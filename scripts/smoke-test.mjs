@@ -8,12 +8,13 @@ const simulationSource = fs.readFileSync(`${gameRoot}/js/game.js`, "utf8");
 const css = fs.readFileSync(`${gameRoot}/style.css`, "utf8");
 const anomalies = fs.readFileSync(`${gameRoot}/js/anomalies.js`, "utf8");
 const audio = fs.readFileSync(`${gameRoot}/js/audio.js`, "utf8");
+const headers = fs.readFileSync(`${gameRoot}/_headers`, "utf8");
 const localRefs = [
   ...[...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1]),
   ...[...css.matchAll(/url\(["']?([^"')]+)["']?\)/g)].map((match) => match[1]),
   ...[...anomalies.matchAll(/"(assets\/[^"']+)"/g)].map((match) => match[1]),
   ...[...audio.matchAll(/"(assets\/audio\/[^"']+)"/g)].map((match) => match[1])
-].filter((value) => !value.startsWith("data:") && !value.startsWith("http") && !value.startsWith("#") && !value.startsWith("%23"));
+].map((value) => value.split("?")[0]).filter((value) => !value.startsWith("data:") && !value.startsWith("http") && !value.startsWith("#") && !value.startsWith("%23"));
 const missingFiles = localRefs.filter((value) => !fs.existsSync(`${gameRoot}/${value}`));
 if (missingFiles.length) throw new Error(`缺少本地资源：${missingFiles.join(", ")}`);
 
@@ -66,6 +67,8 @@ if (!main.includes('if (state.view === "monitor") renderCamera()')) throw new Er
 if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) throw new Error("主循环或事件图层仍缺少性能限流");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
+if (!html.includes("style.css?v=perf-20260918") || !html.includes("js/main.js?v=perf-20260918")) throw new Error("核心性能资源缺少缓存版本标识");
+if (!headers.includes("/*.css") || !headers.includes("/js/*") || !headers.includes("Cache-Control: no-cache")) throw new Error("Cloudflare 静态资源缺少更新校验规则");
 if (!css.includes("turnMidFrame") || !css.includes("turnFinalFrame")) throw new Error("分阶段回头动画缺失");
 for (const animation of ["waterClimb", "machineViolent", "curtainHeadTurn", "spaceCollapse", "figureNotice"]) {
   if (!css.includes(`@keyframes ${animation}`)) throw new Error(`缺少多阶段异常动画：${animation}`);

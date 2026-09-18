@@ -18,5 +18,14 @@ CREATE TABLE IF NOT EXISTS guestbook_votes (
   UNIQUE (message_id, voter_hash)
 );
 
+CREATE TABLE IF NOT EXISTS handoff_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  content TEXT NOT NULL,
+  ending_kind TEXT NOT NULL CHECK (ending_kind IN ('dawn', 'handoff', 'watched')),
+  visitor_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS guestbook_messages_created_at ON guestbook_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS guestbook_votes_message_id ON guestbook_votes(message_id);
+CREATE INDEX IF NOT EXISTS handoff_messages_created_at ON handoff_messages(created_at DESC);

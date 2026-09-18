@@ -322,13 +322,21 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .incoming-call button{flex:1;padding:.8rem;border:1px solid #603036;background:#321719;cursor:pointer}
 .incoming-call button:last-child{border-color:#34634c;background:#183627}
 .ending-overlay{background:rgba(0,0,0,.9)}
-.ending-card{width:min(90vw,560px);padding:2.4rem;border:1px solid #44534b;background:#09100d;text-align:center}
+.ending-card{width:min(90vw,560px);max-height:92dvh;padding:2.1rem 2.4rem;border:1px solid #44534b;background:#09100d;overflow-y:auto;text-align:center}
 .ending-card>small{color:#8d9991;font:600 .62rem ui-monospace,monospace;letter-spacing:.2em}
 .ending-card h2{font-size:2.7rem;margin:.6rem}
 .ending-card p{color:#aeb9b2;line-height:1.7}
 .ending-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin:1.6rem 0}
 .ending-stats span{padding:.7rem .3rem;border:1px solid #27342d;font-size:.6rem;color:#7f9186}
 .ending-stats b{display:block;margin-top:.4rem;color:#d3ddd6;font-size:1.15rem}
+.handoff-form{margin:0 0 .9rem;padding:1rem;border:1px solid #27342d;background:rgba(4,10,7,.72);text-align:left}
+.handoff-form>label{display:block;margin-bottom:.55rem;color:#b9c7be;font-size:.7rem;font-weight:700;letter-spacing:.08em}
+.handoff-form textarea{width:100%;min-height:58px;padding:.7rem;border:1px solid #43544a;background:#0d1712;color:#dce6df;resize:vertical;outline:none;font:inherit;font-size:.72rem;line-height:1.55}
+.handoff-form textarea:focus{border-color:#799280;box-shadow:0 0 0 2px rgba(121,146,128,.12)}
+.handoff-form>div{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem}.handoff-form>div small{color:#718178;font:500 .58rem ui-monospace,monospace}
+.handoff-form button{padding:.62rem .85rem;border:1px solid #718a79;background:rgba(24,39,31,.92);color:#dce6df;cursor:pointer;font-size:.67rem;font-weight:700;letter-spacing:.08em}.handoff-form button:disabled,.handoff-form textarea:disabled{cursor:not-allowed;opacity:.55}
+.handoff-form>p{min-height:1.2em;margin:.45rem 0 0;color:#789281;font-size:.62rem;line-height:1.45}.handoff-form>p.error{color:#d28b8f}
+.ending-card>button{width:100%;text-align:center}
 .toast{position:fixed;z-index:100;left:50%;bottom:7rem;transform:translate(-50%,15px);padding:.7rem 1rem;border:1px solid #53655b;background:rgba(4,9,7,.94);color:#ced8d1;font-size:.72rem;opacity:0;pointer-events:none;transition:.25s}
 .toast.visible{opacity:1;transform:translate(-50%,0)}
 .toast.error{border-color:#733035;color:#e1adb0}
@@ -433,6 +441,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .audio-check-card{width:min(94vw,520px);padding:0 1.15rem 1.2rem}.audio-check-header{margin:0 -1.15rem .8rem;padding:.6rem .75rem}.audio-check-header small{display:none}.audio-check-icon{height:66px;gap:.6rem}.audio-check-icon svg{width:62px;height:62px}.audio-spectrum{width:48px}.audio-check-card h2{margin-top:.05rem}.audio-check-card>p{margin-bottom:1rem;font-size:.7rem}.audio-check-note i{width:24px}
 .guestbook-phone{width:min(94vw,410px);height:min(91vh,720px);border-radius:28px;padding:17px 12px 9px;grid-template-rows:24px 58px 42px minmax(0,1fr) auto auto 38px}
 .phone-gesture-hint{display:none}
+.ending-card{width:min(94vw,560px);max-height:94dvh;padding:1.25rem}.ending-card h2{font-size:2rem}.ending-card>p{font-size:.72rem}.ending-stats{margin:1rem 0}.handoff-form{padding:.8rem}
 .ending-stats{grid-template-columns:1fr 1fr}
 }
 @media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span{animation:none}}

@@ -9,7 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=neutral-status-20260918">
+  <link rel="stylesheet" href="style.css?v=handoff-20260919">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -237,7 +237,17 @@
   </section>
 
   <section class="overlay ending-overlay hidden" id="endingOverlay">
-    <div class="ending-card"><small id="endingKicker">SHIFT COMPLETE</small><h2 id="endingTitle">天亮了</h2><p id="endingText"></p><div class="ending-stats"><span>正确上报 <b id="endCorrect">0</b></span><span>误报 <b id="endWrong">0</b></span><span>漏报 <b id="endMissed">0</b></span><span>危险 <b id="endDanger">0</b></span></div><button id="restartGame" type="button">再次值班</button></div>
+    <div class="ending-card">
+      <small id="endingKicker">SHIFT COMPLETE</small><h2 id="endingTitle">天亮了</h2><p id="endingText"></p>
+      <div class="ending-stats"><span>正确上报 <b id="endCorrect">0</b></span><span>误报 <b id="endWrong">0</b></span><span>漏报 <b id="endMissed">0</b></span><span>危险 <b id="endDanger">0</b></span></div>
+      <form class="handoff-form" id="handoffForm">
+        <label for="handoffContent">给下一任值班员留一句话</label>
+        <textarea id="handoffContent" maxlength="100" rows="2" placeholder="你希望下一任记住什么？" required></textarea>
+        <div><small id="handoffCounter">0 / 100</small><button type="submit">留下留言</button></div>
+        <p id="handoffNote" role="status" aria-live="polite"></p>
+      </form>
+      <button id="restartGame" type="button">再次值班</button>
+    </div>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -247,6 +257,7 @@
   <script src="js/game.js"></script>
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=d1-20260918"></script>
-  <script src="js/main.js?v=neutral-status-20260918"></script>
+  <script src="js/handoff.js?v=handoff-20260919"></script>
+  <script src="js/main.js?v=handoff-20260919"></script>
 </body>
 </html>

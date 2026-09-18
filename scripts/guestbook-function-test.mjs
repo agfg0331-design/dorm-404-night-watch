@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { onRequestGet, onRequestPost } from "../functions/api/board.js";
 import { onRequestPost as onVote } from "../functions/api/board/[id]/vote.js";
+import { onRequestGet as onHandoffGet, onRequestPost as onHandoffPost } from "../functions/api/handoff.js";
 
 class D1Statement {
   constructor(database, sql, values = []) {
@@ -125,4 +126,55 @@ data = await json(await onRequestPost({
 }), 429);
 assert.match(data.error, /30 秒/);
 
-console.log("D1 留言接口自检通过：发布、最新/最热、点赞/点踩、内容校验与限流均正常。");
+const nextHeaders = { "Content-Type": "application/json", "X-Board-Visitor": "device-b" };
+data = await json(await onHandoffGet({
+  request: new Request("https://example.test/api/handoff", { headers: nextHeaders }),
+  env
+}));
+assert.deepEqual(data, { message: null });
+
+data = await json(await onHandoffPost({
+  request: new Request("https://example.test/api/handoff", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ content: "四点以后，记得听走廊里的脚步。", endingKind: "handoff", visitorId: "device-a" })
+  }),
+  env
+}), 201);
+assert.equal(data.saved, true);
+assert.equal(env.DB.database.prepare("SELECT COUNT(*) AS count FROM handoff_messages").get().count, 1);
+assert.equal(env.DB.database.prepare("SELECT ending_kind AS endingKind FROM handoff_messages").get().endingKind, "handoff");
+
+data = await json(await onHandoffGet({
+  request: new Request("https://example.test/api/handoff", { headers }),
+  env
+}));
+assert.deepEqual(data, { message: null });
+
+data = await json(await onHandoffGet({
+  request: new Request("https://example.test/api/handoff", { headers: nextHeaders }),
+  env
+}));
+assert.equal(data.message.content, "四点以后，记得听走廊里的脚步。");
+
+data = await json(await onHandoffPost({
+  request: new Request("https://example.test/api/handoff", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Board-Visitor": "device-c" },
+    body: JSON.stringify({ content: "去 https://spam.invalid 看提示", endingKind: "dawn", visitorId: "device-c" })
+  }),
+  env
+}), 400);
+assert.match(data.error, /不能包含网址/);
+
+data = await json(await onHandoffPost({
+  request: new Request("https://example.test/api/handoff", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ content: "第二条交班留言", endingKind: "dawn", visitorId: "device-a" })
+  }),
+  env
+}), 429);
+assert.match(data.error, /30 秒/);
+
+console.log("D1 接口自检通过：公共留言板与独立交班留言的保存、读取、过滤和限流均正常。");

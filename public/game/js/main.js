@@ -33,6 +33,7 @@
     callOverlay: $("callOverlay"), callText: $("callText"), answerCall: $("answerCall"), declineCall: $("declineCall"),
     endingOverlay: $("endingOverlay"), endingKicker: $("endingKicker"), endingTitle: $("endingTitle"), endingText: $("endingText"),
     endCorrect: $("endCorrect"), endWrong: $("endWrong"), endMissed: $("endMissed"), endDanger: $("endDanger"),
+    handoffForm: $("handoffForm"), handoffContent: $("handoffContent"), handoffCounter: $("handoffCounter"), handoffNote: $("handoffNote"),
     restart: $("restartGame"), toast: $("toast"), guestbookOverlay: $("guestbookOverlay")
   };
 
@@ -65,6 +66,12 @@
   let renderedMonitorFailed = null;
   let renderedFrameEventKey = "";
   let renderedEventFocus = null;
+  let handoffLoadStarted = false;
+  let handoffCandidate = null;
+  let handoffDeliveryMinute = null;
+  let handoffDelivered = false;
+  let handoffSubmitted = false;
+  let activeEndingKind = "dawn";
   const SETTINGS_KEY = "dorm404.settings.v2";
   const HOME_STATE_KEY = "dorm404.home.contaminated";
   const defaultSettings = { master: 76, bgm: 58, sfx: 92, brightness: 100, shake: true, noise: true };
@@ -347,6 +354,21 @@
     els.tabUnread.classList.toggle("visible", state.unread > 0);
   }
 
+  function prepareHandoff() {
+    if (handoffLoadStarted || !window.HandoffService) return;
+    handoffLoadStarted = true;
+    handoffDeliveryMinute = 2 + Math.floor(Math.random() * 13);
+    window.HandoffService.getRandom()
+      .then((content) => { if (typeof content === "string" && content.trim()) handoffCandidate = content.trim(); })
+      .catch(() => {});
+  }
+
+  function maybeDeliverHandoff(state) {
+    if (handoffDelivered || !handoffCandidate || !sim.running || state.minute < handoffDeliveryMinute || state.minute > 15) return;
+    handoffDelivered = true;
+    sim.pushMessage({ sender: "上一任值班员", text: handoffCandidate });
+  }
+
   function render(state) {
     if (!state) return;
     const currentPhase = phase(state.minute);
@@ -390,6 +412,7 @@
     if (qa) {
       els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
     }
+    maybeDeliverHandoff(state);
   }
 
   function renderCamera() {
@@ -686,10 +709,43 @@
       watched: ["NO OPERATOR DETECTED", "下一任值班员", "你回头看见的不是门，而是 CAM 04 的镜头。第二天，新的值班员坐下时，画面角落里多了一个始终背对镜头的人。"]
     };
     const [kicker, title, text] = endings[kind] || endings.dawn;
+    activeEndingKind = endings[kind] ? kind : "dawn";
+    handoffSubmitted = false;
+    els.handoffContent.value = "";
+    els.handoffContent.disabled = false;
+    els.handoffForm.querySelector("button[type=submit]").disabled = false;
+    els.handoffCounter.textContent = "0 / 100";
+    els.handoffNote.textContent = "";
+    els.handoffNote.classList.remove("error");
     if (kind === "watched") localStorage.setItem(HOME_STATE_KEY, "1");
     els.endingKicker.textContent = kicker; els.endingTitle.textContent = title; els.endingText.textContent = text;
     els.endCorrect.textContent = state.correct; els.endWrong.textContent = state.wrong; els.endMissed.textContent = state.missed; els.endDanger.textContent = Math.round(state.danger);
     els.turnSequence.classList.add("hidden"); els.endingOverlay.classList.remove("hidden");
+  }
+
+  async function submitHandoff(event) {
+    event.preventDefault();
+    if (handoffSubmitted || !window.HandoffService) return;
+    const content = els.handoffContent.value.trim();
+    if (!content) {
+      els.handoffNote.textContent = "请先写下一句话。";
+      els.handoffNote.classList.add("error");
+      return;
+    }
+    const submit = els.handoffForm.querySelector("button[type=submit]");
+    submit.disabled = true;
+    els.handoffNote.textContent = "正在写入值班记录……";
+    els.handoffNote.classList.remove("error");
+    try {
+      await window.HandoffService.submit(content, activeEndingKind);
+      handoffSubmitted = true;
+      els.handoffContent.disabled = true;
+      els.handoffNote.textContent = "留言已留在值班室。";
+    } catch (error) {
+      submit.disabled = false;
+      els.handoffNote.textContent = error.message || "交班留言发送失败。";
+      els.handoffNote.classList.add("error");
+    }
   }
 
   async function startGame() {
@@ -728,6 +784,7 @@
     const syncHint = els.enterMonitor.querySelector("small");
     const oldHint = syncHint?.textContent || "点击屏幕正式开始值班";
     if (syncHint) syncHint.textContent = "正在同步六路监控……";
+    prepareHandoff();
     await cameraPreload;
     sim.start(performance.now());
     switchView("monitor");
@@ -751,6 +808,8 @@
   els.declineCall.addEventListener("click", () => { audio.stopRingtone(); els.callOverlay.classList.add("hidden"); phone.addMessage({ sender: "自己", text: "你听见门外响了三下。", corrupt: true }); audio.knock(); });
   els.dontTurn.addEventListener("click", () => sim.chooseTurn(false));
   els.turnAround.addEventListener("click", () => sim.chooseTurn(true));
+  els.handoffContent.addEventListener("input", () => { els.handoffCounter.textContent = `${Array.from(els.handoffContent.value).length} / 100`; });
+  els.handoffForm.addEventListener("submit", submitHandoff);
   els.restart.addEventListener("click", () => location.reload());
   els.openSettings.addEventListener("click", () => els.settingsOverlay.classList.remove("hidden"));
   els.closeSettings.addEventListener("click", () => els.settingsOverlay.classList.add("hidden"));

@@ -5,6 +5,7 @@ const gameRoot = "public/game";
 const html = fs.readFileSync(`${gameRoot}/index.html`, "utf8");
 const main = fs.readFileSync(`${gameRoot}/js/main.js`, "utf8");
 const phoneSource = fs.readFileSync(`${gameRoot}/js/phone.js`, "utf8");
+const handoffSource = fs.readFileSync(`${gameRoot}/js/handoff.js`, "utf8");
 const simulationSource = fs.readFileSync(`${gameRoot}/js/game.js`, "utf8");
 const css = fs.readFileSync(`${gameRoot}/style.css`, "utf8");
 const anomalies = fs.readFileSync(`${gameRoot}/js/anomalies.js`, "utf8");
@@ -31,6 +32,9 @@ if (missing.length) throw new Error(`缺少 DOM 节点：${missing.join(", ")}`)
 for (const requiredId of ["phoneHome", "settingsOverlay", "masterVolume", "bgmVolume", "sfxVolume", "brightness", "cameraSwitchMask", "phoneCorruption", "phoneRedFlood", "phoneGhostWarning"]) {
   if (!ids.has(requiredId)) throw new Error(`缺少新交互节点：${requiredId}`);
 }
+for (const requiredId of ["handoffForm", "handoffContent", "handoffCounter", "handoffNote"]) {
+  if (!ids.has(requiredId)) throw new Error(`缺少交班留言节点：${requiredId}`);
+}
 for (const requiredId of ["openGuestbook", "guestbookOverlay", "guestbookList", "guestbookForm", "guestbookHome"]) {
   if (!ids.has(requiredId)) throw new Error(`缺少访客留言节点：${requiredId}`);
 }
@@ -48,6 +52,7 @@ if (!html.includes("js/guestbook.js?v=d1-20260918")) throw new Error("Cloudflare
 for (const path of ["functions/api/board.js", "functions/api/board/[id]/vote.js", "d1/schema.sql"]) {
   if (!fs.existsSync(path)) throw new Error(`Cloudflare 留言后端缺失：${path}`);
 }
+if (!fs.existsSync("functions/api/handoff.js")) throw new Error("交班留言接口缺失");
 const cloudflareBoard = fs.readFileSync("functions/api/board.js", "utf8");
 const cloudflareVote = fs.readFileSync("functions/api/board/[id]/vote.js", "utf8");
 const d1Schema = fs.readFileSync("d1/schema.sql", "utf8");
@@ -59,6 +64,13 @@ for (const feature of ["onRequestPost", "ON CONFLICT(message_id, voter_hash)", "
 }
 for (const table of ["guestbook_messages", "guestbook_votes"]) {
   if (!d1Schema.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) throw new Error(`D1 表结构缺失：${table}`);
+}
+if (!d1Schema.includes("CREATE TABLE IF NOT EXISTS handoff_messages")) throw new Error("交班留言 D1 表结构缺失");
+for (const feature of ["/api/handoff", "X-Board-Visitor", "getRandom", "submit"]) {
+  if (!handoffSource.includes(feature)) throw new Error(`交班留言前端能力缺失：${feature}`);
+}
+for (const feature of ['sender: "上一任值班员"', "handoffDeliveryMinute", "state.minute > 15", "submitHandoff", "留言已留在值班室。"] ) {
+  if (!main.includes(feature)) throw new Error(`交班留言游戏流程缺失：${feature}`);
 }
 const roomSection = html.match(/<section class="view room-view[\s\S]*?<\/section>/)?.[0] || "";
 const startSection = html.match(/<section class="overlay start-overlay[\s\S]*?<\/section>/)?.[0] || "";
@@ -89,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=neutral-status-20260918", "js/phone.js?v=neutral-status-20260918", "js/main.js?v=neutral-status-20260918"]) {
+for (const versionedAsset of ["style.css?v=handoff-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/main.js?v=handoff-20260919"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 for (const leakedPrompt of ["画面中有什么正在改变", "有一项变化没有被记录", "监控信号正在失去同步", "变化正在发生", "信号出现变化", "画面已改变"]) {

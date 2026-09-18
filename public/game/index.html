@@ -9,7 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=perf-20260918">
+  <link rel="stylesheet" href="style.css?v=audio-prompt-20260919">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -167,6 +167,29 @@
     </div>
   </section>
 
+  <section class="overlay audio-check-overlay hidden" id="audioCheckOverlay" aria-label="耳机游玩提示">
+    <div class="audio-check-card" role="dialog" aria-modal="true" aria-labelledby="audioCheckTitle" aria-describedby="audioCheckDescription">
+      <header class="audio-check-header">
+        <span><i></i>音频校准 / AUDIO CHECK</span>
+        <small>CH.01　▰▰▰</small>
+      </header>
+      <div class="audio-check-icon" aria-hidden="true">
+        <span class="audio-spectrum left"><i></i><i></i><i></i><i></i><i></i></span>
+        <svg viewBox="0 0 96 96" focusable="false">
+          <path d="M18 51V40a30 30 0 0 1 60 0v11M18 51h9v27h-6a8 8 0 0 1-8-8V59a8 8 0 0 1 5-8Zm60 0h-9v27h6a8 8 0 0 0 8-8V59a8 8 0 0 0-5-8Z"/>
+        </svg>
+        <span class="audio-spectrum right"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+      <h2 id="audioCheckTitle">建议佩戴耳机</h2>
+      <p id="audioCheckDescription">本游戏包含方向性音效与细微环境声<br>佩戴耳机可获得更完整的值班体验</p>
+      <div class="audio-check-actions">
+        <button id="confirmHeadphones" type="button">戴上耳机，开始值班</button>
+        <button id="skipHeadphones" type="button">暂不佩戴</button>
+      </div>
+      <small class="audio-check-note"><i></i>请确认左右声道正常<i></i></small>
+    </div>
+  </section>
+
   <section class="overlay guestbook-overlay hidden" id="guestbookOverlay" aria-label="404访客留言板">
     <div class="guestbook-phone" role="dialog" aria-modal="true" aria-labelledby="guestbookTitle">
       <div class="guestbook-speaker" aria-hidden="true"></div>
@@ -224,6 +247,6 @@
   <script src="js/game.js"></script>
   <script src="js/phone.js"></script>
   <script src="js/guestbook.js?v=d1-20260918"></script>
-  <script src="js/main.js?v=perf-20260918-2"></script>
+  <script src="js/main.js?v=audio-prompt-20260919"></script>
 </body>
 </html>

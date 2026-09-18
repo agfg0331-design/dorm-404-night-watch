@@ -25,6 +25,7 @@
     reportForm: $("reportForm"), reportCamera: $("reportCamera"), reportFeedback: $("reportFeedback"),
     turnChoice: $("turnChoice"), dontTurn: $("dontTurn"), turnAround: $("turnAround"), turnSequence: $("turnSequence"),
     turnStart: $("turnStart"), turnMid: $("turnMid"), turnImage: $("turnImage"), turnCaption: $("turnCaption"), turnWarning: $("turnWarning"), startOverlay: $("startOverlay"), startGame: $("startGame"),
+    audioCheckOverlay: $("audioCheckOverlay"), confirmHeadphones: $("confirmHeadphones"), skipHeadphones: $("skipHeadphones"),
     settingsOverlay: $("settingsOverlay"), settingsForm: $("settingsForm"), openSettings: $("openSettings"), closeSettings: $("closeSettings"),
     masterVolume: $("masterVolume"), bgmVolume: $("bgmVolume"), sfxVolume: $("sfxVolume"), brightness: $("brightness"),
     masterVolumeValue: $("masterVolumeValue"), bgmVolumeValue: $("bgmVolumeValue"), sfxVolumeValue: $("sfxVolumeValue"), brightnessValue: $("brightnessValue"),
@@ -57,6 +58,7 @@
   const eventCueState = new Set();
   let lastAudioTensionKey = "";
   let shiftStarting = false;
+  let audioPromptResolving = false;
   const renderedText = new WeakMap();
   let renderedUnread = -1;
   let renderedPhase = -1;
@@ -699,8 +701,23 @@
     // The game can still continue if a browser refuses one optional clip.
     audio.loadSamples(criticalAudioSamples);
     els.startGame.innerHTML = oldText;
-    els.startOverlay.classList.add("hidden");
-    switchView("room");
+    els.audioCheckOverlay.classList.remove("hidden", "closing");
+    window.requestAnimationFrame(() => els.confirmHeadphones.focus({ preventScroll: true }));
+  }
+
+  function finishAudioCheck() {
+    if (audioPromptResolving) return;
+    audioPromptResolving = true;
+    els.confirmHeadphones.disabled = true;
+    els.skipHeadphones.disabled = true;
+    els.audioCheckOverlay.classList.add("closing");
+    window.setTimeout(() => {
+      els.audioCheckOverlay.classList.add("hidden");
+      els.audioCheckOverlay.classList.remove("closing");
+      els.startOverlay.classList.add("hidden");
+      switchView("room");
+      els.enterMonitor.focus({ preventScroll: true });
+    }, 220);
   }
 
   async function beginShift(firstCamera = null) {
@@ -721,6 +738,8 @@
   }
 
   els.startGame.addEventListener("click", startGame);
+  els.confirmHeadphones.addEventListener("click", finishAudioCheck);
+  els.skipHeadphones.addEventListener("click", finishAudioCheck);
   els.enterMonitor.addEventListener("click", () => beginShift());
   els.monitorPhone.addEventListener("click", () => switchView("phone-messages"));
   els.closePhone.addEventListener("click", phoneBack);
@@ -743,6 +762,11 @@
     swipeStartY = null;
   });
   document.addEventListener("keydown", (event) => {
+    if (!els.audioCheckOverlay.classList.contains("hidden")) {
+      if (event.key === "Enter") { event.preventDefault(); finishAudioCheck(); }
+      else if (event.key === "Escape") { event.preventDefault(); finishAudioCheck(); }
+      return;
+    }
     if (!els.guestbookOverlay.classList.contains("hidden")) return;
     if (["1", "2", "3", "4", "5", "6"].includes(event.key) && !sim.ended && !sim.finalStage) {
       const camera = `cam0${event.key}`;

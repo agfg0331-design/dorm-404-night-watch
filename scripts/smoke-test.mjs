@@ -63,6 +63,10 @@ const roomSection = html.match(/<section class="view room-view[\s\S]*?<\/section
 const startSection = html.match(/<section class="overlay start-overlay[\s\S]*?<\/section>/)?.[0] || "";
 if (!roomSection.includes('id="openGuestbook"') || startSection.includes('id="openGuestbook"')) throw new Error("留言板入口没有放在值班室右侧手机上");
 if (html.includes('id="leaveMonitor"') || html.includes("退出监控")) throw new Error("监控界面仍保留退出监控入口");
+for (const promptElement of ['id="audioCheckOverlay"', 'id="confirmHeadphones"', 'id="skipHeadphones"', "建议佩戴耳机"]) {
+  if (!html.includes(promptElement)) throw new Error(`耳机提示界面缺失：${promptElement}`);
+}
+if (!main.includes("function finishAudioCheck") || !main.includes('audioCheckOverlay.classList.remove("hidden", "closing")')) throw new Error("耳机提示交互流程缺失");
 if (!main.includes("async function beginShift") || !main.includes("sim.start(performance.now())")) throw new Error("点击监控正式开始值班的流程缺失");
 const startBody = main.match(/async function startGame\(\)[\s\S]*?\n  }/)?.[0] || "";
 if (startBody.includes("sim.start(")) throw new Error("点击开始值班后计时仍提前启动");
@@ -84,7 +88,8 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-if (!html.includes("style.css?v=perf-20260918") || !html.includes("js/main.js?v=perf-20260918-2")) throw new Error("核心性能资源缺少缓存版本标识");
+if (!html.includes("style.css?v=audio-prompt-20260919") || !html.includes("js/main.js?v=audio-prompt-20260919")) throw new Error("核心性能资源缺少缓存版本标识");
+if (!css.includes("audioCardIn") || !css.includes("prefers-reduced-motion:reduce")) throw new Error("耳机提示缺少平滑动画或减少动态效果适配");
 if (!headers.includes("/*.css") || !headers.includes("/js/*") || !headers.includes("Cache-Control: no-cache")) throw new Error("Cloudflare 静态资源缺少更新校验规则");
 if (!css.includes("turnMidFrame") || !css.includes("turnFinalFrame")) throw new Error("分阶段回头动画缺失");
 for (const animation of ["waterClimb", "machineViolent", "curtainHeadTurn", "spaceCollapse", "figureNotice"]) {

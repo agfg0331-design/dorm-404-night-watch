@@ -261,6 +261,28 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .start-actions button span{float:right;color:#83948a;font:500 .55rem ui-monospace,monospace}
 .start-actions button:disabled{cursor:wait;opacity:.7}
 .start-hint{display:block;margin-top:.75rem!important;color:#65746c!important;letter-spacing:.08em!important}
+.audio-check-overlay{z-index:82;padding:1rem;background:rgba(0,4,3,.66);backdrop-filter:none;animation:audioOverlayIn .2s ease-out both}
+.audio-check-overlay.closing{pointer-events:none;animation:audioOverlayOut .22s ease-in both}
+.audio-check-card{position:relative;width:min(92vw,620px);padding:0 2.5rem 1.75rem;border:1px solid rgba(154,184,165,.62);background:linear-gradient(180deg,rgba(8,17,13,.97),rgba(3,9,7,.985));box-shadow:0 24px 80px #000,0 0 0 1px rgba(19,31,25,.8),inset 0 0 50px rgba(80,122,97,.07);overflow:hidden;text-align:center;animation:audioCardIn .36s cubic-bezier(.2,.78,.24,1) both}
+.audio-check-overlay.closing .audio-check-card{animation:audioCardOut .2s ease-in both}
+.audio-check-card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.17;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(153,185,164,.09) 4px)}
+.audio-check-card::after{content:"";position:absolute;inset:5px;border:1px solid rgba(154,184,165,.09);pointer-events:none}
+.audio-check-header{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin:0 -2.5rem 1.1rem;padding:.65rem 1rem;border-bottom:1px solid rgba(154,184,165,.2);color:#82978a;font:600 .56rem/1 ui-monospace,monospace;letter-spacing:.13em;text-align:left}
+.audio-check-header span{display:flex;align-items:center;gap:.45rem}.audio-check-header span i{width:6px;height:6px;border-radius:50%;background:#a52b30;box-shadow:0 0 9px rgba(196,40,49,.72)}
+.audio-check-header small{color:#607269;font:inherit;letter-spacing:.08em}
+.audio-check-icon{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:1rem;height:76px;margin:.15rem auto .35rem;color:#c6d4ca}
+.audio-check-icon svg{width:74px;height:74px;fill:none;stroke:currentColor;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 9px rgba(139,183,157,.18))}
+.audio-spectrum{display:flex;align-items:center;gap:3px;width:78px;height:30px}.audio-spectrum.right{justify-content:flex-start}.audio-spectrum.left{justify-content:flex-end}
+.audio-spectrum i{width:2px;height:var(--bar,12px);background:#6f9a81;opacity:.5;transform-origin:center;animation:audioBarResolve .48s ease-out both}
+.audio-spectrum i:nth-child(1){--bar:6px;animation-delay:.02s}.audio-spectrum i:nth-child(2){--bar:15px;animation-delay:.05s}.audio-spectrum i:nth-child(3){--bar:24px;animation-delay:.08s}.audio-spectrum i:nth-child(4){--bar:12px;animation-delay:.11s}.audio-spectrum i:nth-child(5){--bar:5px;animation-delay:.14s}
+.audio-check-card h2{position:relative;z-index:1;margin:.15rem 0 .55rem;color:#dce6df;font-size:clamp(1.4rem,3.8vw,2rem);font-weight:650;letter-spacing:.16em;text-shadow:0 0 18px rgba(156,192,169,.12)}
+.audio-check-card>p{position:relative;z-index:1;margin:0 auto 1.25rem;color:#aebdb4;font-size:.76rem;line-height:1.8;letter-spacing:.08em}
+.audio-check-actions{position:relative;z-index:1;display:grid;gap:.55rem;width:min(100%,430px);margin:auto}
+.audio-check-actions button{min-height:46px;border:1px solid #78917f;background:rgba(35,55,43,.86);color:#e2e9e4;cursor:pointer;font-size:.74rem;font-weight:700;letter-spacing:.12em;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+.audio-check-actions button:hover,.audio-check-actions button:focus-visible{outline:0;transform:translateY(-1px);border-color:#abc1b1;background:rgba(50,76,60,.94);box-shadow:0 0 0 2px rgba(143,177,155,.13),0 8px 24px #0008}
+.audio-check-actions button:last-child{min-height:36px;border-color:rgba(100,120,108,.45);background:rgba(5,11,8,.62);color:#76887d;font-size:.62rem;font-weight:500}
+.audio-check-actions button:disabled{cursor:wait;opacity:.62;transform:none}
+.audio-check-note{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:.65rem;margin-top:1rem;color:#66786d;font:500 .55rem ui-monospace,monospace;letter-spacing:.13em}.audio-check-note i{width:36px;height:1px;background:linear-gradient(90deg,transparent,#60766a)}.audio-check-note i:last-child{transform:scaleX(-1)}
 .guestbook-overlay{z-index:88;background:rgba(0,3,2,.58);backdrop-filter:blur(3px);perspective:1200px}
 .guestbook-phone{position:relative;width:min(94vw,430px);height:min(88vh,760px);display:grid;grid-template-rows:26px 62px 44px minmax(0,1fr) auto auto 48px;padding:20px 18px 12px;border:2px solid #3c433f;border-radius:38px;background:linear-gradient(145deg,#343936,#121615 18%,#070908 84%,#242a27);box-shadow:0 35px 110px #000,0 0 0 6px #101311,inset 0 0 0 2px #626a65;overflow:hidden;animation:guestbookLift .5s cubic-bezier(.2,.72,.22,1) both}
 .guestbook-phone::before{content:"";position:absolute;inset:12px;border:1px solid rgba(194,208,198,.12);border-radius:29px;pointer-events:none}
@@ -384,6 +406,11 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 }
 @keyframes fadeIn{from{opacity:0}
 }
+@keyframes audioOverlayIn{from{opacity:0}to{opacity:1}}
+@keyframes audioOverlayOut{from{opacity:1}to{opacity:0}}
+@keyframes audioCardIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes audioCardOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-5px) scale(.992)}}
+@keyframes audioBarResolve{from{opacity:0;transform:scaleY(.15)}to{opacity:.5;transform:scaleY(1)}}
 @keyframes slowTurn{0%{transform:translateX(-12%) scale(1.12);filter:blur(4px)}
 65%{filter:blur(9px)}
 100%{transform:translateX(14%) scale(1.22);filter:blur(1px)}
@@ -404,8 +431,9 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .start-menu{width:100%;padding:.85rem}
 .start-menu>strong{display:block}
 .start-actions{grid-template-columns:1.25fr .8fr}
+.audio-check-card{width:min(94vw,520px);padding:0 1.15rem 1.2rem}.audio-check-header{margin:0 -1.15rem .8rem;padding:.6rem .75rem}.audio-check-header small{display:none}.audio-check-icon{height:66px;gap:.6rem}.audio-check-icon svg{width:62px;height:62px}.audio-spectrum{width:48px}.audio-check-card h2{margin-top:.05rem}.audio-check-card>p{margin-bottom:1rem;font-size:.7rem}.audio-check-note i{width:24px}
 .guestbook-phone{width:min(94vw,410px);height:min(91vh,720px);border-radius:28px;padding:17px 12px 9px;grid-template-rows:24px 58px 42px minmax(0,1fr) auto auto 38px}
 .phone-gesture-hint{display:none}
 .ending-stats{grid-template-columns:1fr 1fr}
 }
-@media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span{animation:none}}
+@media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span{animation:none}}

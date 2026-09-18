@@ -42,6 +42,7 @@
   let promptPending = false;
   let callOverride = false;
   let transitionLocked = false;
+  let phoneTransitionTimer = null;
   let swipeStartY = null;
   let displayedCameraSource = els.cameraImage.getAttribute("src");
   let pendingCameraSource = null;
@@ -223,6 +224,7 @@
     if (transitionLocked || sim.ended || sim.turning) return;
     if (!sim.view.startsWith("phone")) previousView = sim.view === "room" ? "room" : "monitor";
     transitionLocked = true;
+    window.clearTimeout(phoneTransitionTimer);
     els.phoneView.classList.remove("lowering");
     els.phoneView.classList.add("active");
     els.body.dataset.view = "phone";
@@ -233,7 +235,7 @@
       pendingPhoneCorruption = null;
       window.setTimeout(() => triggerPhoneCorruption(pending.type, pending.phrase), 480);
     }
-    window.setTimeout(() => { transitionLocked = false; }, 500);
+    phoneTransitionTimer = window.setTimeout(() => { transitionLocked = false; }, 500);
     if (promptPending) window.setTimeout(revealTurnChoice, 720);
   }
 
@@ -253,15 +255,17 @@
   }
 
   function closePhone(force = false) {
-    if (transitionLocked && !force) return;
+    if (els.phoneView.classList.contains("lowering")) return;
+    if (transitionLocked && !force && !els.phoneView.classList.contains("active")) return;
     transitionLocked = true;
+    window.clearTimeout(phoneTransitionTimer);
     audio.stopReportTension();
     audio.putdownPhone();
     const destination = previousView === "room" ? "room" : "monitor";
     sim.setView(destination);
     setViewElement(destination);
     els.phoneView.classList.add("lowering");
-    window.setTimeout(() => {
+    phoneTransitionTimer = window.setTimeout(() => {
       els.phoneView.classList.remove("active", "lowering");
       transitionLocked = false;
     }, 430);

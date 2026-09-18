@@ -63,6 +63,9 @@ for (const retiredPhoneEffect of ["filter:blur(8px) brightness(.48)", "filter:bl
 }
 if (main.includes("void els.phoneView.offsetWidth")) throw new Error("手机动画仍通过强制同步布局重启");
 if (!main.includes('if (state.view === "monitor") renderCamera()')) throw new Error("手机动画期间仍在更新隐藏监控图层");
+if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) throw new Error("主循环或事件图层仍缺少性能限流");
+if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
+if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
 if (!css.includes("turnMidFrame") || !css.includes("turnFinalFrame")) throw new Error("分阶段回头动画缺失");
 for (const animation of ["waterClimb", "machineViolent", "curtainHeadTurn", "spaceCollapse", "figureNotice"]) {
   if (!css.includes(`@keyframes ${animation}`)) throw new Error(`缺少多阶段异常动画：${animation}`);

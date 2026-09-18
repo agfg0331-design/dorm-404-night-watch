@@ -57,6 +57,11 @@
   let lastAudioTensionKey = "";
   let shiftStarting = false;
   const renderedText = new WeakMap();
+  let renderedUnread = -1;
+  let renderedPhase = -1;
+  let renderedMonitorFailed = null;
+  let renderedFrameEventKey = "";
+  let renderedEventFocus = null;
   const SETTINGS_KEY = "dorm404.settings.v2";
   const HOME_STATE_KEY = "dorm404.home.contaminated";
   const defaultSettings = { master: 76, bgm: 58, sfx: 92, brightness: 100, shake: true, noise: true };
@@ -174,6 +179,7 @@
     els.screenShake.checked = settings.shake;
     els.visualNoise.checked = settings.noise;
     document.documentElement.style.setProperty("--game-brightness", String(settings.brightness / 100));
+    document.body.classList.toggle("custom-brightness", settings.brightness !== 100);
     document.documentElement.style.setProperty("--noise-opacity", settings.noise ? ".12" : "0");
     document.body.classList.toggle("no-screen-shake", !settings.shake);
     document.body.classList.toggle("no-visual-noise", !settings.noise);
@@ -326,8 +332,10 @@
   }
 
   function updateUnread(state = sim.snapshot()) {
+    if (renderedUnread === state.unread) return;
+    renderedUnread = state.unread;
     [els.monitorUnread].forEach((badge) => {
-      badge.textContent = state.unread;
+      setText(badge, state.unread);
       badge.classList.toggle("visible", state.unread > 0);
     });
     els.tabUnread.classList.toggle("visible", state.unread > 0);
@@ -341,7 +349,10 @@
       lastAudioTensionKey = tensionKey;
       audio.setTension(currentPhase, state.danger);
     }
-    els.body.dataset.phase = String(currentPhase);
+    if (renderedPhase !== currentPhase) {
+      renderedPhase = currentPhase;
+      els.body.dataset.phase = String(currentPhase);
+    }
     setText(els.roomClock, formatMinute(state.minute));
     const phoneOffset = currentPhase >= 3 ? (currentPhase - 2) * 7 : 0;
     setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
@@ -350,18 +361,26 @@
     setText(els.trust, String(Math.round(state.trust)).padStart(2, "0"));
     setText(els.correct, state.correct);
     setText(els.missed, state.missed);
-    els.monitorView.classList.toggle("failed", state.monitorFailed && !callOverride);
+    const monitorFailed = state.monitorFailed && !callOverride;
+    if (renderedMonitorFailed !== monitorFailed) {
+      renderedMonitorFailed = monitorFailed;
+      els.monitorView.classList.toggle("failed", monitorFailed);
+    }
     updateUnread(state);
     // The phone covers the feed. Avoid mutating hidden camera layers during its
     // lift/lower animation so mobile browsers can keep the phone on the compositor.
     if (state.view === "monitor") renderCamera();
     const visibleEvent = state.view === "monitor" ? state.visibleEvent : null;
-    audio.setEventFocus(Boolean(visibleEvent));
+    const eventFocused = Boolean(visibleEvent);
+    if (renderedEventFocus !== eventFocused) {
+      renderedEventFocus = eventFocused;
+      audio.setEventFocus(eventFocused);
+    }
     if (visibleEvent) {
       ensureEventCue(visibleEvent);
       syncEventBeat(visibleEvent);
     }
-    if (currentPhase >= 4) els.roomCaption.textContent = "你偶尔听见身后椅脚摩擦地面，但值班室只有一把椅子。";
+    if (currentPhase >= 4) setText(els.roomCaption, "你偶尔听见身后椅脚摩擦地面，但值班室只有一把椅子。");
     if (qa) {
       els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
     }
@@ -426,14 +445,18 @@
   }
 
   function renderEventFrames(event) {
-    els.eventFrames.forEach((frame) => {
-      frame.style.opacity = "0";
-      frame.style.clipPath = "none";
-      frame.style.maskImage = "none";
-      frame.style.webkitMaskImage = "none";
-      frame.style.transform = "";
-      frame.style.transformOrigin = "";
-    });
+    const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
+    if (nextFrameEventKey !== renderedFrameEventKey) {
+      renderedFrameEventKey = nextFrameEventKey;
+      els.eventFrames.forEach((frame) => {
+        frame.style.opacity = "0";
+        frame.style.clipPath = "none";
+        frame.style.maskImage = "none";
+        frame.style.webkitMaskImage = "none";
+        frame.style.transform = "";
+        frame.style.transformOrigin = "";
+      });
+    }
     if (!event?.frames?.length) return;
     const p = eventVisualProgress(event);
     if (event.visual === "shadow-walk") {
@@ -728,7 +751,13 @@
   [els.dontTurn, els.turnAround].forEach((button) => button.addEventListener("pointerenter", () => audio.choiceHover()));
 
   let lastAmbientWarning = -1;
+  let lastSimulationFrame = 0;
   function loop(now) {
+    if (lastSimulationFrame && now - lastSimulationFrame < 1000 / 30) {
+      requestAnimationFrame(loop);
+      return;
+    }
+    lastSimulationFrame = now;
     sim.step(now);
     const currentMinute = Math.floor(sim.minute);
     if (currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {

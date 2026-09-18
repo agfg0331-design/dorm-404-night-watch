@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050909">
+  <meta name="description" content="在宿舍值班室里守到清晨。看监控、查手机、上报异常——但不要轻信任何屏幕。">
+  <title>404宿舍：夜间监控</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" href="assets/title-screen-normal.webp">
+  <link rel="preload" as="image" href="assets/duty-room-normal.webp">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="chair-fix.css">
+</head>
+<body data-phase="0" data-view="room">
+  <main class="game" id="game">
+    <section class="view room-view active" id="roomView" aria-label="值班室第一视角">
+      <img class="room-background" id="roomBackground" src="assets/duty-room-normal.webp" alt="昏暗的宿舍楼值班室">
+      <div class="room-depth"></div>
+      <header class="room-hud">
+        <div><b>东区 4 号楼</b><span>夜间值班</span></div>
+        <time id="roomClock">00:00</time>
+      </header>
+      <button class="room-hotspot monitor-hotspot" id="enterMonitor" type="button">
+        <span>开始监控</span><small>点击屏幕正式开始值班</small>
+      </button>
+      <button class="room-hotspot phone-hotspot" id="openGuestbook" type="button">
+        <strong>查看 404 留言板</strong>
+      </button>
+      <p class="room-caption" id="roomCaption">左侧监控开始值班，右侧手机查看访客留言。</p>
+    </section>
+
+    <section class="view monitor-view" id="monitorView" aria-label="放大的监控画面">
+      <img class="feed-image" id="cameraImage" src="assets/cam-dorm-normal.webp" alt="监控画面">
+      <div class="event-frame-stack" id="eventFrameStack" aria-hidden="true">
+        <img id="eventFrame1" alt=""><img id="eventFrame2" alt=""><img id="eventFrame3" alt="">
+      </div>
+      <div class="camera-switch-mask" id="cameraSwitchMask" aria-hidden="true"><span>SYNC</span></div>
+      <div class="feed-grade"></div>
+      <div class="event-layer" id="eventLayer" aria-hidden="true">
+        <span class="moving-chair"></span>
+        <span class="walking-shadow"></span>
+        <span class="extra-shadow"></span>
+        <svg class="glass-crack" viewBox="0 0 300 300"><path d="M153 22 148 137 71 86 143 150 42 177 144 160 89 264 154 171 203 275 164 165 272 191 170 154 257 79 162 143Z"/></svg>
+        <span class="machine-light"></span>
+        <span class="wet-footprints"></span>
+        <span class="curtain-figure"></span>
+        <span class="door-gap"></span>
+        <span class="reverse-clock"></span>
+        <span class="rising-water"></span>
+        <span class="machine-drum"></span>
+        <span class="air-draft"></span>
+        <span class="space-echo"></span>
+        <span class="event-flash"></span>
+      </div>
+      <div class="scanlines"></div><div class="noise"></div><div class="glitch-band"></div>
+      <div class="signal-error" id="signalError"><b>UNKNOWN SIGNAL</b><span>CAMERA FEED ERROR</span><small>正在尝试重新连接……</small></div>
+      <header class="monitor-hud top">
+        <div><i class="rec"></i><b id="cameraCode">CAM 01</b><span id="cameraName">404宿舍</span></div>
+        <time id="monitorTime">00:00:00</time>
+      </header>
+      <aside class="monitor-stats">
+        <span>危险 <b id="dangerValue">08</b></span>
+        <span>信任 <b id="trustValue">100</b></span>
+        <span>上报 <b id="correctValue">0</b></span>
+        <span>漏报 <b id="missedValue">0</b></span>
+      </aside>
+      <div class="event-status" id="eventStatus"></div>
+      <nav class="camera-dock" aria-label="监控切换">
+        <button class="active" data-camera="cam01" type="button"><kbd>1</kbd><span>404宿舍</span></button>
+        <button data-camera="cam02" type="button"><kbd>2</kbd><span>四楼走廊</span></button>
+        <button data-camera="cam03" type="button"><kbd>3</kbd><span>公共洗衣房</span></button>
+        <button data-camera="cam04" type="button"><kbd>4</kbd><span>值班室</span></button>
+        <button data-camera="cam05" type="button"><kbd>5</kbd><span>四楼楼梯间</span></button>
+        <button data-camera="cam06" type="button"><kbd>6</kbd><span>一楼大厅</span></button>
+      </nav>
+      <button class="phone-dock" id="monitorPhone" type="button" aria-label="打开手机">
+        <span class="mini-phone" aria-hidden="true"><i></i></span><i class="unread-badge" id="monitorUnread">0</i><small>手机</small>
+      </button>
+    </section>
+
+    <section class="view phone-view" id="phoneView" aria-label="手机界面">
+      <div class="phone-composite">
+        <div class="phone-screen handset" id="handset">
+          <header class="phone-status"><time id="phoneTime">00:00</time><span>4G　▰ 82%</span></header>
+          <div class="phone-title"><button id="closePhone" type="button">‹ 返回</button><div><b>宿舍值班系统</b><small id="phoneSubtitle">东区4号楼</small></div><i></i></div>
+          <nav class="phone-tabs">
+            <button class="active" data-tab="messages" type="button">信息 <i id="tabUnread"></i></button>
+            <button data-tab="report" type="button">异常上报</button>
+          </nav>
+          <section class="phone-panel active" id="messagesPanel">
+            <div class="message-list" id="messageList"></div>
+            <div class="auto-input" id="autoInput">输入消息…</div>
+          </section>
+          <section class="phone-panel report-panel" id="reportPanel">
+            <div class="report-urgency"><i></i><span>监控仍在运行</span><b>时间流速 42%</b></div>
+            <form id="reportForm">
+              <label>异常区域
+                <select id="reportCamera">
+                  <option value="cam01">CAM 01｜404宿舍</option>
+                  <option value="cam02">CAM 02｜四楼走廊</option>
+                  <option value="cam03">CAM 03｜公共洗衣房</option>
+                  <option value="cam04">CAM 04｜值班室</option>
+                  <option value="cam05">CAM 05｜四楼楼梯间</option>
+                  <option value="cam06">CAM 06｜一楼大厅</option>
+                </select>
+              </label>
+              <fieldset><legend>异常类别</legend><div class="category-grid">
+                <label><input required type="radio" name="category" value="物品移动"><span>物品移动</span></label>
+                <label><input type="radio" name="category" value="人物异常"><span>人物异常</span></label>
+                <label><input type="radio" name="category" value="灯光异常"><span>灯光异常</span></label>
+                <label><input type="radio" name="category" value="门窗异常"><span>门窗异常</span></label>
+                <label><input type="radio" name="category" value="空间异常"><span>空间异常</span></label>
+                <label><input type="radio" name="category" value="未知异常"><span>未知异常</span></label>
+                <label class="late-category"><input type="radio" name="category" value="监控异常"><span>监控异常</span></label>
+                <label class="late-category"><input type="radio" name="category" value="系统异常"><span>系统异常</span></label>
+              </div></fieldset>
+              <p class="report-feedback" id="reportFeedback"></p>
+              <button class="submit-report" type="submit">提交异常报告</button>
+            </form>
+          </section>
+          <div class="phone-corruption" id="phoneCorruption" aria-hidden="true">
+            <div class="phone-snow"></div>
+            <div class="phone-signal-tear"></div>
+            <p class="phone-ghost-warning" id="phoneGhostWarning">消息已撤回</p>
+            <div class="phone-red-flood" id="phoneRedFlood">
+              <span>不要回头看</span><span>不要回头看</span><span>不要回头看</span><span>不要回头看</span>
+              <span>不要回头看</span><span>不要回头看</span><span>不要回头看</span><span>不要回头看</span>
+            </div>
+          </div>
+        </div>
+        <div class="phone-glass" aria-hidden="true"></div>
+        <button class="phone-home" id="phoneHome" type="button" aria-label="按下手机 Home 键"><span></span></button>
+        <p class="phone-gesture-hint">向下滑动也可放回手机</p>
+      </div>
+    </section>
+
+    <section class="turn-choice hidden" id="turnChoice">
+      <time>06:00　TIME SUSPENDED</time>
+      <p>手机屏幕上的文字正在输入</p><h2 id="turnWarning">不 要 回 头 看</h2>
+      <small>没有倒计时。门外的人也没有再敲门。</small>
+      <div><button id="dontTurn" type="button">继续看屏幕</button><button class="danger-choice" id="turnAround" type="button">回头</button></div>
+    </section>
+
+    <section class="turn-sequence hidden" id="turnSequence">
+      <div class="turn-pan">
+        <img class="turn-frame turn-start" id="turnStart" src="assets/duty-room-normal.webp" alt="从监控前缓慢转身">
+        <img class="turn-frame turn-mid" id="turnMid" src="assets/turn-mid-v2.webp" alt="转向值班室门口">
+        <img class="turn-frame turn-final" id="turnImage" src="assets/turn-bad-v2.webp" alt="回头后的值班室">
+      </div>
+      <div class="turn-vignette"></div>
+      <p id="turnCaption">你把手从鼠标上移开。</p>
+    </section>
+  </main>
+
+  <section class="overlay start-overlay" id="startOverlay">
+    <h1 class="sr-only">404宿舍：夜间监控</h1>
+    <div class="start-menu">
+      <small>东区 4 号楼 / 00:00—06:00</small>
+      <strong>404宿舍：夜间监控</strong>
+      <p>监控异常，及时上报。不要轻信屏幕。</p>
+      <div class="start-actions">
+        <button id="startGame" type="button">开始值班 <span>ENTER</span></button>
+        <button id="openSettings" type="button">设置 <span>声音 / 画面</span></button>
+      </div>
+      <small class="start-hint">进入值班室后，点击左侧监控正式开始</small>
+    </div>
+  </section>
+
+  <section class="overlay guestbook-overlay hidden" id="guestbookOverlay" aria-label="404访客留言板">
+    <div class="guestbook-phone" role="dialog" aria-modal="true" aria-labelledby="guestbookTitle">
+      <div class="guestbook-speaker" aria-hidden="true"></div>
+      <header class="guestbook-status"><time>00:00</time><span>访客网络　▰ 82%</span></header>
+      <div class="guestbook-titlebar">
+        <button id="closeGuestbook" type="button" aria-label="关闭留言板">‹ 返回</button>
+        <div><b id="guestbookTitle">404 留言终端</b><small>公开频道 · 请勿透露个人信息</small></div>
+        <i class="guestbook-online" aria-label="在线"></i>
+      </div>
+      <nav class="guestbook-sort" aria-label="留言排序">
+        <button class="active" data-sort="latest" type="button">最新</button>
+        <button data-sort="hot" type="button">最热</button>
+      </nav>
+      <div class="guestbook-list" id="guestbookList" aria-live="polite">
+        <p class="guestbook-state">正在连接留言终端……</p>
+      </div>
+      <form class="guestbook-compose" id="guestbookForm">
+        <label><span>昵称</span><input id="guestbookNickname" maxlength="16" autocomplete="nickname" aria-label="留言昵称"></label>
+        <label><span>留言</span><textarea id="guestbookContent" maxlength="180" rows="2" placeholder="给下一位值班员留句话……" required></textarea></label>
+        <div><small id="guestbookCounter">0 / 180</small><button type="submit">发送</button></div>
+      </form>
+      <p class="guestbook-note" id="guestbookNote">每台设备对每条留言只能投一票。</p>
+      <button class="guestbook-home" id="guestbookHome" type="button" aria-label="按下手机 Home 键"><span></span></button>
+    </div>
+  </section>
+
+  <section class="overlay settings-overlay hidden" id="settingsOverlay" aria-label="游戏设置">
+    <form class="settings-card" id="settingsForm">
+      <header><div><small>OPTIONS</small><h2>值班设置</h2></div><button id="closeSettings" type="button" aria-label="关闭设置">×</button></header>
+      <label><span>总音量 <output id="masterVolumeValue">76</output></span><input id="masterVolume" type="range" min="0" max="100" value="76"></label>
+      <label><span>氛围音乐 <output id="bgmVolumeValue">58</output></span><input id="bgmVolume" type="range" min="0" max="100" value="58"></label>
+      <label><span>异常音效 <output id="sfxVolumeValue">92</output></span><input id="sfxVolume" type="range" min="0" max="100" value="92"></label>
+      <label><span>画面亮度 <output id="brightnessValue">100</output></span><input id="brightness" type="range" min="55" max="125" value="100"></label>
+      <div class="setting-toggles">
+        <label><input id="screenShake" type="checkbox" checked><span>屏幕震动</span></label>
+        <label><input id="visualNoise" type="checkbox" checked><span>监控噪点</span></label>
+      </div>
+      <p>氛围音乐会在异常声响出现时自动降低，不会盖住脚步、玻璃和提示音。</p>
+      <button class="settings-done" type="submit">保存并返回</button>
+    </form>
+  </section>
+
+  <section class="overlay call-overlay hidden" id="callOverlay">
+    <div class="incoming-call"><small>来电</small><h2>自己</h2><p id="callText">正在呼叫……</p><div><button id="declineCall" type="button">拒接</button><button id="answerCall" type="button">接听</button></div></div>
+  </section>
+
+  <section class="overlay ending-overlay hidden" id="endingOverlay">
+    <div class="ending-card"><small id="endingKicker">SHIFT COMPLETE</small><h2 id="endingTitle">天亮了</h2><p id="endingText"></p><div class="ending-stats"><span>正确上报 <b id="endCorrect">0</b></span><span>误报 <b id="endWrong">0</b></span><span>漏报 <b id="endMissed">0</b></span><span>危险 <b id="endDanger">0</b></span></div><button id="restartGame" type="button">再次值班</button></div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/anomalies.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/phone.js"></script>
+  <script src="js/guestbook.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

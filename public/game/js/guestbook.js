@@ -86,7 +86,7 @@
       setNote("每台设备对每条留言只能投一票。");
     } catch (error) {
       ui.list.innerHTML = '<p class="guestbook-state">留言终端没有回应。游戏本体仍可正常开始。</p>';
-      setNote(error instanceof Error ? error.message : "留言服务暂不可用", true);
+      setNote("公共留言暂未接入，游戏本体不受影响。", true);
     } finally { loading = false; }
   }
   function open() {
@@ -127,7 +127,7 @@
       ui.content.value = ""; ui.counter.textContent = "0 / 180";
       setNote("留言已写入 404 终端。");
       await load();
-    } catch (error) { setNote(error instanceof Error ? error.message : "发送失败", true); }
+    } catch (error) { setNote("公共留言暂未接入，当前无法发送。", true); }
     finally { submit.disabled = false; }
   });
   ui.list.addEventListener("click", async (event) => {
@@ -142,7 +142,7 @@
       localVotes[id] = data.vote;
       localStorage.setItem(votesKey, JSON.stringify(localVotes));
       await load();
-    } catch (error) { setNote(error instanceof Error ? error.message : "投票失败", true); }
+    } catch (error) { setNote("公共留言暂未接入，当前无法投票。", true); }
     finally { button.disabled = false; }
   });
   document.addEventListener("keydown", (event) => {

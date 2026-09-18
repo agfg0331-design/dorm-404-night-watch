@@ -58,6 +58,11 @@ for (const source of [...new Set(localRefs.filter((value) => value.endsWith(".we
 }
 if (!css.includes("phoneLift") || !css.includes("phoneLower")) throw new Error("手机拿起/放回动画缺失");
 if (!css.includes("skewX(1.85deg)")) throw new Error("手机屏幕透视贴合缺失");
+for (const retiredPhoneEffect of ["filter:blur(8px) brightness(.48)", "filter:blur(7px) brightness(.42)", "backdrop-filter:blur(1.5px)"]) {
+  if (css.includes(retiredPhoneEffect)) throw new Error(`手机动画仍包含高开销逐帧滤镜：${retiredPhoneEffect}`);
+}
+if (main.includes("void els.phoneView.offsetWidth")) throw new Error("手机动画仍通过强制同步布局重启");
+if (!main.includes('if (state.view === "monitor") renderCamera()')) throw new Error("手机动画期间仍在更新隐藏监控图层");
 if (!css.includes("turnMidFrame") || !css.includes("turnFinalFrame")) throw new Error("分阶段回头动画缺失");
 for (const animation of ["waterClimb", "machineViolent", "curtainHeadTurn", "spaceCollapse", "figureNotice"]) {
   if (!css.includes(`@keyframes ${animation}`)) throw new Error(`缺少多阶段异常动画：${animation}`);

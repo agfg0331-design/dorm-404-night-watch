@@ -56,6 +56,7 @@
   const eventCueState = new Set();
   let lastAudioTensionKey = "";
   let shiftStarting = false;
+  const renderedText = new WeakMap();
   const SETTINGS_KEY = "dorm404.settings.v2";
   const HOME_STATE_KEY = "dorm404.home.contaminated";
   const defaultSettings = { master: 76, bgm: 58, sfx: 92, brightness: 100, shake: true, noise: true };
@@ -124,6 +125,13 @@
     els.toast.textContent = message;
     els.toast.className = `toast visible${error ? " error" : ""}`;
     toastTimer = window.setTimeout(() => { els.toast.className = "toast"; }, 2100);
+  }
+
+  function setText(element, value) {
+    const text = String(value);
+    if (renderedText.get(element) === text) return;
+    renderedText.set(element, text);
+    element.textContent = text;
   }
 
   function loadSettings() {
@@ -210,8 +218,6 @@
     if (!sim.view.startsWith("phone")) previousView = sim.view === "room" ? "room" : "monitor";
     transitionLocked = true;
     els.phoneView.classList.remove("lowering");
-    els.phoneView.classList.remove("active");
-    void els.phoneView.offsetWidth;
     els.phoneView.classList.add("active");
     els.body.dataset.view = "phone";
     audio.pickupPhone();
@@ -221,7 +227,7 @@
       pendingPhoneCorruption = null;
       window.setTimeout(() => triggerPhoneCorruption(pending.type, pending.phrase), 480);
     }
-    window.setTimeout(() => { transitionLocked = false; }, 640);
+    window.setTimeout(() => { transitionLocked = false; }, 500);
     if (promptPending) window.setTimeout(revealTurnChoice, 720);
   }
 
@@ -252,7 +258,7 @@
     window.setTimeout(() => {
       els.phoneView.classList.remove("active", "lowering");
       transitionLocked = false;
-    }, 540);
+    }, 430);
   }
 
   function phoneBack() {
@@ -336,17 +342,19 @@
       audio.setTension(currentPhase, state.danger);
     }
     els.body.dataset.phase = String(currentPhase);
-    els.roomClock.textContent = formatMinute(state.minute);
+    setText(els.roomClock, formatMinute(state.minute));
     const phoneOffset = currentPhase >= 3 ? (currentPhase - 2) * 7 : 0;
-    els.phoneTime.textContent = formatMinute(state.minute + phoneOffset);
-    els.monitorTime.textContent = state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : formatMinute(state.minute, true);
-    els.danger.textContent = String(Math.round(state.danger)).padStart(2, "0");
-    els.trust.textContent = String(Math.round(state.trust)).padStart(2, "0");
-    els.correct.textContent = state.correct;
-    els.missed.textContent = state.missed;
+    setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
+    setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : formatMinute(state.minute, true));
+    setText(els.danger, String(Math.round(state.danger)).padStart(2, "0"));
+    setText(els.trust, String(Math.round(state.trust)).padStart(2, "0"));
+    setText(els.correct, state.correct);
+    setText(els.missed, state.missed);
     els.monitorView.classList.toggle("failed", state.monitorFailed && !callOverride);
     updateUnread(state);
-    renderCamera();
+    // The phone covers the feed. Avoid mutating hidden camera layers during its
+    // lift/lower animation so mobile browsers can keep the phone on the compositor.
+    if (state.view === "monitor") renderCamera();
     const visibleEvent = state.view === "monitor" ? state.visibleEvent : null;
     audio.setEventFocus(Boolean(visibleEvent));
     if (visibleEvent) {

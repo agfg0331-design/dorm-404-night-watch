@@ -148,15 +148,15 @@ body[data-phase="5"] .feed-image{filter:saturate(.24) sepia(.16) hue-rotate(290d
 body[data-phase="5"] .event-frame-stack img{filter:saturate(.24) sepia(.16) hue-rotate(290deg) contrast(1.45) brightness(.39);transform:scale(1.045,1.018)}
 body[data-phase="5"] .noise{opacity:.25}
 body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contrast(1.25)}
-.phone-view{z-index:24;background:transparent;overflow:hidden;pointer-events:none}
+.phone-view{z-index:24;background:transparent;overflow:hidden;pointer-events:none;contain:layout paint style;isolation:isolate}
 .phone-view.active{display:block;pointer-events:auto}
-.phone-view::before{content:"";position:absolute;inset:0;background:rgba(0,2,2,.3);backdrop-filter:blur(0);animation:phoneBackdropIn .58s ease both}
+.phone-view::before{content:"";position:absolute;inset:0;background:rgba(0,2,2,.3);opacity:0;will-change:opacity;animation:phoneBackdropIn .48s ease-out both}
 .phone-view::after{content:"";position:absolute;z-index:4;inset:0;pointer-events:none;background:radial-gradient(circle at 68% 50%,transparent 12%,rgba(2,6,5,.08) 43%,rgba(0,0,0,.5) 100%),repeating-linear-gradient(180deg,transparent 0 3px,rgba(5,13,10,.025) 4px)}
-.phone-composite{position:absolute;z-index:1;left:50%;top:50%;width:max(125vw,calc(118vh * 1.33333));aspect-ratio:1448/1086;transform:translate(-50%,-50%);transform-origin:75% 86%;background:url("assets/phone-view-integrated-v2.webp") center/100% 100% no-repeat;will-change:transform,filter,opacity;animation:phoneLift .62s cubic-bezier(.16,.82,.22,1) both}
-.phone-view.lowering .phone-composite{animation:phoneLower .52s cubic-bezier(.55,.04,.88,.38) both}
-.phone-view.lowering::before{animation:phoneBackdropOut .52s ease both}
-.phone-screen{position:absolute;z-index:3;left:56.84%;top:37.9%;width:16.72%;height:39.72%;overflow:hidden;border:0;border-radius:1.2%;clip-path:polygon(.5% .2%,99.7% 0,100% 99.2%,.9% 100%);background:#d8ded8;color:#1d2823;box-shadow:inset 9px 0 12px rgba(18,29,23,.18),inset -6px 0 10px rgba(18,29,23,.22),inset 0 8px 10px rgba(18,29,23,.11),inset 0 -9px 12px rgba(18,29,23,.16);transform-origin:top left;transform:skewX(1.85deg) translateZ(0);filter:saturate(.72) contrast(.93) brightness(.91) blur(.12px);animation:phoneScreenOn .62s ease both}
-.phone-view.lowering .phone-screen{animation:phoneScreenOff .36s ease both}
+.phone-composite{position:absolute;z-index:1;left:50%;top:50%;width:max(125vw,calc(118vh * 1.33333));aspect-ratio:1448/1086;transform:translate3d(-50%,-50%,0);transform-origin:75% 86%;background:url("assets/phone-view-integrated-v2.webp") center/100% 100% no-repeat;backface-visibility:hidden;contain:layout paint style;will-change:transform,opacity;animation:phoneLift .48s cubic-bezier(.16,.82,.22,1) both}
+.phone-view.lowering .phone-composite{animation:phoneLower .4s cubic-bezier(.55,.04,.88,.38) both}
+.phone-view.lowering::before{animation:phoneBackdropOut .4s ease both}
+.phone-screen{position:absolute;z-index:3;left:56.84%;top:37.9%;width:16.72%;height:39.72%;overflow:hidden;border:0;border-radius:1.2%;clip-path:polygon(.5% .2%,99.7% 0,100% 99.2%,.9% 100%);background:#d8ded8;color:#1d2823;box-shadow:inset 9px 0 12px rgba(18,29,23,.18),inset -6px 0 10px rgba(18,29,23,.22),inset 0 8px 10px rgba(18,29,23,.11),inset 0 -9px 12px rgba(18,29,23,.16);transform-origin:top left;transform:skewX(1.85deg) translateZ(0);filter:saturate(.72) contrast(.93) brightness(.91);will-change:opacity;animation:phoneScreenOn .42s ease-out both}
+.phone-view.lowering .phone-screen{animation:phoneScreenOff .28s ease both}
 .phone-screen::after{content:"";position:absolute;z-index:8;inset:0;pointer-events:none;background:linear-gradient(112deg,rgba(255,255,255,.12),transparent 24%,transparent 72%,rgba(33,52,43,.07)),repeating-linear-gradient(180deg,transparent 0 3px,rgba(50,65,57,.02) 4px)}
 .phone-corruption{display:none;position:absolute;z-index:20;inset:0;overflow:hidden;pointer-events:none;background:transparent;color:#ff3945;font-family:ui-monospace,monospace}
 .phone-corruption.active{display:block}
@@ -317,18 +317,18 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 }
 @keyframes blink{50%{opacity:.25}
 }
-@keyframes phoneLift{0%{opacity:.15;filter:blur(8px) brightness(.48);transform:translate(-34%,-10%) scale(.45) rotate(15deg)}
-58%{opacity:1;filter:blur(1px) brightness(.92);transform:translate(-49%,-52%) scale(1.025) rotate(-1.2deg)}
-100%{opacity:1;filter:none;transform:translate(-50%,-50%) scale(1) rotate(0)}
+@keyframes phoneLift{0%{opacity:.18;transform:translate3d(-34%,-10%,0) scale(.45) rotate(15deg)}
+58%{opacity:1;transform:translate3d(-49%,-52%,0) scale(1.025) rotate(-1.2deg)}
+100%{opacity:1;transform:translate3d(-50%,-50%,0) scale(1) rotate(0)}
 }
-@keyframes phoneLower{0%{opacity:1;filter:none;transform:translate(-50%,-50%) scale(1) rotate(0)}
-35%{filter:blur(1px) brightness(.8);transform:translate(-49%,-47%) scale(.92) rotate(2deg)}
-100%{opacity:0;filter:blur(7px) brightness(.42);transform:translate(-33%,-9%) scale(.43) rotate(16deg)}
+@keyframes phoneLower{0%{opacity:1;transform:translate3d(-50%,-50%,0) scale(1) rotate(0)}
+35%{opacity:.9;transform:translate3d(-49%,-47%,0) scale(.92) rotate(2deg)}
+100%{opacity:0;transform:translate3d(-33%,-9%,0) scale(.43) rotate(16deg)}
 }
-@keyframes phoneScreenOn{0%,38%{opacity:0;filter:brightness(.2)}100%{opacity:1;filter:saturate(.72) contrast(.93) brightness(.91) blur(.12px)}}
-@keyframes phoneScreenOff{0%{opacity:1}30%{opacity:.35;filter:brightness(.25)}100%{opacity:0}}
-@keyframes phoneBackdropIn{from{background:rgba(0,2,2,0);backdrop-filter:blur(0)}to{background:rgba(0,2,2,.3);backdrop-filter:blur(1.5px)}}
-@keyframes phoneBackdropOut{from{background:rgba(0,2,2,.3);backdrop-filter:blur(1.5px)}to{background:rgba(0,2,2,0);backdrop-filter:blur(0)}}
+@keyframes phoneScreenOn{0%,32%{opacity:0}100%{opacity:1}}
+@keyframes phoneScreenOff{0%{opacity:1}35%{opacity:.35}100%{opacity:0}}
+@keyframes phoneBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes phoneBackdropOut{from{opacity:1}to{opacity:0}}
 @keyframes phoneSnow{0%{background-position:0 0,0 0}33%{background-position:19px -11px,-23px 7px}66%{background-position:-13px 17px,31px -9px}100%{background-position:7px -21px,-17px 13px}}
 @keyframes phoneTear{0%{transform:translateY(-5%) skewX(0)}35%{transform:translateY(18%) skewX(5deg)}70%{transform:translateY(-12%) skewX(-4deg)}100%{transform:translateY(7%)}}
 @keyframes phoneGhost{0%{opacity:0;transform:translateX(-9%) scaleX(1.2);filter:blur(8px)}18%{opacity:.9;filter:blur(0)}26%{opacity:.18;transform:translateX(7%)}42%{opacity:1;transform:translateX(-2%)}68%{opacity:.42;letter-spacing:.35em}100%{opacity:0;transform:translateX(4%) scaleY(1.22)}}

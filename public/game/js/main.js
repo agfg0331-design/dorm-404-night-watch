@@ -99,12 +99,10 @@
       onEventStart: (event) => {
         if (sim.currentCamera === event.camera && sim.view === "monitor") {
           ensureEventCue(event);
-          showToast("画面中有什么正在改变……");
         }
       },
-      onMiss: () => showToast("有一项变化没有被记录。", true),
       onReport: (result) => result.ok && showToast("上报已受理。"),
-      onMonitorFail: () => { audio.glitch(true); showToast("监控信号正在失去同步。", true); },
+      onMonitorFail: () => audio.glitch(true),
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
         promptPending = true;
@@ -288,7 +286,9 @@
   function receiveMessage(message, state) {
     preloadLinkedEvent(message);
     phone.addMessage(message);
-    const level = message.corrupt ? "corrupt" : message.suspicious ? "suspicious" : "normal";
+    // Keep the internal suspicious flag for story timing, but never reveal it
+    // through a different notification sound before an explicit corruption beat.
+    const level = message.corrupt ? "corrupt" : "normal";
     audio.phoneNotify(level);
     queuePhoneCorruption(message, state);
     [els.monitorPhone].forEach((element) => {
@@ -424,16 +424,16 @@
         renderedEventStage = nextStage;
         els.monitorView.dataset.eventStage = nextStage;
       }
-      const label = event.state === "changing" ? (event.seenChanging ? "变化正在发生" : "信号出现变化") : "画面已改变";
-      els.eventStatus.textContent = `${camera.code} / ${label}`;
     } else {
       els.eventLayer.style.setProperty("--event-progress", "0");
       if (renderedEventStage !== "0") {
         renderedEventStage = "0";
         els.monitorView.dataset.eventStage = "0";
       }
-      els.eventStatus.textContent = sim.minute < 48 ? "信号稳定 · 请记住正常画面" : "未识别到系统标记";
     }
+    // The monitor never judges the feed for the player. Normal and altered
+    // footage deliberately share the same neutral status line.
+    els.eventStatus.textContent = `${camera.code} / MONITORING`;
   }
 
   function clamp01(value) { return Math.max(0, Math.min(1, value)); }

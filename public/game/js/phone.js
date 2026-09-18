@@ -24,7 +24,9 @@
       this.listElement.textContent = "";
       this.messages.forEach((message) => {
         const item = document.createElement("article");
-        item.className = `chat-message${message.corrupt ? " corrupt" : ""}${message.suspicious ? " suspicious" : ""}${message.system ? " system" : ""}`;
+        // suspicious remains story metadata only. It must not become a visual
+        // class that lets the player identify false or unreliable messages.
+        item.className = `chat-message${message.corrupt ? " corrupt" : ""}${message.system ? " system" : ""}`;
         const sender = document.createElement("strong");
         sender.textContent = message.sender || "未知号码";
         const text = document.createElement("p");

@@ -4,6 +4,7 @@ import vm from "node:vm";
 const gameRoot = "public/game";
 const html = fs.readFileSync(`${gameRoot}/index.html`, "utf8");
 const main = fs.readFileSync(`${gameRoot}/js/main.js`, "utf8");
+const phoneSource = fs.readFileSync(`${gameRoot}/js/phone.js`, "utf8");
 const simulationSource = fs.readFileSync(`${gameRoot}/js/game.js`, "utf8");
 const css = fs.readFileSync(`${gameRoot}/style.css`, "utf8");
 const anomalies = fs.readFileSync(`${gameRoot}/js/anomalies.js`, "utf8");
@@ -88,7 +89,16 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-if (!html.includes("style.css?v=audio-prompt-20260919") || !html.includes("js/main.js?v=audio-prompt-20260919")) throw new Error("核心性能资源缺少缓存版本标识");
+for (const versionedAsset of ["style.css?v=neutral-status-20260918", "js/phone.js?v=neutral-status-20260918", "js/main.js?v=neutral-status-20260918"]) {
+  if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
+}
+for (const leakedPrompt of ["画面中有什么正在改变", "有一项变化没有被记录", "监控信号正在失去同步", "变化正在发生", "信号出现变化", "画面已改变"]) {
+  if (main.includes(leakedPrompt)) throw new Error(`监控仍会直接暴露异常：${leakedPrompt}`);
+}
+if (!main.includes('els.eventStatus.textContent = `${camera.code} / MONITORING`')) throw new Error("监控底部缺少统一中性状态");
+if (phoneSource.includes('message.suspicious ? " suspicious"')) throw new Error("可疑消息仍会获得专属视觉样式");
+if (css.includes(".chat-message.suspicious")) throw new Error("可疑消息仍保留专属视觉样式");
+if (!main.includes('const level = message.corrupt ? "corrupt" : "normal"')) throw new Error("真假消息仍使用不同通知反馈");
 if (!css.includes("audioCardIn") || !css.includes("prefers-reduced-motion:reduce")) throw new Error("耳机提示缺少平滑动画或减少动态效果适配");
 if (!headers.includes("/*.css") || !headers.includes("/js/*") || !headers.includes("Cache-Control: no-cache")) throw new Error("Cloudflare 静态资源缺少更新校验规则");
 if (!css.includes("turnMidFrame") || !css.includes("turnFinalFrame")) throw new Error("分阶段回头动画缺失");

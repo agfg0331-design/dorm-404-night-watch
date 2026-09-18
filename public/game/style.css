@@ -206,7 +206,6 @@ body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contra
 .chat-message.system strong{display:none}
 .chat-message.corrupt{margin-left:auto;border-color:#8c5553;background:#342123;color:#f0d9d6;text-shadow:1px 0 #8c2529}
 .chat-message.corrupt strong{color:#d79894}
-.chat-message.suspicious{border-color:#aa9362;background:#ede7cf;color:#403922}
 .auto-input{height:43px;margin:0;padding:.72rem .9rem;border-top:1px solid #adbab2;background:#e6e9e5;color:#7d8982;font-size:.78rem}
 .report-panel{overflow:auto;padding:.72rem;background:linear-gradient(145deg,#d4dcd6,#eef0ed);color:#243129}
 .report-urgency{display:flex;align-items:center;gap:.42rem;padding:.55rem;border:1px solid #b98d6d;background:#f0e2d3;color:#684d38;font-size:.65rem}

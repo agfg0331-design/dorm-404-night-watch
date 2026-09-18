@@ -25,6 +25,15 @@
     : "";
   const apiUrl = (path) => `${apiBase}${path}`;
 
+  async function requestJson(path, options = {}) {
+    const response = await fetch(apiUrl(path), options);
+    const type = response.headers.get("content-type") || "";
+    if (!type.includes("application/json")) throw new Error("留言接口尚未完成部署。");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "留言终端暂时离线");
+    return data;
+  }
+
   function readVotes() {
     try { return JSON.parse(localStorage.getItem(votesKey) || "{}"); } catch { return {}; }
   }
@@ -74,9 +83,7 @@
     loading = true;
     ui.list.innerHTML = '<p class="guestbook-state">正在读取值班记录……</p>';
     try {
-      const response = await fetch(apiUrl(`/api/board?sort=${sort}`), { headers: { "X-Board-Visitor": visitorId }, cache: "no-store" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "留言终端暂时离线");
+      const data = await requestJson(`/api/board?sort=${sort}`, { headers: { "X-Board-Visitor": visitorId }, cache: "no-store" });
       messages = Array.isArray(data.messages) ? data.messages : [];
       if (data.votes) {
         localVotes = { ...localVotes, ...data.votes };
@@ -86,7 +93,7 @@
       setNote("每台设备对每条留言只能投一票。");
     } catch (error) {
       ui.list.innerHTML = '<p class="guestbook-state">留言终端没有回应。游戏本体仍可正常开始。</p>';
-      setNote("公共留言暂未接入，游戏本体不受影响。", true);
+      setNote(error.message || "留言终端暂时离线。", true);
     } finally { loading = false; }
   }
   function open() {
@@ -120,14 +127,12 @@
     submit.disabled = true;
     setNote("正在写入留言……");
     try {
-      const response = await fetch(apiUrl("/api/board"), { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ nickname, content, visitorId }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "发送失败");
+      await requestJson("/api/board", { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ nickname, content, visitorId }) });
       localStorage.setItem(nameKey, nickname);
       ui.content.value = ""; ui.counter.textContent = "0 / 180";
       setNote("留言已写入 404 终端。");
       await load();
-    } catch (error) { setNote("公共留言暂未接入，当前无法发送。", true); }
+    } catch (error) { setNote(error.message || "留言发送失败。", true); }
     finally { submit.disabled = false; }
   });
   ui.list.addEventListener("click", async (event) => {
@@ -136,13 +141,11 @@
     button.disabled = true;
     try {
       const id = Number(button.dataset.id); const value = Number(button.dataset.vote);
-      const response = await fetch(apiUrl(`/api/board/${id}/vote`), { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ value, visitorId }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "投票失败");
+      const data = await requestJson(`/api/board/${id}/vote`, { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ value, visitorId }) });
       localVotes[id] = data.vote;
       localStorage.setItem(votesKey, JSON.stringify(localVotes));
       await load();
-    } catch (error) { setNote("公共留言暂未接入，当前无法投票。", true); }
+    } catch (error) { setNote(error.message || "投票失败。", true); }
     finally { button.disabled = false; }
   });
   document.addEventListener("keydown", (event) => {

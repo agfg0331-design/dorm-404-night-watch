@@ -43,6 +43,22 @@ const boardRoute = fs.readFileSync("app/api/board/route.ts", "utf8");
 if (!/\bmessages, votes, and, desc\b/.test(boardRoute)) throw new Error("留言接口缺少 and 查询条件导入");
 if (!boardRoute.includes("boardOptions") || !fs.readFileSync("app/api/board/shared.ts", "utf8").includes("Access-Control-Allow-Origin")) throw new Error("留言接口缺少 EdgeOne 跨站兼容");
 if (!fs.readFileSync("public/game/js/guestbook.js", "utf8").includes(".edgeone.dev")) throw new Error("EdgeOne 留言板没有连接共享接口");
+if (!html.includes("js/guestbook.js?v=d1-20260918")) throw new Error("Cloudflare 留言板脚本缺少缓存版本标识");
+for (const path of ["functions/api/board.js", "functions/api/board/[id]/vote.js", "d1/schema.sql"]) {
+  if (!fs.existsSync(path)) throw new Error(`Cloudflare 留言后端缺失：${path}`);
+}
+const cloudflareBoard = fs.readFileSync("functions/api/board.js", "utf8");
+const cloudflareVote = fs.readFileSync("functions/api/board/[id]/vote.js", "utf8");
+const d1Schema = fs.readFileSync("d1/schema.sql", "utf8");
+for (const feature of ["env.DB", "onRequestGet", "onRequestPost", "ensureSchema", "visitorHash", "latest", "hot"]) {
+  if (!cloudflareBoard.includes(feature)) throw new Error(`Cloudflare 留言接口能力缺失：${feature}`);
+}
+for (const feature of ["onRequestPost", "ON CONFLICT(message_id, voter_hash)", "likes", "dislikes"]) {
+  if (!cloudflareVote.includes(feature)) throw new Error(`Cloudflare 投票接口能力缺失：${feature}`);
+}
+for (const table of ["guestbook_messages", "guestbook_votes"]) {
+  if (!d1Schema.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) throw new Error(`D1 表结构缺失：${table}`);
+}
 const roomSection = html.match(/<section class="view room-view[\s\S]*?<\/section>/)?.[0] || "";
 const startSection = html.match(/<section class="overlay start-overlay[\s\S]*?<\/section>/)?.[0] || "";
 if (!roomSection.includes('id="openGuestbook"') || startSection.includes('id="openGuestbook"')) throw new Error("留言板入口没有放在值班室右侧手机上");

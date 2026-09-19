@@ -10,7 +10,7 @@
       camera: { mode: "desk-empty", status: "CAM 04 / FRAME HOLD 03:17" },
       phone: [
         { sender: "门卫老陈", text: "值班室那路画面要是只剩空椅，先别拿录像确认自己。那路监控比屋里慢了不止一拍。" },
-        { sender: "周老师", text: "CAM 04里的人影如果和你对不上，先相信值班室里能听见的动静。" }
+        { sender: "门卫老陈", text: "CAM 04里的人影如果和你对不上，先相信值班室里能听见的动静。" }
       ],
       sound: ["handoff-pattern", "key-and-knock"],
       mislead: [
@@ -22,7 +22,7 @@
       camera: { mode: "desk-synced", status: "CAM 04 / MOTION SYNC" },
       phone: [
         { sender: "门卫老陈", text: "我还在一楼门卫室。六点十分前，不会有人拿钥匙进值班室。" },
-        { sender: "周老师", text: "今晚接班推迟到六点十分。六点前，值班室外不该有人敲门。" }
+        { sender: "门卫老陈", text: "我和接班老师都在一楼，六点十分才会上来。六点前，值班室外不该有人敲门。" }
       ],
       sound: ["false-entry", "steps-at-door"],
       mislead: [

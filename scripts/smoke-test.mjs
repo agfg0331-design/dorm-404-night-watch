@@ -101,9 +101,30 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=handoff-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=final-choice-20260919", "js/game.js?v=final-choice-20260919", "js/main.js?v=final-choice-20260919"]) {
+for (const versionedAsset of ["style.css?v=anomaly-20260919", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=anomaly-20260919", "js/game.js?v=final-choice-20260919", "js/main.js?v=anomaly-20260919"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
+const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;
+if (coreEventCount !== 20) throw new Error(`正式异常数量应保持20，当前为${coreEventCount}`);
+for (const layer of ["stairs-darkness", "duty-gaze", "mirror-figure", "lobby-twins", "footprint-trail"]) {
+  if (!html.includes(`class="${layer}`)) throw new Error(`缺少安静恐怖表现层：${layer}`);
+}
+for (const mapping of ['id: "stairs-light"[\\s\\S]*?visual: "stairs-darkness"', 'id: "laundry-reflection"[\\s\\S]*?visual: "mirror-reflection"', 'id: "lobby-footprints"[\\s\\S]*?visual: "wet-footprints"']) {
+  if (!(new RegExp(mapping)).test(anomalies)) throw new Error(`异常视觉映射缺失：${mapping}`);
+}
+const footprintsDefinition = anomalies.match(/\{ id: "lobby-footprints"[^\n]+/)?.[0] || "";
+if (footprintsDefinition.includes("frames:")) throw new Error("大厅湿脚印仍会整帧替换画面");
+if ((css.match(/\.footprint-trail i:nth-child\(/g) || []).length !== 10) throw new Error("湿脚印没有按10个独立脚印推进");
+if (!css.includes("@keyframes twinEcho") || !css.includes("animation-delay:.72s")) throw new Error("大厅双人缺少延迟同步动作");
+if (css.includes("event-lobby-double .extra-shadow") || css.includes("event-self-turn .extra-shadow")) throw new Error("专属人物异常仍被通用 extra-shadow 规则覆盖");
+for (const quietVisual of ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]) {
+  if (!main.includes(`"${quietVisual}"`)) throw new Error(`主循环缺少安静异常节奏：${quietVisual}`);
+}
+for (const beat of ["douse-1", "douse-4", "step-10", "stop", "cloth", "outside", "echo", "hold"]) {
+  if (!main.includes(`"${beat}"`)) throw new Error(`缺少细分异常节拍：${beat}`);
+}
+const quietAudioSection = audio.match(/else if \(cue === "stairs-darkness"\)[\s\S]*?else if \(cue === "light-flicker"\)/)?.[0] || "";
+if (!quietAudioSection || quietAudioSection.includes("horrorHit") || quietAudioSection.includes("vibrate")) throw new Error("楼梯熄灯仍包含强惊吓音效");
 for (const leakedPrompt of ["画面中有什么正在改变", "有一项变化没有被记录", "监控信号正在失去同步", "变化正在发生", "信号出现变化", "画面已改变"]) {
   if (main.includes(leakedPrompt)) throw new Error(`监控仍会直接暴露异常：${leakedPrompt}`);
 }

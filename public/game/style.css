@@ -90,13 +90,45 @@ body.no-screen-shake .phone-dock.ringing,body.no-screen-shake .phone-hotspot.rin
 .reverse-clock::after{content:"";position:absolute;left:50%;top:50%;width:38%;height:1px;background:#d5dfd8;transform-origin:left;animation:reverseClock .8s linear infinite reverse}
 .monitor-view.event-bed-curtain .curtain-figure{display:none}
 .monitor-view.event-space-repeat .feed-image{animation:spaceRepeat .7s steps(2) infinite}
-.monitor-view.event-lobby-double .extra-shadow{display:block;left:34%;top:31%;box-shadow:25vw 3vw 18px rgba(0,0,0,.9)}
 .monitor-view.impact-soft{animation:cameraImpactSoft .34s ease-out}
 .monitor-view.impact-hard{animation:cameraImpactHard .62s cubic-bezier(.18,.72,.25,1)}
 body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-view.impact-hard{animation:none}
 .monitor-view.event-light-flicker .feed-image{animation:flicker .31s steps(2) infinite}
-.monitor-view.event-self-turn .feed-image{filter:saturate(.25) contrast(1.35) brightness(.56)}
-.monitor-view.event-self-turn .extra-shadow{display:block;left:49%;top:40%;opacity:calc(var(--event-progress));transform:scale(calc(.3 + var(--event-progress) * .65))}
+.stairs-darkness,.duty-gaze,.mirror-figure,.lobby-twins,.footprint-trail{display:none;position:absolute;inset:0;pointer-events:none}
+
+/* CAM05: four local masks advance from the remote upper flight to the camera-side landing. */
+.monitor-view.event-stairs-darkness .stairs-darkness{display:block}
+.stairs-darkness i{position:absolute;background:#010303;mix-blend-mode:multiply;will-change:opacity}
+.stairs-darkness i:nth-child(1){inset:0 19% 48% 48%;clip-path:polygon(33% 0,100% 0,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .08) * 8),.82)}
+.stairs-darkness i:nth-child(2){inset:23% 11% 22% 44%;clip-path:polygon(28% 0,100% 0,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .3) * 8),.84)}
+.stairs-darkness i:nth-child(3){inset:48% 12% 7% 31%;clip-path:polygon(43% 0,100% 5%,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .54) * 8),.78)}
+.stairs-darkness i:nth-child(4){inset:0;background:radial-gradient(ellipse at 35% 30%,transparent 0 12%,rgba(0,2,2,.38) 34%,rgba(0,1,1,.86) 100%);opacity:clamp(0,calc((var(--event-progress) - .76) * 6),.9)}
+
+/* CAM04: the operator's head changes by degrees; the room itself never flashes. */
+.monitor-view.event-self-turn .duty-gaze{display:block}
+.duty-gaze .duty-body{position:absolute;left:35.4%;top:52.3%;width:11.2%;height:26.8%;clip-path:polygon(35% 0,65% 0,88% 18%,100% 100%,0 100%,12% 18%);background:linear-gradient(90deg,#030504,rgba(13,16,14,.98) 48%,#020303);opacity:clamp(0,calc((var(--event-progress) - .3) * 3.2),.97);transform-origin:50% 100%;transform:translate3d(0,calc(var(--event-progress) * -4.7vh),0) scaleX(calc(.88 + var(--event-progress) * .16)) scaleY(calc(.72 + var(--event-progress) * .38));will-change:transform,opacity}
+.duty-gaze .duty-head{position:absolute;left:38.05%;top:49.2%;width:5.7%;height:9.5%;border-radius:48% 52% 43% 47%;background:radial-gradient(ellipse at 50% 42%,#111411 0 38%,#030504 70%,transparent 74%);opacity:clamp(0,calc((var(--event-progress) - .06) * 4.2),.98);transform-origin:50% 80%;transform:translate3d(0,calc(var(--event-progress) * -5.35vh),0) rotate(calc(var(--event-progress) * -5deg)) scale(calc(.92 + var(--event-progress) * .2));will-change:transform,opacity}
+.duty-gaze .duty-face{position:absolute;left:38.9%;top:50.15%;width:3.95%;height:5.9%;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,rgba(65,73,68,.56),rgba(5,8,7,.98) 72%);opacity:clamp(0,calc((var(--event-progress) - .42) * 2.6),.76);transform:translate3d(0,calc(var(--event-progress) * -5.75vh),0) scale(calc(.7 + var(--event-progress) * .38));transform-origin:center bottom;will-change:transform,opacity}
+.duty-gaze .duty-face::before{content:"";position:absolute;left:19%;right:19%;top:35%;height:12%;background:linear-gradient(90deg,#020303 0 24%,transparent 25% 70%,#020303 71%);opacity:clamp(0,calc((var(--event-progress) - .68) * 4),.9)}
+
+/* CAM03: clipping guarantees the figure can exist only in the physical mirror. */
+.monitor-view.event-mirror-reflection .mirror-figure{display:block;clip-path:polygon(53.5% 18.4%,76% 18.4%,76% 42%,53.5% 42%)}
+.mirror-figure i{position:absolute;left:59.8%;top:18.8%;width:10.8%;height:23.3%;border-radius:44% 56% 16% 18%;background:radial-gradient(ellipse at 50% 15%,rgba(2,3,3,.98) 0 17%,transparent 18%),linear-gradient(90deg,transparent 6%,rgba(1,2,2,.96) 22% 78%,transparent 94%);opacity:clamp(0,calc((var(--event-progress) - .12) * 1.45),.86);transform-origin:center bottom;transform:translate3d(calc((1 - var(--event-progress)) * 2.2%),0,0) scale(calc(.48 + var(--event-progress) * .52));will-change:transform,opacity}
+
+/* CAM06: identical silhouettes use independent compositor animations; no box-shadow clone. */
+.monitor-view.event-lobby-double .lobby-twins{display:block}
+.lobby-twin{position:absolute;width:3.3%;height:25%;border-radius:48% 52% 22% 22%;background:radial-gradient(ellipse at 50% 9%,#030404 0 12%,transparent 13%),linear-gradient(90deg,transparent 4%,rgba(1,2,2,.94) 27% 73%,transparent 96%);transform-origin:center bottom;will-change:transform,opacity}
+.lobby-twin::before,.lobby-twin::after{content:"";position:absolute;bottom:0;width:30%;height:34%;background:#020303}
+.lobby-twin::before{left:19%;transform:rotate(2deg)}.lobby-twin::after{right:19%;transform:rotate(-2deg)}
+.lobby-twin.outside{left:70.1%;top:27.8%;opacity:clamp(0,calc((var(--event-progress) - .08) * 5),.84)}
+.lobby-twin.inside{left:57.6%;top:38.5%;opacity:clamp(0,calc((var(--event-progress) - .38) * 5),.9)}
+.monitor-view.event-lobby-double[data-event-stage="3"] .lobby-twin,.monitor-view.event-lobby-double[data-event-stage="4"] .lobby-twin{animation:twinEcho 3.8s ease-in-out infinite}
+.monitor-view.event-lobby-double[data-event-stage="3"] .lobby-twin.inside,.monitor-view.event-lobby-double[data-event-stage="4"] .lobby-twin.inside{animation-delay:.72s}
+
+/* CAM06: ten independent prints reveal irregularly and stop as a pair at the duty-room threshold. */
+.monitor-view.event-wet-footprints .footprint-trail{display:block}
+.footprint-trail i{position:absolute;left:var(--x);top:var(--y);width:1.15%;height:3.25%;border-radius:62% 38% 55% 45%;background:radial-gradient(ellipse at 52% 24%,rgba(8,15,13,.82) 0 28%,transparent 31%),radial-gradient(ellipse at 48% 76%,rgba(4,10,8,.76) 0 35%,transparent 38%);opacity:clamp(0,calc((var(--event-progress) - var(--at)) * 15),.82);transform:rotate(var(--r));will-change:opacity}
+.footprint-trail i:nth-child(1){--x:69%;--y:58%;--at:.08;--r:78deg}.footprint-trail i:nth-child(2){--x:63.5%;--y:60.5%;--at:.18;--r:99deg}.footprint-trail i:nth-child(3){--x:57%;--y:61%;--at:.3;--r:80deg}.footprint-trail i:nth-child(4){--x:50.5%;--y:64%;--at:.39;--r:101deg}.footprint-trail i:nth-child(5){--x:43.5%;--y:64.5%;--at:.51;--r:81deg}.footprint-trail i:nth-child(6){--x:36.5%;--y:67%;--at:.59;--r:100deg}.footprint-trail i:nth-child(7){--x:29.5%;--y:66.5%;--at:.7;--r:80deg}.footprint-trail i:nth-child(8){--x:22.5%;--y:68.5%;--at:.78;--r:101deg}.footprint-trail i:nth-child(9){--x:15.8%;--y:66.3%;--at:.89;--r:82deg}.footprint-trail i:nth-child(10){--x:12.9%;--y:69%;--at:.94;--r:99deg}
 .rising-water,.machine-drum,.air-draft,.space-echo,.event-flash{display:none;position:absolute;pointer-events:none}
 .event-flash{z-index:12;inset:-3%;background:radial-gradient(circle,rgba(218,238,224,.2),transparent 38%),rgba(192,218,201,.08);mix-blend-mode:screen}
 .monitor-view.impact-soft .event-flash,.monitor-view.impact-hard .event-flash{display:block;animation:eventFlash .42s steps(2) both}
@@ -128,8 +160,8 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .monitor-view.event-space-repeat .space-echo{display:block;z-index:2;inset:5% 7%;border:1px solid rgba(177,205,190,.25);box-shadow:calc(var(--event-progress) * 18px) 0 0 rgba(61,105,86,.24),calc(var(--event-progress) * -22px) 0 0 rgba(119,19,28,.2),inset 0 0 60px rgba(0,0,0,.7);opacity:calc(.18 + var(--event-progress) * .74);transform:perspective(900px) translateZ(calc(var(--event-progress) * 95px)) rotateY(calc(var(--event-progress) * 2deg));animation:spacePulse .84s steps(3) infinite}
 .monitor-view.event-space-repeat[data-event-stage="4"] .feed-image{animation:spaceCollapse .28s steps(2) infinite}
 
-.monitor-view.event-self-turn .extra-shadow,.monitor-view.event-duty-extra .extra-shadow,.monitor-view.event-lobby-double .extra-shadow{box-shadow:0 0 calc(16px + var(--event-progress) * 38px) #000;animation:figureBreathe 2.1s ease-in-out infinite}
-.monitor-view.event-self-turn[data-event-stage="4"] .extra-shadow,.monitor-view.event-duty-extra[data-event-stage="4"] .extra-shadow,.monitor-view.event-lobby-double[data-event-stage="4"] .extra-shadow{filter:blur(1.2px);animation:figureNotice .72s cubic-bezier(.17,.84,.31,1) both}
+.monitor-view.event-duty-extra .extra-shadow{box-shadow:0 0 calc(16px + var(--event-progress) * 38px) #000;animation:figureBreathe 2.1s ease-in-out infinite}
+.monitor-view.event-duty-extra[data-event-stage="4"] .extra-shadow{filter:blur(1.2px);animation:figureNotice .72s cubic-bezier(.17,.84,.31,1) both}
 .signal-error{display:none;position:absolute;z-index:9;inset:0;background:rgba(0,0,0,.82);place-content:center;text-align:center;font-family:ui-monospace,monospace;letter-spacing:.18em}
 .signal-error b{font-size:clamp(1.7rem,5vw,4rem);color:#9b272c;text-shadow:4px 0 #235249,-4px 0 #5e1d20;animation:errorJitter .22s steps(2) infinite}
 .signal-error span,.signal-error small{display:block;margin-top:1rem}
@@ -389,6 +421,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 @keyframes spaceCollapse{0%,100%{transform:scale(1.04,1.01) translateX(0)}50%{transform:scale(1.11,.96) translateX(-2%);filter:contrast(1.7) brightness(.38)}}
 @keyframes figureBreathe{0%,100%{transform:scale(calc(.72 + var(--event-progress) * .5)) translateY(0)}50%{transform:scale(calc(.74 + var(--event-progress) * .52)) translateY(-1.3%)}}
 @keyframes figureNotice{0%,58%{transform:scale(1.15) translateY(0)}68%{transform:scale(1.25,1.09) translateY(-2%)}100%{transform:scale(1.3,1.1) translateY(-3%)}}
+@keyframes twinEcho{0%,34%,100%{transform:translate3d(0,0,0) rotate(0)}48%,64%{transform:translate3d(.28vw,-.12vh,0) rotate(.65deg)}76%{transform:translate3d(.08vw,0,0) rotate(.15deg)}}
 @keyframes choicePulse{50%{opacity:.38}}
 @keyframes warningResolve{0%{opacity:0;filter:blur(18px);letter-spacing:.65em}38%{opacity:.35}68%{filter:blur(3px)}100%{opacity:1;filter:none;letter-spacing:.15em}}
 @keyframes choiceReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -444,4 +477,4 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .ending-card{width:min(94vw,560px);max-height:94dvh;padding:1.25rem}.ending-card h2{font-size:2rem}.ending-card>p{font-size:.72rem}.ending-stats{margin:1rem 0}.handoff-form{padding:.8rem}
 .ending-stats{grid-template-columns:1fr 1fr}
 }
-@media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span{animation:none}}
+@media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span,.lobby-twin{animation:none!important}}

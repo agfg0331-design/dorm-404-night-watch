@@ -404,7 +404,9 @@
     // lift/lower animation so mobile browsers can keep the phone on the compositor.
     if (state.view === "monitor") renderCamera();
     const visibleEvent = state.view === "monitor" ? state.visibleEvent : null;
-    const eventFocused = Boolean(visibleEvent);
+    // The mirror figure is deliberately silent: keep the ordinary laundry-room
+    // ambience running so sight and sound contradict one another.
+    const eventFocused = Boolean(visibleEvent && visibleEvent.visual !== "mirror-reflection");
     if (renderedEventFocus !== eventFocused) {
       renderedEventFocus = eventFocused;
       audio.setEventFocus(eventFocused);
@@ -489,9 +491,11 @@
   }
 
   function clamp01(value) { return Math.max(0, Math.min(1, value)); }
+  const quietAnomalyVisuals = new Set(["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]);
+  const hardEventBeats = new Set(["surge", "ceiling-hit", "bang", "head-turn", "presence", "collapse"]);
 
   function eventVisualProgress(event) {
-    const rate = event.visual === "window-break" ? 1.15 : event.visual === "shadow-walk" ? 1.45 : 1.75;
+    const rate = quietAnomalyVisuals.has(event.visual) ? 1 : event.visual === "window-break" ? 1.15 : event.visual === "shadow-walk" ? 1.45 : 1.75;
     return clamp01(event.progress * rate);
   }
 
@@ -574,14 +578,14 @@
     audio.playEventCue(event);
   }
 
-  function fireDueBeats(event, beats, progress, hardBeats = new Set()) {
+  function fireDueBeats(event, beats, progress, hardBeats = new Set(), quiet = false) {
     const fired = eventBeatState.get(event.id) || new Set();
     const due = beats.filter(([point, beat]) => progress >= point && !fired.has(beat));
     if (!due.length) return;
     due.slice(0, -1).forEach(([, beat]) => fired.add(beat));
     eventBeatState.set(event.id, fired);
     const [, beat] = due[due.length - 1];
-    fireEventBeat(event, beat, hardBeats.has(beat) ? "impact-hard" : "impact-soft");
+    fireEventBeat(event, beat, hardBeats.has(beat) ? "impact-hard" : quiet ? null : "impact-soft");
   }
 
   function syncEventBeat(event, audible = true) {
@@ -594,19 +598,20 @@
     }
     const stagedBeats = {
       "light-flicker": [[0.08, "arc-1"], [0.28, "arc-2"], [0.52, "blackout"], [0.78, "surge"]],
+      "stairs-darkness": [[0.1, "douse-1"], [0.22, "step-1"], [0.36, "douse-2"], [0.49, "step-2"], [0.62, "douse-3"], [0.75, "step-3"], [0.86, "douse-4"], [0.96, "silence"]],
       "pipe-drip": [[0.14, "drop-1"], [0.36, "drop-2"], [0.62, "reverse"], [0.86, "ceiling-hit"]],
       "stair-steps": [[0.12, "step-1"], [0.3, "step-2"], [0.5, "step-3"], [0.7, "step-4"], [0.88, "step-5"]],
-      "wet-footprints": [[0.12, "step-1"], [0.3, "step-2"], [0.5, "step-3"], [0.7, "step-4"], [0.88, "step-5"]],
+      "wet-footprints": [[0.08, "step-1"], [0.18, "step-2"], [0.3, "step-3"], [0.39, "step-4"], [0.51, "step-5"], [0.59, "step-6"], [0.7, "step-7"], [0.78, "step-8"], [0.89, "step-9"], [0.94, "step-10"], [0.985, "stop"]],
       "door-open": [[0.12, "handle"], [0.34, "creak"], [0.68, "open"], [0.9, "inside-breath"]],
       "machine-start": [[0.1, "click"], [0.3, "spin"], [0.56, "knock"], [0.82, "bang"]],
       "bed-curtain": [[0.18, "rustle"], [0.52, "breath"], [0.84, "head-turn"]],
       "clock-reverse": [[0.14, "tick-1"], [0.32, "tick-2"], [0.5, "tick-3"], [0.68, "tick-4"], [0.86, "tick-5"]],
-      "self-turn": [[0.18, "breath"], [0.55, "neck"], [0.86, "look"]],
+      "self-turn": [[0.38, "cloth"], [0.7, "breath"], [0.94, "look"]],
       "duty-extra": [[0.18, "breath"], [0.55, "whisper"], [0.86, "presence"]],
-      "lobby-double": [[0.18, "presence"], [0.55, "split"], [0.86, "impact"]],
+      "lobby-double": [[0.12, "outside"], [0.42, "inside"], [0.72, "echo"], [0.94, "hold"]],
       "space-repeat": [[0.18, "slip"], [0.48, "repeat"], [0.82, "collapse"]]
     };
-    fireDueBeats(event, stagedBeats[event.visual] || [], p, new Set(["surge", "ceiling-hit", "bang", "head-turn", "look", "presence", "impact", "collapse"]));
+    fireDueBeats(event, stagedBeats[event.visual] || [], p, hardEventBeats, quietAnomalyVisuals.has(event.visual));
   }
 
   function queueCameraSource(source) {

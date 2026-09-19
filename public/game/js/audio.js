@@ -407,8 +407,9 @@
     }
 
     playEventCue(event) {
-      this.duck(1.1, 0.24);
       const cue = event.visual;
+      const quietCue = ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"].includes(cue);
+      if (!quietCue) this.duck(1.1, 0.24);
       if (cue === "chair-fall") {
         this.playSample("woodScrape", { volume: 0.2, rate: 0.76, filter: "lowpass", frequency: 2500 });
       } else if (cue === "window-break") {
@@ -426,9 +427,7 @@
         for (let i = 0; i < 5; i += 1) this.tone(96, 0.035, { delay: i * 0.13, volume: 0.055, type: "square" });
       } else if (cue === "machine-start") {
         this.playSample("washer1", { volume: 0.42, rate: 1, duration: 4.95, filter: "lowpass", frequency: 5200, pan: -0.16 });
-      } else if (cue === "self-turn") {
-        this.breath(2);
-      } else if (cue === "stair-steps" || cue === "wet-footprints") {
+      } else if (cue === "stair-steps") {
         this.footsteps(1, 0.4);
       } else if (cue === "door-open") {
         this.playDoor("short", { volume: 0.28, duration: 1.6, filter: "lowpass", frequency: 2600, pan: 0.55 });
@@ -440,8 +439,6 @@
         this.playSample("breathing", { volume: 0.1, rate: 0.8, offset: 0.4, duration: 1.2, filter: "lowpass", frequency: 1400 });
       } else if (cue === "clock-reverse") {
         this.tone(1240, 0.05, { volume: 0.035, to: 680, type: "square" });
-      } else if (cue === "lobby-double") {
-        this.tone(39, 1.6, { volume: 0.06, to: 28, type: "triangle" });
       }
     }
 
@@ -474,6 +471,16 @@
         // Keep a low floor impact, but let the recorded heel remain the audible focus.
         this.tone(54 - intensity * 20, 0.18, { volume: 0.022 + intensity * 0.07, to: 28, type: "triangle" });
         if (navigator.vibrate) navigator.vibrate(index >= 4 ? [55 + index * 9, 28, 70 + index * 10] : 28);
+      } else if (cue === "stairs-darkness") {
+        if (beat === "silence") {
+          this.duck(1.8, 0.04);
+        } else if (beat.startsWith("douse")) {
+          const index = Number(beat.split("-")[1] || 1);
+          this.tone(92 - index * 5, 0.055, { volume: 0.018 + index * 0.004, to: 54, type: "square" });
+        } else if (beat.startsWith("step")) {
+          const index = Number(beat.split("-")[1] || 1);
+          this.playSample(index < 3 ? "heelsFar" : "heelsNear", { volume: 0.1 + index * 0.035, rate: 0.9 + index * 0.035, offset: 1.2 + index * 1.45, duration: 0.62, filter: "lowpass", frequency: 850 + index * 720, pan: -0.25 + index * 0.2 });
+        }
       } else if (cue === "light-flicker") {
         this.duck(beat === "blackout" || beat === "surge" ? 1.15 : 0.35, beat === "surge" ? 0.08 : 0.32);
         this.tone(92, beat === "surge" ? 0.62 : 0.09, { volume: beat === "surge" ? 0.16 : 0.075, to: beat === "blackout" ? 26 : 62, type: "square" });
@@ -484,7 +491,18 @@
         this.duck(finalHit ? 1.25 : 0.35, finalHit ? 0.12 : 0.45);
         this.playRandomDrip({ volume: finalHit ? 0.62 : 0.36 + Math.random() * 0.08, rate: finalHit ? 0.8 : 0.95 + Math.random() * 0.08, pan: finalHit ? 0.12 : -0.5 + Math.random() });
         if (finalHit) { this.playSample("horrorHit", { volume: 0.18, rate: 0.72, duration: 0.8 }); this.tone(42, 0.65, { volume: 0.1, to: 25, type: "triangle" }); this.vibrate(3); }
-      } else if ((cue === "stair-steps" || cue === "wet-footprints") && beat.startsWith("step")) {
+      } else if (cue === "wet-footprints") {
+        if (beat === "stop") {
+          this.duck(1.8, 0.06);
+        } else if (beat.startsWith("step")) {
+          const index = Math.max(1, Number(beat.split("-")[1] || 1));
+          if (index % 2 === 0) {
+            const closeness = index / 10;
+            this.playRandomDrip({ volume: 0.07 + closeness * 0.09, rate: 0.78 + closeness * 0.08, pan: 0.42 - closeness * 0.65 });
+            this.playSample(index < 6 ? "heelsFar" : "heelsNear", { volume: 0.06 + closeness * 0.09, rate: 0.86 + closeness * 0.08, offset: 0.7 + (index % 5) * 1.2, duration: 0.48, filter: "lowpass", frequency: 720 + closeness * 1700, pan: 0.38 - closeness * 0.62 });
+          }
+        }
+      } else if (cue === "stair-steps" && beat.startsWith("step")) {
         const index = Math.max(1, Number(beat.split("-")[1] || 1));
         this.duck(0.45, Math.max(0.16, 0.5 - index * 0.065));
         this.playSample(index < 4 ? "heelsFar" : "heelsNear", { volume: 0.2 + index * 0.1, rate: 0.94 + index * 0.025, offset: 0.8 + ((index - 1) * 1.34), duration: 0.9, filter: "lowpass", frequency: 1050 + index * 720, pan: index % 2 ? -0.34 : 0.34 });
@@ -511,7 +529,15 @@
         this.duck(0.28, Math.max(0.18, 0.5 - index * 0.06));
         this.tone(1280 + index * 110, 0.055, { volume: 0.045 + index * 0.014, to: 260, type: "square" });
         if (index === 5) { this.tone(44, 0.7, { volume: 0.14, to: 25, type: "triangle" }); this.vibrate(2); }
-      } else if (["self-turn", "duty-extra", "lobby-double"].includes(cue)) {
+      } else if (cue === "self-turn") {
+        if (beat === "cloth") this.playSample("woodScrape", { volume: 0.065, rate: 1.42, duration: 0.72, filter: "lowpass", frequency: 980, pan: -0.08 });
+        else if (beat === "breath") this.breath(1);
+        else if (beat === "look") this.duck(1.45, 0.045);
+      } else if (cue === "lobby-double") {
+        if (beat === "inside") this.tone(43, 0.7, { volume: 0.045, to: 32, type: "triangle" });
+        else if (beat === "echo") this.tone(39, 0.9, { volume: 0.052, to: 29, type: "triangle" });
+        else if (beat === "hold") this.duck(0.9, 0.16);
+      } else if (cue === "duty-extra") {
         const terminal = ["look", "presence", "impact"].includes(beat);
         this.duck(terminal ? 2 : 0.9, terminal ? 0.03 : 0.16);
         if (beat === "breath" || beat === "whisper") this.breath(beat === "whisper" ? 3 : 1);

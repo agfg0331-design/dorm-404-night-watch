@@ -4,13 +4,72 @@
   const { events, narrative } = window.GameContent;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+  const FINAL_CHOICES = Object.freeze({ TURN: "TURN", STAY: "STAY" });
+  const FINAL_ROUTES = Object.freeze({
+    TURN: {
+      camera: { mode: "desk-empty", status: "CAM 04 / FRAME HOLD 03:17" },
+      phone: [
+        { sender: "门卫老陈", text: "值班室那路画面要是只剩空椅，先别拿录像确认自己。那路监控比屋里慢了不止一拍。" },
+        { sender: "周老师", text: "CAM 04里的人影如果和你对不上，先相信值班室里能听见的动静。" }
+      ],
+      sound: ["handoff-pattern", "key-and-knock"],
+      mislead: [
+        { sender: "自己", text: "门外的声音是屏幕放出来的。别把视线移开。", corrupt: true },
+        { sender: "未知号码", text: "只要继续看着监控，它就进不来。", corrupt: true }
+      ]
+    },
+    STAY: {
+      camera: { mode: "desk-synced", status: "CAM 04 / MOTION SYNC" },
+      phone: [
+        { sender: "门卫老陈", text: "我还在一楼门卫室。六点十分前，不会有人拿钥匙进值班室。" },
+        { sender: "周老师", text: "今晚接班推迟到六点十分。六点前，值班室外不该有人敲门。" }
+      ],
+      sound: ["false-entry", "steps-at-door"],
+      mislead: [
+        { sender: "自己", text: "接班的人已经到了。听见敲门就确认一下。", corrupt: true },
+        { sender: "未知号码", text: "门外是来接班的老师。别让他等太久。", corrupt: true }
+      ]
+    }
+  });
+
   class NightShiftSimulation {
+    #safeFinalChoice;
+    #finalPlan;
+
     constructor(options = {}) {
       this.callbacks = options.callbacks || {};
       this.minuteMs = options.minuteMs || 1800;
       this.startMinute = options.startMinute || 0;
-      this.seed = options.seed || Math.floor(Math.random() * 99999);
+      const providedSeed = Number(options.seed);
+      this.seed = Number.isFinite(providedSeed) ? Math.trunc(providedSeed) : Math.floor(Math.random() * 99999);
+      this.#safeFinalChoice = this.#seededUnit(0x46494e41) < 0.5 ? FINAL_CHOICES.TURN : FINAL_CHOICES.STAY;
+      this.#finalPlan = this.#buildFinalPlan();
       this.reset();
+    }
+
+    #seededUnit(salt) {
+      let value = (this.seed ^ salt) >>> 0;
+      value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+      value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+      return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
+    }
+
+    #seededIndex(length, salt) {
+      return Math.min(length - 1, Math.floor(this.#seededUnit(salt) * length));
+    }
+
+    #buildFinalPlan() {
+      const route = FINAL_ROUTES[this.#safeFinalChoice];
+      const phone = route.phone[this.#seededIndex(route.phone.length, 0x50484f4e)];
+      const sound = route.sound[this.#seededIndex(route.sound.length, 0x534f554e)];
+      const mislead = route.mislead[this.#seededIndex(route.mislead.length, 0x4d49534c)];
+      const at = (base, span, salt) => base + Math.floor(this.#seededUnit(salt) * span);
+      return [
+        { id: "final-camera", at: at(244, 7, 0x43414d34), channel: "camera", role: "evidence", cue: { ...route.camera } },
+        { id: "final-phone", at: at(276, 13, 0x50484f54), channel: "phone", role: "evidence", message: { ...phone } },
+        { id: "final-sound", at: at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
+        { id: "final-misdirect", at: at(334, 8, 0x4d495354), channel: "phone", role: "interference", message: { ...mislead } }
+      ];
     }
 
     reset() {
@@ -30,7 +89,10 @@
       this.turnPrompted = false;
       this.finalStage = false;
       this.turning = false;
+      this.finalDecision = null;
+      this.finalCameraCue = null;
       this.firedNarrative = new Set();
+      this.firedFinalClues = new Set();
       this.eventQueue = events.map((event, index) => {
         const leadOffset = event.start >= 280 ? -0.35 : -0.65;
         return {
@@ -90,6 +152,7 @@
       if (floorMinute !== this.lastMinute) {
         this.lastMinute = floorMinute;
         this.processNarrative();
+        this.processFinalClues();
         this.processMilestones();
       }
       if (this.finalStage) {
@@ -110,11 +173,28 @@
       });
     }
 
+    processFinalClues() {
+      this.#finalPlan.forEach((clue) => {
+        if (this.minute < clue.at || this.firedFinalClues.has(clue.id)) return;
+        this.firedFinalClues.add(clue.id);
+        if (clue.channel === "camera") this.finalCameraCue = { ...clue.cue };
+        if (clue.channel === "phone") this.pushMessage({ ...clue.message });
+        this.callbacks.onFinalClue?.({
+          id: clue.id,
+          at: clue.at,
+          channel: clue.channel,
+          role: clue.role,
+          cue: typeof clue.cue === "object" ? { ...clue.cue } : clue.cue,
+          message: clue.message ? { ...clue.message } : null
+        }, this.snapshot());
+      });
+    }
+
     processMilestones() {
       if (this.minute >= 342 && !this.monitorFailed) {
         this.monitorFailed = true;
         this.callbacks.onMonitorFail?.(this.snapshot());
-        this.pushMessage({ sender: "自己", text: "不要相信时间戳。它在门外。", corrupt: true });
+        this.pushMessage({ sender: "值班系统", text: "CAMERA FEED INTERRUPTED", corrupt: true });
       }
       if (this.minute >= 347 && !this.firedNarrative.has("self-call")) {
         this.firedNarrative.add("self-call");
@@ -124,7 +204,7 @@
         this.turnPrompted = true;
         this.finalStage = true;
         this.minute = 360;
-        this.pushMessage({ sender: "自己", text: "不要回头看。", corrupt: true });
+        this.pushMessage({ sender: "自己", text: "屏幕和门外，只能有一个是真的。", corrupt: true });
         this.callbacks.onTurnPrompt?.(this.snapshot());
       }
     }
@@ -199,21 +279,35 @@
     chooseTurn(turn) {
       if (this.turning || this.ended) return;
       this.turning = true;
+      this.finalDecision = turn ? FINAL_CHOICES.TURN : FINAL_CHOICES.STAY;
+      const resolution = this.#finalResolution(this.finalDecision);
       if (!turn) {
-        this.callbacks.onTurnDeclined?.(this.snapshot());
+        this.callbacks.onTurnDeclined?.(this.snapshot(), resolution);
         return;
       }
-      this.callbacks.onTurnStart?.(this.snapshot());
+      this.callbacks.onTurnStart?.(this.snapshot(), resolution);
+    }
+
+    #performancePassed() {
+      return this.correct >= 9 && this.missed <= 7 && this.danger < 68 && this.trust > 30;
+    }
+
+    #finalResolution(choice) {
+      const performancePassed = this.#performancePassed();
+      const choiceCorrect = choice === this.#safeFinalChoice;
+      let endingKind = "watched";
+      if (performancePassed && choiceCorrect) endingKind = choice === FINAL_CHOICES.TURN ? "handoff" : "dawn";
+      return { endingKind, performancePassed, choiceCorrect };
     }
 
     resolveTurn() {
-      const survived = this.correct >= 9 && this.missed <= 7 && this.danger < 68 && this.trust > 30;
-      this.finish(survived ? "handoff" : "watched");
+      this.finalDecision = FINAL_CHOICES.TURN;
+      this.finish(this.#finalResolution(FINAL_CHOICES.TURN).endingKind);
     }
 
     resolveNoTurn() {
-      const survived = this.correct >= 9 && this.missed <= 7 && this.danger < 68 && this.trust > 30;
-      this.finish(survived ? "dawn" : "watched");
+      this.finalDecision = FINAL_CHOICES.STAY;
+      this.finish(this.#finalResolution(FINAL_CHOICES.STAY).endingKind);
     }
 
     finish(kind) {
@@ -233,6 +327,8 @@
         danger: this.danger, trust: this.trust, correct: this.correct, wrong: this.wrong,
         missed: this.missed, unread: this.unread, monitorFailed: this.monitorFailed,
         turnPrompted: this.turnPrompted, finalStage: this.finalStage, turning: this.turning, ended: this.ended,
+        finalDecision: this.finalDecision,
+        finalCameraCue: this.finalCameraCue ? { ...this.finalCameraCue } : null,
         visibleEvent: this.getVisibleEvent(), activeEvents: this.activeEvents
       };
     }

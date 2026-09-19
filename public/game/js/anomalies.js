@@ -18,6 +18,7 @@
     "assets/cam-laundry-machine-mid-v4.webp", "assets/cam-laundry-machine-violent-v4.webp",
     "assets/cam-lobby-clock-mid-v4.webp", "assets/cam-lobby-clock-final-v4.webp",
     "assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp", "assets/cam-lobby-normal-v2.webp",
+    "assets/cam-duty-empty-v1.webp",
     "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
   ];
 
@@ -52,8 +53,8 @@
     { id: "cam03-off", at: 251, sender: "值班系统", text: "CAM 03 已离线，请勿查看。", corrupt: true },
     { id: "looked", at: 276, sender: "未知号码", text: "你为什么看了？", corrupt: true },
     { id: "contradiction", at: 308, sender: "周老师", text: "我今晚没有给你发过消息。", suspicious: true },
-    { id: "no-operator", at: 329, sender: "值班系统", text: "CAM 04：NO OPERATOR DETECTED", corrupt: true },
-    { id: "watching", at: 338, sender: "自己", text: "监控已经不在看宿舍了。", corrupt: true }
+    { id: "no-operator", at: 329, sender: "值班系统", text: "CAM 04：FRAME 331-04 RECOVERED", corrupt: true },
+    { id: "watching", at: 338, sender: "自己", text: "刚才那条消息不是我发的。", corrupt: true }
   ];
 
   window.GameContent = { cameras, events, narrative, frameAssets };

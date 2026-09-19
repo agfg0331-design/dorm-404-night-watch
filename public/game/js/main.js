@@ -8,6 +8,7 @@
   const fast = params.get("fast") === "1";
   const startMinute = qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
   const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 1800;
+  const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const $ = (id) => document.getElementById(id);
 
   const els = {
@@ -72,6 +73,7 @@
   let handoffDelivered = false;
   let handoffSubmitted = false;
   let activeEndingKind = "dawn";
+  let activeFinalCameraCue = null;
   const SETTINGS_KEY = "dorm404.settings.v2";
   const HOME_STATE_KEY = "dorm404.home.contaminated";
   const defaultSettings = { master: 76, bgm: 58, sfx: 92, brightness: 100, shake: true, noise: true };
@@ -97,6 +99,7 @@
   const sim = new window.NightShiftSimulation({
     minuteMs,
     startMinute,
+    ...(Number.isFinite(requestedSeed) ? { seed: Math.trunc(requestedSeed) } : {}),
     callbacks: {
       onTick: render,
       onView: () => render(sim.snapshot()),
@@ -110,14 +113,15 @@
       },
       onReport: (result) => result.ok && showToast("上报已受理。"),
       onMonitorFail: () => audio.glitch(true),
+      onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
         promptPending = true;
         if (sim.view.startsWith("phone")) revealTurnChoice();
         else window.setTimeout(() => { openPhone("messages"); window.setTimeout(revealTurnChoice, 1500); }, 500);
       },
-      onTurnDeclined: runNoTurnSequence,
-      onTurnStart: runTurnSequence,
+      onTurnDeclined: (_state, resolution) => runNoTurnSequence(resolution),
+      onTurnStart: (_state, resolution) => runTurnSequence(resolution),
       onEnding: showEnding
     }
   });
@@ -389,6 +393,7 @@
     setText(els.trust, String(Math.round(state.trust)).padStart(2, "0"));
     setText(els.correct, state.correct);
     setText(els.missed, state.missed);
+    activeFinalCameraCue = state.finalCameraCue;
     const monitorFailed = state.monitorFailed && !callOverride;
     if (renderedMonitorFailed !== monitorFailed) {
       renderedMonitorFailed = monitorFailed;
@@ -427,7 +432,10 @@
       document.querySelectorAll(".camera-dock [data-camera]").forEach((button) => button.classList.toggle("active", button.dataset.camera === sim.currentCamera));
     }
     const lateCorruption = sim.minute > 285 && !event?.frames && (event?.visual === "shadow-rush" || event?.visual === "duty-extra");
-    const source = lateCorruption ? camera.corruptImage : camera.image;
+    const finalCueSource = sim.currentCamera === "cam04" && !event && activeFinalCameraCue
+      ? (activeFinalCameraCue.mode === "desk-empty" ? "assets/cam-duty-empty-v1.webp" : camera.image)
+      : null;
+    const source = lateCorruption ? camera.corruptImage : finalCueSource || camera.image;
     queueCameraSource(source);
     const nextEventKey = event ? `${sim.currentCamera}:${event.id}` : "";
     const nextEventClass = event ? `event-${event.visual}` : "";
@@ -456,7 +464,28 @@
     }
     // The monitor never judges the feed for the player. Normal and altered
     // footage deliberately share the same neutral status line.
-    els.eventStatus.textContent = `${camera.code} / MONITORING`;
+    els.eventStatus.textContent = sim.currentCamera === "cam04" && activeFinalCameraCue
+      ? activeFinalCameraCue.status
+      : `${camera.code} / MONITORING`;
+  }
+
+  function handleFinalClue(clue) {
+    if (clue.channel !== "sound") return;
+    if (clue.cue === "handoff-pattern") {
+      audio.playDoor("short", { volume: 0.22, duration: 1.25, filter: "lowpass", frequency: 2500, pan: 0.6 });
+      window.setTimeout(() => audio.knock(), 650);
+    } else if (clue.cue === "key-and-knock") {
+      audio.doorHandle();
+      window.setTimeout(() => audio.knock(), 900);
+    } else if (clue.cue === "false-entry") {
+      audio.footsteps(3, 0.48);
+      window.setTimeout(() => audio.doorHandle(), 1700);
+      window.setTimeout(() => audio.knock(), 2450);
+    } else if (clue.cue === "steps-at-door") {
+      audio.footsteps(4, 0.44);
+      window.setTimeout(() => audio.knock(), 2050);
+      window.setTimeout(() => audio.breath(1), 3900);
+    }
   }
 
   function clamp01(value) { return Math.max(0, Math.min(1, value)); }
@@ -667,14 +696,14 @@
     }, 5000);
   }
 
-  function runTurnSequence() {
+  function runTurnSequence(resolution = {}) {
     audio.stopReportTension();
     els.turnChoice.classList.add("hidden");
     els.turnChoice.classList.remove("ready");
     els.turnSequence.classList.remove("hidden");
     els.turnSequence.classList.remove("no-turn");
     els.turnSequence.classList.add("turning");
-    const survived = sim.correct >= 9 && sim.missed <= 7 && sim.danger < 68 && sim.trust > 30;
+    const survived = resolution.endingKind === "handoff";
     els.turnImage.src = survived ? "assets/turn-good-v2.webp" : "assets/turn-bad-v2.webp";
     els.turnCaption.textContent = "你把手从鼠标上移开。屏幕在身后失去信号。";
     audio.turn();
@@ -684,18 +713,19 @@
     window.setTimeout(() => sim.resolveTurn(), 18500);
   }
 
-  function runNoTurnSequence() {
+  function runNoTurnSequence(resolution = {}) {
     audio.stopReportTension();
     els.turnChoice.classList.add("hidden");
     els.turnChoice.classList.remove("ready");
     promptPending = false;
     els.turnSequence.classList.remove("hidden", "turning");
     els.turnSequence.classList.add("no-turn");
+    const survived = resolution.endingKind === "dawn";
     els.turnStart.src = els.cameraImage.src;
     els.turnCaption.textContent = "你决定相信屏幕。06:00之后，时间没有再动。";
     audio.holdGaze();
-    window.setTimeout(() => { els.turnCaption.textContent = "监控逐路熄灭。脚步已经走进值班室。"; }, 6000);
-    window.setTimeout(() => { els.turnCaption.textContent = "最后一块屏幕里，坐着的人慢慢抬起了头。"; }, 12000);
+    window.setTimeout(() => { els.turnCaption.textContent = survived ? "门把手响了一次，却没有任何人进来。" : "监控逐路熄灭。脚步已经走进值班室。"; }, 6000);
+    window.setTimeout(() => { els.turnCaption.textContent = survived ? "最后一块屏幕仍照着你的背影。窗外开始变亮。" : "最后一块屏幕里，坐着的人慢慢抬起了头。"; }, 12000);
     window.setTimeout(() => sim.resolveNoTurn(), 18500);
   }
 
@@ -703,10 +733,13 @@
     audio.stopRingtone();
     audio.stopReportTension();
     audio.resolveEnding(kind);
+    const watchedText = state.finalDecision === "STAY"
+      ? "你始终没有移开视线。CAM 04里的椅子还坐着你，门把手却从画面外慢慢转动。第二天，新的值班员只在录像里找到了你的背影。"
+      : "你回头看见的不是门，而是 CAM 04 的镜头。第二天，新的值班员坐下时，画面角落里多了一个始终背对镜头的人。";
     const endings = {
       dawn: ["SHIFT COMPLETE", "天亮了", "06:00。窗外的鸟叫重新变得普通。接班老师推门进来，监控恢复正常，像整晚什么都没发生。"],
       handoff: ["GOOD MORNING", "有人来接班", "你回头时，磨砂玻璃已经被晨光照亮。门外的人穿着宿管制服，问你为什么一直盯着一块黑掉的屏幕。"],
-      watched: ["NO OPERATOR DETECTED", "下一任值班员", "你回头看见的不是门，而是 CAM 04 的镜头。第二天，新的值班员坐下时，画面角落里多了一个始终背对镜头的人。"]
+      watched: ["NO OPERATOR DETECTED", "下一任值班员", watchedText]
     };
     const [kicker, title, text] = endings[kind] || endings.dawn;
     activeEndingKind = endings[kind] ? kind : "dawn";

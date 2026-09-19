@@ -101,13 +101,13 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=handoff-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/main.js?v=handoff-20260919"]) {
+for (const versionedAsset of ["style.css?v=handoff-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=final-choice-20260919", "js/game.js?v=final-choice-20260919", "js/main.js?v=final-choice-20260919"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 for (const leakedPrompt of ["画面中有什么正在改变", "有一项变化没有被记录", "监控信号正在失去同步", "变化正在发生", "信号出现变化", "画面已改变"]) {
   if (main.includes(leakedPrompt)) throw new Error(`监控仍会直接暴露异常：${leakedPrompt}`);
 }
-if (!main.includes('els.eventStatus.textContent = `${camera.code} / MONITORING`')) throw new Error("监控底部缺少统一中性状态");
+if (!main.includes('`${camera.code} / MONITORING`')) throw new Error("监控底部缺少统一中性状态");
 if (phoneSource.includes('message.suspicious ? " suspicious"')) throw new Error("可疑消息仍会获得专属视觉样式");
 if (css.includes(".chat-message.suspicious")) throw new Error("可疑消息仍保留专属视觉样式");
 if (!main.includes('const level = message.corrupt ? "corrupt" : "normal"')) throw new Error("真假消息仍使用不同通知反馈");

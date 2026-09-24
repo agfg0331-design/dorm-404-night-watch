@@ -9,7 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=anomaly-20260919">
+  <link rel="stylesheet" href="style.css?v=briefing-20260924">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -64,12 +64,6 @@
         <div><i class="rec"></i><b id="cameraCode">CAM 01</b><span id="cameraName">404宿舍</span></div>
         <time id="monitorTime">00:00:00</time>
       </header>
-      <aside class="monitor-stats">
-        <span>危险 <b id="dangerValue">08</b></span>
-        <span>信任 <b id="trustValue">100</b></span>
-        <span>上报 <b id="correctValue">0</b></span>
-        <span>漏报 <b id="missedValue">0</b></span>
-      </aside>
       <div class="event-status" id="eventStatus"></div>
       <nav class="camera-dock" aria-label="监控切换">
         <button class="active" data-camera="cam01" type="button"><kbd>1</kbd><span>404宿舍</span></button>
@@ -188,10 +182,25 @@
       <h2 id="audioCheckTitle">建议佩戴耳机</h2>
       <p id="audioCheckDescription">本游戏包含方向性音效与细微环境声<br>佩戴耳机可获得更完整的值班体验</p>
       <div class="audio-check-actions">
-        <button id="confirmHeadphones" type="button">戴上耳机，开始值班</button>
+        <button id="confirmHeadphones" type="button">戴上耳机，继续</button>
         <button id="skipHeadphones" type="button">暂不佩戴</button>
       </div>
       <small class="audio-check-note"><i></i>请确认左右声道正常<i></i></small>
+    </div>
+  </section>
+
+  <section class="overlay briefing-overlay hidden" id="briefingOverlay" aria-label="夜班交接说明">
+    <div class="briefing-card" role="dialog" aria-modal="true" aria-labelledby="briefingTitle">
+      <header><span>东区四号楼 / 值班室</span><small>00:00—06:00</small></header>
+      <h2 id="briefingTitle">夜班交接说明</h2>
+      <ol>
+        <li>点击监控按钮，或按数字键 <b>1～6</b> 切换六路画面。</li>
+        <li>手机收到新消息时，会震动或出现提示。</li>
+        <li>发现异常后，在手机「异常上报」中选择地点和类型。</li>
+        <li>部分异常不会久留；拖延可能让它持续、升级或消失。</li>
+      </ol>
+      <p>系统提示仅供参考，请以你看到的为准。</p>
+      <button id="confirmBriefing" type="button">开始值班</button>
     </div>
   </section>
 
@@ -244,7 +253,7 @@
   <section class="overlay ending-overlay hidden" id="endingOverlay">
     <div class="ending-card">
       <small id="endingKicker">SHIFT COMPLETE</small><h2 id="endingTitle">天亮了</h2><p id="endingText"></p>
-      <div class="ending-stats"><span>正确上报 <b id="endCorrect">0</b></span><span>误报 <b id="endWrong">0</b></span><span>漏报 <b id="endMissed">0</b></span><span>危险 <b id="endDanger">0</b></span></div>
+      <div class="ending-stats"><strong>本次夜班记录</strong><span>正确上报 <b id="endCorrect">0</b></span><span>错误上报 <b id="endWrong">0</b></span><span>漏报异常 <b id="endMissed">0</b></span><small>部分记录无法核实。</small></div>
       <form class="handoff-form" id="handoffForm">
         <label for="handoffContent">给下一任值班员留一句话</label>
         <textarea id="handoffContent" maxlength="100" rows="2" placeholder="你希望下一任记住什么？" required></textarea>
@@ -259,10 +268,10 @@
 
   <script src="js/audio.js?v=anomaly-20260919"></script>
   <script src="js/anomalies.js?v=anomaly-20260919"></script>
-  <script src="js/game.js?v=final-choice-20260919"></script>
+  <script src="js/game.js?v=briefing-20260924"></script>
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=d1-20260918"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/main.js?v=anomaly-20260919"></script>
+  <script src="js/main.js?v=briefing-20260924"></script>
 </body>
 </html>

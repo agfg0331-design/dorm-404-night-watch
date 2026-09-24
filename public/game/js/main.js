@@ -19,7 +19,6 @@
     cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
     eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"),
-    danger: $("dangerValue"), trust: $("trustValue"), correct: $("correctValue"), missed: $("missedValue"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
     phoneCorruption: $("phoneCorruption"), phoneRedFlood: $("phoneRedFlood"), phoneGhostWarning: $("phoneGhostWarning"),
     messagesPanel: $("messagesPanel"), reportPanel: $("reportPanel"), messageList: $("messageList"), autoInput: $("autoInput"),
@@ -27,13 +26,14 @@
     turnChoice: $("turnChoice"), dontTurn: $("dontTurn"), turnAround: $("turnAround"), turnSequence: $("turnSequence"),
     turnStart: $("turnStart"), turnMid: $("turnMid"), turnImage: $("turnImage"), turnCaption: $("turnCaption"), turnWarning: $("turnWarning"), startOverlay: $("startOverlay"), startGame: $("startGame"),
     audioCheckOverlay: $("audioCheckOverlay"), confirmHeadphones: $("confirmHeadphones"), skipHeadphones: $("skipHeadphones"),
+    briefingOverlay: $("briefingOverlay"), confirmBriefing: $("confirmBriefing"),
     settingsOverlay: $("settingsOverlay"), settingsForm: $("settingsForm"), openSettings: $("openSettings"), closeSettings: $("closeSettings"),
     masterVolume: $("masterVolume"), bgmVolume: $("bgmVolume"), sfxVolume: $("sfxVolume"), brightness: $("brightness"),
     masterVolumeValue: $("masterVolumeValue"), bgmVolumeValue: $("bgmVolumeValue"), sfxVolumeValue: $("sfxVolumeValue"), brightnessValue: $("brightnessValue"),
     screenShake: $("screenShake"), visualNoise: $("visualNoise"), cameraSwitchMask: $("cameraSwitchMask"),
     callOverlay: $("callOverlay"), callText: $("callText"), answerCall: $("answerCall"), declineCall: $("declineCall"),
     endingOverlay: $("endingOverlay"), endingKicker: $("endingKicker"), endingTitle: $("endingTitle"), endingText: $("endingText"),
-    endCorrect: $("endCorrect"), endWrong: $("endWrong"), endMissed: $("endMissed"), endDanger: $("endDanger"),
+    endCorrect: $("endCorrect"), endWrong: $("endWrong"), endMissed: $("endMissed"),
     handoffForm: $("handoffForm"), handoffContent: $("handoffContent"), handoffCounter: $("handoffCounter"), handoffNote: $("handoffNote"),
     restart: $("restartGame"), toast: $("toast"), guestbookOverlay: $("guestbookOverlay")
   };
@@ -111,7 +111,6 @@
           ensureEventCue(event);
         }
       },
-      onReport: (result) => result.ok && showToast("上报已受理。"),
       onMonitorFail: () => audio.glitch(true),
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
@@ -389,10 +388,6 @@
     const phoneOffset = currentPhase >= 3 ? (currentPhase - 2) * 7 : 0;
     setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
     setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : formatMinute(state.minute, true));
-    setText(els.danger, String(Math.round(state.danger)).padStart(2, "0"));
-    setText(els.trust, String(Math.round(state.trust)).padStart(2, "0"));
-    setText(els.correct, state.correct);
-    setText(els.missed, state.missed);
     activeFinalCameraCue = state.finalCameraCue;
     const monitorFailed = state.monitorFailed && !callOverride;
     if (renderedMonitorFailed !== monitorFailed) {
@@ -426,6 +421,7 @@
     const camera = cameras[sim.currentCamera];
     if (!camera) return;
     const event = sim.getVisibleEvent();
+    els.monitorView.classList.toggle("event-clearing", Boolean(event?.resolvingUntil && event.resolvingUntil - performance.now() < 550));
     if (renderedCameraId !== sim.currentCamera) {
       renderedCameraId = sim.currentCamera;
       els.cameraCode.textContent = camera.code;
@@ -663,12 +659,10 @@
     const category = form.get("category");
     if (!category) { els.reportFeedback.textContent = "请选择异常类别。"; return; }
     const result = sim.report(els.reportCamera.value, category);
-    els.reportFeedback.textContent = result.message;
-    els.reportFeedback.style.color = result.ok ? "#9bc5a7" : "#d17c80";
-    if (result.ok) {
-      els.reportForm.reset();
-      window.setTimeout(() => { els.reportFeedback.textContent = ""; closePhone(); }, 850);
-    } else audio.phoneNotify("corrupt");
+    els.reportFeedback.textContent = "异常记录已提交";
+    els.reportFeedback.style.color = "#6f826f";
+    // Keep the report tab available so a player can correct an earlier guess.
+    window.setTimeout(() => { els.reportFeedback.textContent = ""; }, 2300);
   }
 
   function showSelfCall() {
@@ -757,7 +751,7 @@
     els.handoffNote.classList.remove("error");
     if (kind === "watched") localStorage.setItem(HOME_STATE_KEY, "1");
     els.endingKicker.textContent = kicker; els.endingTitle.textContent = title; els.endingText.textContent = text;
-    els.endCorrect.textContent = state.correct; els.endWrong.textContent = state.wrong; els.endMissed.textContent = state.missed; els.endDanger.textContent = Math.round(state.danger);
+    els.endCorrect.textContent = state.correct; els.endWrong.textContent = state.wrong; els.endMissed.textContent = state.missed;
     els.turnSequence.classList.add("hidden"); els.endingOverlay.classList.remove("hidden");
   }
 
@@ -808,9 +802,8 @@
     window.setTimeout(() => {
       els.audioCheckOverlay.classList.add("hidden");
       els.audioCheckOverlay.classList.remove("closing");
-      els.startOverlay.classList.add("hidden");
-      switchView("room");
-      els.enterMonitor.focus({ preventScroll: true });
+      els.briefingOverlay.classList.remove("hidden");
+      els.confirmBriefing.focus({ preventScroll: true });
     }, 220);
   }
 
@@ -835,6 +828,11 @@
   els.startGame.addEventListener("click", startGame);
   els.confirmHeadphones.addEventListener("click", finishAudioCheck);
   els.skipHeadphones.addEventListener("click", finishAudioCheck);
+  els.confirmBriefing.addEventListener("click", () => {
+    els.briefingOverlay.classList.add("hidden");
+    els.startOverlay.classList.add("hidden");
+    beginShift();
+  });
   els.enterMonitor.addEventListener("click", () => beginShift());
   els.monitorPhone.addEventListener("click", () => switchView("phone-messages"));
   els.closePhone.addEventListener("click", phoneBack);
@@ -859,6 +857,7 @@
     swipeStartY = null;
   });
   document.addEventListener("keydown", (event) => {
+    if (!els.briefingOverlay.classList.contains("hidden")) return;
     if (!els.audioCheckOverlay.classList.contains("hidden")) {
       if (event.key === "Enter") { event.preventDefault(); finishAudioCheck(); }
       else if (event.key === "Escape") { event.preventDefault(); finishAudioCheck(); }

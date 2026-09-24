@@ -93,6 +93,11 @@
       this.finalCameraCue = null;
       this.firedNarrative = new Set();
       this.firedFinalClues = new Set();
+      this.firedInterference = new Set();
+      // A few seeded interruptions begin after the first ninety minutes.
+      this.interferencePlan = [102, 151, 207, 263, 311].map((base, index) => ({
+        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * 13), index
+      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index === 2 ? .65 : .78));
       this.eventQueue = events.map((event, index) => {
         const leadOffset = event.start >= 280 ? -0.35 : -0.65;
         return {
@@ -103,7 +108,8 @@
           state: "waiting",
           progress: 0,
           seenChanging: false,
-          reported: false
+          reported: false,
+          resolvingUntil: 0
         };
       }).sort((a, b) => a.actualStart - b.actualStart);
       this.activeEvents = [];
@@ -152,6 +158,7 @@
       if (floorMinute !== this.lastMinute) {
         this.lastMinute = floorMinute;
         this.processNarrative();
+        this.processInterference();
         this.processFinalClues();
         this.processMilestones();
       }
@@ -170,6 +177,30 @@
           this.firedNarrative.add(item.id);
           this.pushMessage(item);
         }
+      });
+    }
+
+    processInterference() {
+      this.interferencePlan.forEach(({ at, index }) => {
+        if (this.minute < at || this.firedInterference.has(index)) return;
+        this.firedInterference.add(index);
+        const cameras = Object.keys(window.GameContent.cameras);
+        const active = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil);
+        const empty = cameras.filter((camera) => !this.activeEvents.some((event) => event.camera === camera && !event.reported));
+        const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
+        const code = window.GameContent.cameras[emptyCamera]?.code;
+        let message;
+        if (index % 2 === 0 && code) {
+          message = index === 0
+            ? { sender: "值班系统", text: `${code} 检测到短时人员活动，请核对画面。`, suspicious: true }
+            : { sender: "405 张同学", text: `我刚才看到 ${code} 那边有人经过，你看到了吗？`, suspicious: true };
+        } else if (active) {
+          const activeCode = window.GameContent.cameras[active.camera].code;
+          message = index === 1
+            ? { sender: "值班系统", text: `${activeCode} 现场复核无异常。`, suspicious: true }
+            : { sender: "值班系统", text: `${activeCode} 画面状态正常。`, suspicious: true };
+        }
+        if (message) this.pushMessage(message);
       });
     }
 
@@ -226,13 +257,18 @@
       });
 
       this.activeEvents.slice().forEach((event) => {
-        if (event.reported || event.state === "missed") return;
+        if (event.reported) return;
+        if (event.resolvingUntil) {
+          if (performance.now() >= event.resolvingUntil) event.reported = true;
+          return;
+        }
+        if (event.state === "missed") return;
         event.progress = clamp((this.minute - event.actualStart) / event.duration, 0, 1);
         event.state = event.progress < 1 ? "changing" : "complete";
         if (this.view === "monitor" && this.currentCamera === event.camera && event.state === "changing") event.seenChanging = true;
         if (this.minute >= event.actualStart + event.duration + event.grace) this.missEvent(event);
       });
-      this.activeEvents = this.activeEvents.filter((event) => !event.reported && event.state !== "missed");
+      this.activeEvents = this.activeEvents.filter((event) => !event.reported);
     }
 
     markVisibleEvents() {
@@ -242,20 +278,20 @@
     }
 
     report(camera, category) {
-      const match = this.activeEvents.find((event) => !event.reported && event.camera === camera && event.category === category);
+      const match = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil && event.camera === camera && event.category === category);
       if (match) {
-        match.reported = true;
+        match.resolvingUntil = performance.now() + 2800 + this.#seededUnit(0x52455000 + this.correct) * 1500;
         this.correct += 1;
         this.danger = clamp(this.danger - 7, 0, 100);
         this.trust = clamp(this.trust + 2, 0, 100);
         this.callbacks.onReport?.({ ok: true, event: match }, this.snapshot());
-        return { ok: true, message: "上报已受理。保持观察。", event: match };
+        return { ok: true, message: "异常记录已提交", event: match };
       }
       this.wrong += 1;
       this.trust = clamp(this.trust - 13, 0, 100);
       this.danger = clamp(this.danger + 3, 0, 100);
       this.callbacks.onReport?.({ ok: false }, this.snapshot());
-      return { ok: false, message: this.minute > 250 ? "没有异常。你看错了。" : "未找到对应异常。系统信任下降。" };
+      return { ok: false, message: "异常记录已提交" };
     }
 
     missEvent(event) {

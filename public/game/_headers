@@ -9,3 +9,6 @@
 
 /js/*
   Cache-Control: no-cache
+
+/*.js
+  Content-Type: application/javascript; charset=utf-8

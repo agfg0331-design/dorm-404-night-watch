@@ -115,6 +115,8 @@
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
+        audio.stopRingtone();
+        els.callOverlay.classList.add("hidden");
         promptPending = true;
         if (sim.view.startsWith("phone")) revealTurnChoice();
         else window.setTimeout(() => { openPhone("messages"); window.setTimeout(revealTurnChoice, 1500); }, 500);
@@ -675,8 +677,12 @@
     audio.stopRingtone();
     els.callText.textContent = "通话中 · 只有很轻的呼吸声";
     audio.breath(2);
-    window.setTimeout(() => { audio.knock(); els.callText.textContent = "咚。　咚。　咚。"; }, 1900);
     window.setTimeout(() => {
+      if (sim.finalStage || sim.ended) return;
+      audio.knock(); els.callText.textContent = "咚。　咚。　咚。";
+    }, 1900);
+    window.setTimeout(() => {
+      if (sim.finalStage || sim.ended) return;
       callOverride = true;
       els.callOverlay.classList.add("hidden");
       switchView("monitor");

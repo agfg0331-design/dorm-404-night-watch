@@ -33,6 +33,14 @@ advance(second.actualStart + second.duration + second.grace + 15);
 assert(sim.missed === 1, "同一异常重复计为漏报");
 assert(sim.report(second.camera, second.category).ok, "漏报后无法补报");
 
+const oldLobby = sim.eventQueue.find((event) => event.id === "lobby-door");
+const doubleLobby = sim.eventQueue.find((event) => event.id === "lobby-double");
+sim.activeEvents.push(oldLobby, doubleLobby);
+oldLobby.state = "missed";
+doubleLobby.state = "changing";
+sim.setCamera("cam06");
+assert(sim.getVisibleEvent() === doubleLobby, "旧漏报挡住同监控的新异常");
+
 for (let minute = 0; minute <= 335; minute++) { sim.minute = minute; sim.processInterference(); }
 assert(messages.filter((message) => message.suspicious).length >= 2, "中期干扰信息不足");
 assert(messages.filter((message) => message.suspicious).every((message) => !message.corrupt), "误导信息被直接标成故障");

@@ -354,7 +354,10 @@
     }
 
     getVisibleEvent() {
-      return this.activeEvents.find((event) => event.camera === this.currentCamera && !event.reported) || null;
+      const candidates = this.activeEvents.filter((event) => event.camera === this.currentCamera && !event.reported);
+      // An older missed anomaly stays reportable, but never hides a newer event
+      // on the same feed. The latest missed one remains visible in quiet gaps.
+      return candidates.filter((event) => event.state !== "missed").at(-1) || candidates.at(-1) || null;
     }
 
     snapshot() {

@@ -117,6 +117,7 @@ if (footprintsDefinition.includes("frames:")) throw new Error("大厅湿脚印�
 if ((css.match(/\.footprint-trail i:nth-child\(/g) || []).length !== 10) throw new Error("湿脚印没有按10个独立脚印推进");
 if (!css.includes("@keyframes twinEcho") || !css.includes("animation-delay:.72s")) throw new Error("大厅双人缺少延迟同步动作");
 if (css.includes("event-lobby-double .extra-shadow") || css.includes("event-self-turn .extra-shadow")) throw new Error("专属人物异常仍被通用 extra-shadow 规则覆盖");
+if (!/id: "lobby-double", start: 334[\s\S]*?duration: 8/.test(anomalies)) throw new Error("大厅双人必须在05:42断流前完成演出");
 for (const quietVisual of ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]) {
   if (!main.includes(`"${quietVisual}"`)) throw new Error(`主循环缺少安静异常节奏：${quietVisual}`);
 }

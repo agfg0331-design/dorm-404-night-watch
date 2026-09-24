@@ -42,7 +42,7 @@
     { id: "hall-shadow-near", start: 316, jitter: 2, camera: "cam02", category: "人物异常", title: "人影突然加速逼近镜头", visual: "shadow-rush", frames: ["assets/cam-hall-shadow-mid-v2.webp", "assets/cam-hall-shadow-near-v2.webp"], duration: 15, grace: 4, severity: 18, lead: { offset: -2, sender: "值班系统", text: "CAM 03 检测到人员活动。", kind: "false" } },
     { id: "duty-extra", start: 326, jitter: 2, camera: "cam04", category: "人物异常", title: "值班员身后出现第二个人", visual: "duty-extra", duration: 18, grace: 4, severity: 19, lead: { offset: -2, sender: "自己", text: "别看 CAM 04。", kind: "false" } },
     { id: "dorm-empty", start: 335, jitter: 1, camera: "cam01", category: "空间异常", title: "宿舍内部空间突然变空", visual: "space-repeat", duration: 12, grace: 3, severity: 17, lead: { offset: -2, sender: "404 匿名", text: "你看到的宿舍不是这一间。", kind: "false" } },
-    { id: "lobby-double", start: 340, jitter: 0, camera: "cam06", category: "人物异常", title: "同一人同时站在门内与门外", visual: "lobby-double", duration: 12, grace: 2, severity: 20, lead: { offset: -2, sender: "值班系统", text: "CAM 06：访客人数 0。", kind: "false" } }
+    { id: "lobby-double", start: 334, jitter: 0, camera: "cam06", category: "人物异常", title: "同一人同时站在门内与门外", visual: "lobby-double", duration: 8, grace: 2, severity: 20, lead: { offset: -2, sender: "值班系统", text: "CAM 06：访客人数 0。", kind: "false" } }
   ];
 
   const narrative = [

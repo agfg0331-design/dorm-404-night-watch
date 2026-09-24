@@ -94,10 +94,11 @@
       this.firedNarrative = new Set();
       this.firedFinalClues = new Set();
       this.firedInterference = new Set();
-      // A few seeded interruptions begin after the first ninety minutes.
-      this.interferencePlan = [102, 151, 207, 263, 311].map((base, index) => ({
-        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * 13), index
-      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index === 2 ? .65 : .78));
+      // Two sparse false leads break up the early quiet. Later, seeded leads
+      // become more frequent without replacing the genuine messages.
+      this.interferencePlan = [52, 94, 132, 171, 207, 245, 286, 320].map((base, index) => ({
+        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 9 : 13)), index
+      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 4 ? .78 : .88));
       this.eventQueue = events.map((event, index) => {
         const leadOffset = event.start >= 280 ? -0.35 : -0.65;
         return {
@@ -190,13 +191,13 @@
         const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
         const code = window.GameContent.cameras[emptyCamera]?.code;
         let message;
-        if (index % 2 === 0 && code) {
+        if ((index < 2 || index % 2 === 0) && code) {
           message = index === 0
             ? { sender: "值班系统", text: `${code} 检测到短时人员活动，请核对画面。`, suspicious: true }
             : { sender: "405 张同学", text: `我刚才看到 ${code} 那边有人经过，你看到了吗？`, suspicious: true };
         } else if (active) {
           const activeCode = window.GameContent.cameras[active.camera].code;
-          message = index === 1
+          message = index === 3
             ? { sender: "值班系统", text: `${activeCode} 现场复核无异常。`, suspicious: true }
             : { sender: "值班系统", text: `${activeCode} 画面状态正常。`, suspicious: true };
         }

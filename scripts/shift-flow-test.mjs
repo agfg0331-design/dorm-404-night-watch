@@ -55,8 +55,16 @@ sim.activeEvents = sim.activeEvents.filter((event) => event !== newDuty);
 assert(!sim.getVisibleEvent(), "旧漏报遮住终局 CAM 04 摄像头线索");
 assert(sim.activeEvents.includes(oldDuty), "终局线索不应删除旧漏报的补报资格");
 
-for (let minute = 0; minute <= 335; minute++) { sim.minute = minute; sim.processInterference(); }
-assert(messages.filter((message) => message.suspicious).length >= 2, "中期干扰信息不足");
-assert(messages.filter((message) => message.suspicious).every((message) => !message.corrupt), "误导信息被直接标成故障");
-assert(messages.filter((message) => message.suspicious).length <= 5, "干扰信息过密");
+const interferenceMessages = [];
+const pacingSim = new sandbox.NightShiftSimulation({ seed: 12, callbacks: { onMessage: (message, state) => interferenceMessages.push({ ...message, minute: state.minute }) } });
+for (let minute = 0; minute <= 335; minute++) {
+  pacingSim.minute = minute;
+  pacingSim.processEvents();
+  pacingSim.processInterference();
+}
+const misleading = interferenceMessages.filter((message) => message.suspicious && !message.linkedEvent);
+assert(misleading.filter((message) => message.minute < 120).length === 2, "前期误导信息应保持稀疏");
+assert(misleading.filter((message) => message.minute >= 120).length > 2, "中后期误导信息没有逐渐增多");
+assert(misleading.every((message) => !message.corrupt), "误导信息被直接标成故障");
+assert(misleading.length <= 8, "干扰信息过密");
 console.log("夜班流程自检通过：误报持续、改报解除、漏报保留与补报、中期有限干扰。");

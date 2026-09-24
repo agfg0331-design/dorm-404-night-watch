@@ -191,7 +191,7 @@ body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contra
 .phone-composite{position:absolute;z-index:1;left:50%;top:50%;width:max(125vw,calc(118vh * 1.33333));aspect-ratio:1448/1086;transform:translate3d(-50%,-50%,0);transform-origin:75% 86%;background:url("assets/phone-view-integrated-v2.webp") center/100% 100% no-repeat;backface-visibility:hidden;contain:layout paint style;will-change:transform,opacity;animation:phoneLift .48s cubic-bezier(.16,.82,.22,1) both}
 .phone-view.lowering .phone-composite{animation:phoneLower .4s cubic-bezier(.55,.04,.88,.38) both}
 .phone-view.lowering::before{animation:phoneBackdropOut .4s ease both}
-.phone-screen{position:absolute;z-index:3;left:56.84%;top:37.9%;width:16.72%;height:39.72%;overflow:hidden;border:0;border-radius:1.2%;clip-path:polygon(.5% .2%,99.7% 0,100% 99.2%,.9% 100%);background:#d8ded8;color:#1d2823;box-shadow:inset 9px 0 12px rgba(18,29,23,.18),inset -6px 0 10px rgba(18,29,23,.22),inset 0 8px 10px rgba(18,29,23,.11),inset 0 -9px 12px rgba(18,29,23,.16);transform-origin:top left;transform:skewX(1.85deg) translateZ(0);filter:saturate(.72) contrast(.93) brightness(.91);will-change:opacity;animation:phoneScreenOn .42s ease-out both}
+.phone-screen{position:absolute;z-index:3;left:56.84%;top:37.9%;width:16.72%;height:39.72%;overflow:hidden;border:0;border-radius:1.2%;clip-path:polygon(.5% .2%,99.7% 0,100% 99.2%,.9% 100%);background:#d8ded8;color:#1d2823;box-shadow:inset 9px 0 12px rgba(18,29,23,.18),inset -6px 0 10px rgba(18,29,23,.22),inset 0 8px 10px rgba(18,29,23,.11),inset 0 -9px 12px rgba(18,29,23,.16);transform-origin:top left;transform:skewX(1.85deg) translateZ(0);filter:saturate(.72) contrast(.93) brightness(.91)}
 .phone-view.lowering .phone-screen{animation:phoneScreenOff .28s ease both}
 .phone-screen::after{content:"";position:absolute;z-index:8;inset:0;pointer-events:none;background:linear-gradient(112deg,rgba(255,255,255,.12),transparent 24%,transparent 72%,rgba(33,52,43,.07)),repeating-linear-gradient(180deg,transparent 0 3px,rgba(50,65,57,.02) 4px)}
 .phone-corruption{display:none;position:absolute;z-index:20;inset:0;overflow:hidden;pointer-events:none;background:transparent;color:#ff3945;font-family:ui-monospace,monospace}
@@ -383,6 +383,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .handoff-form button{padding:.62rem .85rem;border:1px solid #718a79;background:rgba(24,39,31,.92);color:#dce6df;cursor:pointer;font-size:.67rem;font-weight:700;letter-spacing:.08em}.handoff-form button:disabled,.handoff-form textarea:disabled{cursor:not-allowed;opacity:.55}
 .handoff-form>p{min-height:1.2em;margin:.45rem 0 0;color:#789281;font-size:.62rem;line-height:1.45}.handoff-form>p.error{color:#d28b8f}
 .ending-card>button{width:100%;text-align:center}
+#endingGuestbook{margin-bottom:.5rem}
 .toast{position:fixed;z-index:100;left:50%;bottom:7rem;transform:translate(-50%,15px);padding:.7rem 1rem;border:1px solid #53655b;background:rgba(4,9,7,.94);color:#ced8d1;font-size:.72rem;opacity:0;pointer-events:none;transition:.25s}
 .toast.visible{opacity:1;transform:translate(-50%,0)}
 .toast.error{border-color:#733035;color:#e1adb0}

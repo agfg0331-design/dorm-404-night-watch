@@ -3,7 +3,7 @@
 
   const $ = (id) => document.getElementById(id);
   const ui = {
-    overlay: $("guestbookOverlay"), open: $("openGuestbook"), close: $("closeGuestbook"), home: $("guestbookHome"),
+    overlay: $("guestbookOverlay"), open: $("openGuestbook"), endingOpen: $("endingGuestbook"), close: $("closeGuestbook"), home: $("guestbookHome"),
     list: $("guestbookList"), form: $("guestbookForm"), nickname: $("guestbookNickname"), content: $("guestbookContent"),
     counter: $("guestbookCounter"), note: $("guestbookNote"), sorts: [...document.querySelectorAll(".guestbook-sort button")]
   };
@@ -108,6 +108,7 @@
   }
 
   ui.open.addEventListener("click", open);
+  ui.endingOpen?.addEventListener("click", open);
   ui.close.addEventListener("click", close);
   ui.home.addEventListener("click", close);
   ui.overlay.addEventListener("click", (event) => { if (event.target === ui.overlay) close(); });

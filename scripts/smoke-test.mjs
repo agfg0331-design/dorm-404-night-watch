@@ -48,7 +48,7 @@ const boardRoute = fs.readFileSync("app/api/board/route.ts", "utf8");
 if (!/\bmessages, votes, and, desc\b/.test(boardRoute)) throw new Error("留言接口缺少 and 查询条件导入");
 if (!boardRoute.includes("boardOptions") || !fs.readFileSync("app/api/board/shared.ts", "utf8").includes("Access-Control-Allow-Origin")) throw new Error("留言接口缺少 EdgeOne 跨站兼容");
 if (!fs.readFileSync("public/game/js/guestbook.js", "utf8").includes(".edgeone.dev")) throw new Error("EdgeOne 留言板没有连接共享接口");
-if (!html.includes("js/guestbook.js?v=d1-20260918")) throw new Error("Cloudflare 留言板脚本缺少缓存版本标识");
+if (!html.includes("js/guestbook.js?v=flow-20260925")) throw new Error("Cloudflare 留言板脚本缺少缓存版本标识");
 for (const path of ["functions/api/board.js", "functions/api/board/[id]/vote.js", "d1/schema.sql"]) {
   if (!fs.existsSync(path)) throw new Error(`Cloudflare 留言后端缺失：${path}`);
 }
@@ -101,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=mirror-20260924", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=anomaly-20260919", "js/game.js?v=review-20260924", "js/main.js?v=review2-20260924"]) {
+for (const versionedAsset of ["style.css?v=flow-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=anomaly-20260919", "js/game.js?v=flow-20260925", "js/main.js?v=flow-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;

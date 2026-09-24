@@ -79,6 +79,9 @@
   const defaultSettings = { master: 76, bgm: 58, sfx: 92, brightness: 100, shake: true, noise: true };
   let settings = loadSettings();
   const imageRecords = new Map();
+  // Decode the handset artwork before the first lift; CSS background images
+  // otherwise begin rasterizing only when the hidden phone view is displayed.
+  preloadImage("assets/phone-view-integrated-v2.webp", true);
   const allCameraSources = [...new Set([
     ...Object.values(cameras).flatMap((camera) => [camera.image, camera.corruptImage]),
     ...frameAssets
@@ -837,7 +840,8 @@
   els.confirmBriefing.addEventListener("click", () => {
     els.briefingOverlay.classList.add("hidden");
     els.startOverlay.classList.add("hidden");
-    beginShift();
+    setViewElement("room");
+    els.enterMonitor.focus({ preventScroll: true });
   });
   els.enterMonitor.addEventListener("click", () => beginShift());
   els.monitorPhone.addEventListener("click", () => switchView("phone-messages"));

@@ -41,6 +41,20 @@ doubleLobby.state = "changing";
 sim.setCamera("cam06");
 assert(sim.getVisibleEvent() === doubleLobby, "旧漏报挡住同监控的新异常");
 
+const oldDuty = sim.eventQueue.find((event) => event.id === "duty-self");
+const newDuty = sim.eventQueue.find((event) => event.id === "duty-extra");
+oldDuty.state = "missed";
+newDuty.state = "changing";
+sim.activeEvents.push(oldDuty, newDuty);
+sim.setCamera("cam04");
+assert(sim.getVisibleEvent() === newDuty, "值班室新异常未显示");
+assert(sim.report("cam04", "人物异常").event === newDuty, "同类旧异常抢走当前画面的上报");
+assert(!oldDuty.resolvingUntil, "当前异常上报却解除旧漏报");
+sim.finalCameraCue = { mode: "desk-empty", status: "CAM 04 / FRAME HOLD 03:17" };
+sim.activeEvents = sim.activeEvents.filter((event) => event !== newDuty);
+assert(!sim.getVisibleEvent(), "旧漏报遮住终局 CAM 04 摄像头线索");
+assert(sim.activeEvents.includes(oldDuty), "终局线索不应删除旧漏报的补报资格");
+
 for (let minute = 0; minute <= 335; minute++) { sim.minute = minute; sim.processInterference(); }
 assert(messages.filter((message) => message.suspicious).length >= 2, "中期干扰信息不足");
 assert(messages.filter((message) => message.suspicious).every((message) => !message.corrupt), "误导信息被直接标成故障");

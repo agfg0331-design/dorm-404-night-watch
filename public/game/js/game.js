@@ -278,7 +278,9 @@
     }
 
     report(camera, category) {
-      const match = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil && event.camera === camera && event.category === category);
+      // When two events share a camera and category, resolve the one currently
+      // shown on the feed before an older missed event behind it.
+      const match = this.activeEvents.slice().reverse().find((event) => !event.reported && !event.resolvingUntil && event.camera === camera && event.category === category);
       if (match) {
         match.resolvingUntil = performance.now() + 2800 + this.#seededUnit(0x52455000 + this.correct) * 1500;
         this.correct += 1;
@@ -354,9 +356,12 @@
     }
 
     getVisibleEvent() {
-      const candidates = this.activeEvents.filter((event) => event.camera === this.currentCamera && !event.reported);
+      // Once missed, the earlier CAM 04 figure gives way to the final camera
+      // clue. It stays in activeEvents and remains reportable from the phone.
+      const candidates = this.activeEvents.filter((event) => event.camera === this.currentCamera && !event.reported &&
+        !(this.currentCamera === "cam04" && this.finalCameraCue && event.id === "duty-self" && event.state === "missed"));
       // An older missed anomaly stays reportable, but never hides a newer event
-      // on the same feed. The latest missed one remains visible in quiet gaps.
+      // on the same feed. Other missed events remain visible in quiet gaps.
       return candidates.filter((event) => event.state !== "missed").at(-1) || candidates.at(-1) || null;
     }
 

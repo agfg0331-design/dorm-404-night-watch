@@ -857,6 +857,10 @@
     swipeStartY = null;
   });
   document.addEventListener("keydown", (event) => {
+    // Form controls need their own keys: typing in a report or guestbook must
+    // never switch feeds, close the handset, or open the report tab.
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey ||
+        (event.target instanceof Element && event.target.closest("input, select, textarea, [contenteditable]"))) return;
     if (!els.briefingOverlay.classList.contains("hidden")) return;
     if (!els.audioCheckOverlay.classList.contains("hidden")) {
       if (event.key === "Enter") { event.preventDefault(); finishAudioCheck(); }

@@ -11,6 +11,11 @@ const legacyScenes = ["dorm", "hall", "laundry", "stairs", "lobby"];
 const sim = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message) => messages.push(message) } });
 function assert(condition, reason) { if (!condition) throw new Error(reason); }
 function advance(minute) { sim.minute = minute; sim.processEvents(); }
+sim.setView("phone-messages");
+assert(sim.timeScale > 0 && sim.timeScale < 1, "查看手机消息时仍按全速推进");
+sim.setView("phone-report");
+assert(sim.timeScale > 0 && sim.timeScale < 0.5, "填写上报时没有足够时间");
+sim.setView("monitor");
 
 advance(sim.eventQueue.find((event) => event.id === "hall-light").actualStart + 1);
 const first = sim.activeEvents[0];
@@ -68,4 +73,10 @@ assert(misleading.filter((message) => message.minute < 120).length === 2, "前�
 assert(misleading.filter((message) => message.minute >= 120).length > 2, "中后期误导信息没有逐渐增多");
 assert(misleading.every((message) => !message.corrupt), "误导信息被直接标成故障");
 assert(misleading.length <= 8, "干扰信息过密");
+let prompts = 0;
+const phoneFinal = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onTurnPrompt: () => { prompts += 1; } } });
+phoneFinal.minute = 347;
+phoneFinal.promptTurn();
+phoneFinal.processMilestones();
+assert(prompts === 1 && phoneFinal.finalStage && phoneFinal.minute === 360 && phoneFinal.timeScale === 0, "接听结尾电话后未立即进入唯一的最终选择");
 console.log("夜班流程自检通过：误报持续、改报解除、漏报保留与补报、中期有限干扰。");

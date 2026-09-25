@@ -137,7 +137,8 @@ for (let stage = 1; stage <= 3; stage++) {
 if (!main.includes("maskLobbyClock(els.eventFrames[index])") || !main.includes("Math.floor(performance.now() / 95)")) throw new Error("挂钟未限制在钟面内快速轮播");
 if (css.includes("event-clock-reverse .event-frame-stack img{transform:scale(1.16)")) throw new Error("旧挂钟局部放大仍会破坏新画面定位");
 const mirrorDefinition = anomalies.match(/\{ id: "laundry-reflection"[^\n]+/)?.[0] || "";
-if (!mirrorDefinition.includes('start: 164')) throw new Error("镜中黑影仍安排在后期暗光阶段");
+const mirrorStart = Number(mirrorDefinition.match(/start: (\d+)/)?.[1]);
+if (!(mirrorStart > 0 && mirrorStart < 160)) throw new Error("镜中黑影仍安排在后期暗光阶段");
 for (let stage = 1; stage <= 3; stage++) {
   const asset = `assets/cam-laundry-mirror-shadow-${stage}-approved-v1.webp`;
   if (!mirrorDefinition.includes(asset) || !fs.existsSync(`${gameRoot}/${asset}`)) throw new Error(`镜中黑影缺少已确认的第${stage}阶段画面`);
@@ -294,7 +295,7 @@ reportTest.minute = event.actualStart + 1;
 reportTest.processEvents();
 if (!reportTest.report(event.camera, event.category).ok) throw new Error("正确上报未被识别");
 reportTest.setView("phone-report");
-if (reportTest.timeScale !== 0.42) throw new Error("上报期间时间未减速");
+if (!(reportTest.timeScale > 0 && reportTest.timeScale < 0.5)) throw new Error("上报期间时间未有效减速");
 
 if (Object.keys(sandbox.GameContent.cameras).length !== 6) throw new Error("监控场景未扩展到6路");
 

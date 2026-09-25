@@ -146,7 +146,8 @@
 
     get timeScale() {
       if (this.finalStage) return 0;
-      if (this.view === "phone-report") return 0.42;
+      if (this.view === "phone-report") return 0.3;
+      if (this.view === "phone-messages") return 0.65;
       if (this.turning) return 0.12;
       return 1;
     }
@@ -235,13 +236,16 @@
         this.firedNarrative.add("self-call");
         this.callbacks.onSelfCall?.(this.snapshot());
       }
-      if (this.minute >= 353 && !this.turnPrompted) {
-        this.turnPrompted = true;
-        this.finalStage = true;
-        this.minute = 360;
-        this.pushMessage({ sender: "自己", text: "屏幕和门外，只能有一个是真的。", corrupt: true });
-        this.callbacks.onTurnPrompt?.(this.snapshot());
-      }
+      if (this.minute >= 353) this.promptTurn();
+    }
+
+    promptTurn() {
+      if (this.turnPrompted || this.ended) return;
+      this.turnPrompted = true;
+      this.finalStage = true;
+      this.minute = 360;
+      this.pushMessage({ sender: "自己", text: "屏幕和门外，只能有一个是真的。", corrupt: true });
+      this.callbacks.onTurnPrompt?.(this.snapshot());
     }
 
     processEvents() {

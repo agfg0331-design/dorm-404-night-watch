@@ -113,7 +113,12 @@
         const buffer = await this.ctx.decodeAudioData(data.slice(0));
         this.sampleBuffers.set(key, buffer);
         return buffer;
-      })().catch(() => null);
+      })().catch(() => {
+        // A transient request/decode failure must not silence the cue for the
+        // rest of the shift. The next warm-up can retry this recording.
+        this.samplePromises.delete(key);
+        return null;
+      });
       this.samplePromises.set(key, promise);
       return promise;
     }
@@ -715,7 +720,7 @@
       osc.connect(gain).connect(this.bgmBus);
       osc.start(); lfo.start();
       this.finalNodes.push(osc, lfo);
-      const heartbeat = this.playSample("heartbeat", { bus: "bgm", volume: 0.17, loop: true, rate: 0.74, filter: "lowpass", frequency: 1800 });
+      const heartbeat = this.playSample("heartbeat", { volume: 0.4, loop: true, rate: 0.86, filter: "lowpass", frequency: 2600 });
       if (heartbeat) { this.finalNodes.push(heartbeat.source); }
       this.breath(1);
     }

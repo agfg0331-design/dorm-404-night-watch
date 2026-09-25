@@ -54,7 +54,9 @@
   let currentTab = "messages";
   let toastTimer = null;
   let promptPending = false;
-  let callOverride = false;
+  let callTimeout = null;
+  let callAnswerTimer = null;
+  let callState = "idle";
   let transitionLocked = false;
   let phoneTransitionTimer = null;
   let swipeStartY = null;
@@ -69,6 +71,7 @@
   let phoneCorruptionTimer = null;
   const eventBeatState = new Map();
   const eventCueState = new Set();
+  const sceneFirstView = new Map();
   let lastAudioTensionKey = "";
   let shiftStarting = false;
   let audioPromptResolving = false;
@@ -80,6 +83,7 @@
   let renderedMonitorFailed = null;
   let renderedFrameEventKey = "";
   let renderedEventFocus = null;
+  let renderedStatus = "";
   let handoffLoadStarted = false;
   let handoffCandidate = null;
   let handoffDeliveryMinute = null;
@@ -115,6 +119,7 @@
       ...(sceneIds.includes("lab") ? ["tvStatic", "robotVoices"] : [])
     ])(shift.sceneIds)
   ];
+  let criticalAudioReady = null;
 
   applySettings(false);
   els.startOverlay.classList.toggle("contaminated", localStorage.getItem(HOME_STATE_KEY) === "1");
@@ -139,11 +144,14 @@
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
+        window.clearTimeout(callTimeout);
+        window.clearTimeout(callAnswerTimer);
+        callState = "finished";
         audio.stopRingtone();
+        audio.stopReportTension();
         els.callOverlay.classList.add("hidden");
         promptPending = true;
-        if (sim.view.startsWith("phone")) revealTurnChoice();
-        else window.setTimeout(() => { openPhone("messages"); window.setTimeout(revealTurnChoice, 1500); }, 500);
+        revealTurnChoice();
       },
       onTurnDeclined: (_state, resolution) => runNoTurnSequence(resolution),
       onTurnStart: (_state, resolution) => runTurnSequence(resolution),
@@ -415,7 +423,7 @@
     setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
     setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : formatMinute(state.minute, true));
     activeFinalCameraCue = state.finalCameraCue;
-    const monitorFailed = state.monitorFailed && !callOverride;
+    const monitorFailed = state.monitorFailed;
     if (renderedMonitorFailed !== monitorFailed) {
       renderedMonitorFailed = monitorFailed;
       els.monitorView.classList.toggle("failed", monitorFailed);
@@ -488,9 +496,13 @@
     }
     // The monitor never judges the feed for the player. Normal and altered
     // footage deliberately share the same neutral status line.
-    els.eventStatus.textContent = sim.currentCamera === "cam04" && activeFinalCameraCue
+    const status = sim.currentCamera === "cam04" && activeFinalCameraCue
       ? activeFinalCameraCue.status
       : `${camera.code} / MONITORING`;
+    if (status !== renderedStatus) {
+      renderedStatus = status;
+      els.eventStatus.textContent = status;
+    }
   }
 
   function handleFinalClue(clue) {
@@ -517,15 +529,22 @@
   const hardEventBeats = new Set(["surge", "ceiling-hit", "bang", "head-turn", "presence", "collapse"]);
 
   function eventVisualProgress(event) {
-    const rate = quietAnomalyVisuals.has(event.visual) ? 1 : event.visual === "window-break" ? 1.15 : event.visual === "shadow-walk" ? 1.45 : 1.75;
-    return clamp01(event.progress * rate);
+    const rate = event.visual === "self-turn" ? 1.8 : quietAnomalyVisuals.has(event.visual) ? 1.35 : event.visual === "window-break" ? 1.15 : event.visual === "shadow-walk" ? 1.45 : 1.35;
+    const progress = clamp01(event.progress * rate);
+    if (event.visual !== "scene-still") return progress;
+    // A scene first discovered after it changed still plays its reveal while
+    // watched. The image and its recorded sound share this same progress.
+    if (!sceneFirstView.has(event.id)) sceneFirstView.set(event.id, progress > 0.11 ? performance.now() : null);
+    const observedAt = sceneFirstView.get(event.id);
+    return observedAt === null ? progress : Math.min(progress, clamp01((performance.now() - observedAt) / 3400));
   }
 
   function setEventFrame(index, source, opacity) {
     const frame = els.eventFrames[index];
     if (!frame) return;
     if (source && !frame.src.endsWith(source)) frame.src = source;
-    frame.style.opacity = String(clamp01(opacity));
+    const nextOpacity = String(Math.round(clamp01(opacity) * 100) / 100);
+    if (frame.style.opacity !== nextOpacity) frame.style.opacity = nextOpacity;
   }
 
   // Reveal the approved CCTV artwork a shoe at a time, using small feathered
@@ -626,7 +645,7 @@
       });
     }
     if (!event?.frames?.length) {
-      els.monitorView.classList.remove("dance-blackout");
+      if (els.monitorView.classList.contains("dance-blackout")) els.monitorView.classList.remove("dance-blackout");
       return;
     }
     const p = eventVisualProgress(event);
@@ -660,8 +679,8 @@
     } else if (event.visual === "self-turn") {
       // The seated silhouette first raises its head, then stands with both
       // hands visible; only after that does its torso snap to the right.
-      setEventFrame(0, event.frames[0], clamp01((p - 0.35) / 0.12));
-      setEventFrame(1, event.frames[1], clamp01((p - 0.66) / 0.14));
+      setEventFrame(0, event.frames[0], clamp01((p - 0.17) / 0.12));
+      setEventFrame(1, event.frames[1], clamp01((p - 0.46) / 0.14));
       clipDutyShadow(els.eventFrames[0], false);
       clipDutyShadow(els.eventFrames[1], true);
     } else if (event.visual === "stairs-darkness") {
@@ -738,14 +757,12 @@
 
   function fireSceneBeats(event, beats, progress) {
     const fired = eventBeatState.get(event.id) || new Set();
-    for (const [point, beat] of beats) {
-      if (progress < point || fired.has(beat)) continue;
-      // If the player switches into a feed after the change, do not make a
-      // fallen stand or already-open door sound as if it just happened.
-      if (progress - point <= 0.075) fireEventBeat(event, beat, beat === "fall" ? "impact-hard" : null);
-      else fired.add(beat);
-    }
+    const due = beats.filter(([point, beat]) => progress >= point && !fired.has(beat));
+    if (!due.length) return;
+    due.slice(0, -1).forEach(([, beat]) => fired.add(beat));
     eventBeatState.set(event.id, fired);
+    const [, beat] = due[due.length - 1];
+    fireEventBeat(event, beat, beat === "fall" ? "impact-hard" : null);
   }
 
   function syncEventBeat(event, audible = true) {
@@ -777,7 +794,7 @@
       "machine-start": [[0.1, "click"], [0.3, "spin"], [0.56, "knock"], [0.82, "bang"]],
       "bed-curtain": [[0.18, "rustle"], [0.52, "breath"], [0.84, "head-turn"]],
       "clock-reverse": [[0.4, "spin-start"]],
-      "self-turn": [[0.38, "cloth"], [0.66, "snap"], [0.94, "look"]],
+      "self-turn": [[0.18, "cloth"], [0.48, "snap"], [0.78, "look"]],
       "duty-extra": [[0.18, "breath"], [0.55, "whisper"], [0.86, "presence"]],
       "lobby-double": [[0.12, "outside"], [0.42, "inside"], [0.72, "echo"], [0.94, "hold"]],
       "space-repeat": [[0.18, "slip"], [0.48, "repeat"], [0.82, "collapse"]]
@@ -798,19 +815,18 @@
     if (source === pendingCameraSource) return;
     const token = ++cameraRequestToken;
     pendingCameraSource = source;
-    els.monitorView.classList.add("camera-switching");
-    els.cameraImage.setAttribute("aria-busy", "true");
     const record = imageRecords.get(source);
+    if (!record?.ready) {
+      els.monitorView.classList.add("camera-switching");
+      els.cameraImage.setAttribute("aria-busy", "true");
+    }
     const commit = () => {
       if (token !== cameraRequestToken) return;
       els.cameraImage.src = source;
       displayedCameraSource = source;
       pendingCameraSource = null;
-      requestAnimationFrame(() => window.setTimeout(() => {
-        if (token !== cameraRequestToken) return;
-        els.monitorView.classList.remove("camera-switching");
-        els.cameraImage.removeAttribute("aria-busy");
-      }, 72));
+      els.monitorView.classList.remove("camera-switching");
+      els.cameraImage.removeAttribute("aria-busy");
     };
     if (record?.ready) commit();
     else preloadImage(source, true).then(commit);
@@ -821,10 +837,8 @@
     // Clear overlays before changing the simulation camera so no event from the
     // previous feed survives for a frame on slower phones.
     els.eventFrames.forEach((frame) => { frame.style.opacity = "0"; });
-    els.monitorView.classList.add("camera-switching");
     sim.setCamera(cameraId);
     audio.switchCamera();
-    audio.loadSamples(criticalAudioSamples);
     audio.setScene(cameras[cameraId].ambient);
   }
 
@@ -841,31 +855,38 @@
   }
 
   function showSelfCall() {
+    if (sim.finalStage || sim.ended) return;
+    callState = "ringing";
     els.callOverlay.classList.remove("hidden");
-    els.callText.textContent = "正在呼叫……";
+    els.callText.textContent = "来电显示：自己 · 你没有拨出这个号码";
     audio.startRingtone();
+    window.clearTimeout(callTimeout);
+    callTimeout = window.setTimeout(() => {
+      if (callState !== "ringing") return;
+      callState = "missed";
+      audio.stopRingtone();
+      els.callOverlay.classList.add("hidden");
+      phone.addMessage({ sender: "自己", text: "未接来电。门外又响了三下。", corrupt: true });
+      audio.knock();
+    }, 9000);
   }
 
   function answerCall() {
+    if (callState !== "ringing") return;
+    callState = "answered";
+    window.clearTimeout(callTimeout);
     audio.stopRingtone();
     els.callText.textContent = "通话中 · 只有很轻的呼吸声";
     audio.breath(2);
-    window.setTimeout(() => {
-      if (sim.finalStage || sim.ended) return;
+    callAnswerTimer = window.setTimeout(() => {
+      if (callState !== "answered" || sim.ended) return;
       audio.knock(); els.callText.textContent = "咚。　咚。　咚。";
-    }, 1900);
-    window.setTimeout(() => {
-      if (sim.finalStage || sim.ended) return;
-      callOverride = true;
-      els.callOverlay.classList.add("hidden");
-      switchView("monitor");
-      switchCamera("cam04");
-      window.setTimeout(() => { callOverride = false; }, 6500);
-    }, 3900);
+      callAnswerTimer = window.setTimeout(() => sim.promptTurn(), 1100);
+    }, 1800);
   }
 
   function revealTurnChoice() {
-    if (!promptPending || sim.ended) return;
+    if (!promptPending || sim.ended || !els.turnChoice.classList.contains("hidden")) return;
     els.turnChoice.classList.remove("ready");
     els.turnChoice.classList.remove("hidden");
     audio.enterFinalChoice();
@@ -968,7 +989,7 @@
     await audio.setEnabled(true);
     // Warm real-world samples while the player is looking around the duty room.
     // The game can still continue if a browser refuses one optional clip.
-    audio.loadSamples(criticalAudioSamples);
+    criticalAudioReady = audio.loadSamples(criticalAudioSamples);
     els.startGame.innerHTML = oldText;
     els.audioCheckOverlay.classList.remove("hidden", "closing");
     window.requestAnimationFrame(() => els.confirmHeadphones.focus({ preventScroll: true }));
@@ -1022,7 +1043,9 @@
     const oldHint = syncHint?.textContent || "点击屏幕正式开始值班";
     if (syncHint) syncHint.textContent = "正在同步六路监控……";
     prepareHandoff();
-    await cameraPreload;
+    await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
+    const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
+    if (missingSamples.length) await audio.loadSamples(missingSamples);
     sim.start(performance.now());
     switchView("monitor");
     if (firstCamera) switchCamera(firstCamera);
@@ -1058,7 +1081,15 @@
   document.querySelectorAll(".phone-tabs button").forEach((button) => button.addEventListener("click", () => setPhoneTab(button.dataset.tab)));
   els.reportForm.addEventListener("submit", report);
   els.answerCall.addEventListener("click", answerCall);
-  els.declineCall.addEventListener("click", () => { audio.stopRingtone(); els.callOverlay.classList.add("hidden"); phone.addMessage({ sender: "自己", text: "你听见门外响了三下。", corrupt: true }); audio.knock(); });
+  els.declineCall.addEventListener("click", () => {
+    if (callState !== "ringing") return;
+    callState = "declined";
+    window.clearTimeout(callTimeout);
+    audio.stopRingtone();
+    els.callOverlay.classList.add("hidden");
+    phone.addMessage({ sender: "自己", text: "你拒接了自己的来电。门外响了三下。", corrupt: true });
+    audio.knock();
+  });
   els.dontTurn.addEventListener("click", () => sim.chooseTurn(false));
   els.turnAround.addEventListener("click", () => sim.chooseTurn(true));
   els.handoffContent.addEventListener("input", () => { els.handoffCounter.textContent = `${Array.from(els.handoffContent.value).length} / 100`; });

@@ -39,7 +39,7 @@
     { id: "stairs-light", start: 220, jitter: 4, camera: "cam05", category: "灯光异常", title: "楼梯灯逐层向上熄灭", visual: "stairs-darkness", frames: ["assets/cam-stairs-blackout-1-approved-v1.webp", "assets/cam-stairs-blackout-2-approved-v1.webp", "assets/cam-stairs-blackout-3-approved-v1.webp"], duration: 17, grace: 9, severity: 9, lead: { offset: -3, sender: "401 刘同学", text: "楼梯灯是跟着脚步一层一层灭的。", kind: "real" } },
     { id: "duty-self", start: 239, jitter: 4, camera: "cam04", category: "人物异常", title: "值班室黑影抬头、起身并向右横折", visual: "self-turn", frames: ["assets/cam-duty-shadow-stand-approved-v1.webp", "assets/cam-duty-shadow-right-fold-approved-v1.webp"], duration: 22, grace: 13, severity: 15, lead: { offset: -3, sender: "值班系统", text: "CAM 04 坐姿识别异常。请确认值班员状态。", kind: "real" } },
     { id: "hall-door", start: 256, jitter: 4, camera: "cam02", category: "门窗异常", title: "不存在的房门缓慢打开", visual: "door-open", frames: ["assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp"], duration: 21, grace: 8, severity: 13, lead: { offset: -3, sender: "未知号码", text: "走廊多出来的那扇门开了。里面不像宿舍。", kind: "real" } },
-    { id: "laundry-reflection", start: 164, jitter: 2, camera: "cam03", category: "人物异常", title: "镜中出现未进入房间的人", visual: "mirror-reflection", frames: ["assets/cam-laundry-mirror-shadow-1-approved-v1.webp", "assets/cam-laundry-mirror-shadow-2-approved-v1.webp", "assets/cam-laundry-mirror-shadow-3-approved-v1.webp"], duration: 18, grace: 7, severity: 14, lead: { offset: -3, sender: "值班系统", text: "CAM 02 检测到人员活动。", kind: "false" } },
+    { id: "laundry-reflection", start: 145, jitter: 2, camera: "cam03", category: "人物异常", title: "镜中出现未进入房间的人", visual: "mirror-reflection", frames: ["assets/cam-laundry-mirror-shadow-1-approved-v1.webp", "assets/cam-laundry-mirror-shadow-2-approved-v1.webp", "assets/cam-laundry-mirror-shadow-3-approved-v1.webp"], duration: 18, grace: 10, severity: 14, lead: { offset: -3, sender: "值班系统", text: "CAM 02 检测到人员活动。", kind: "false" } },
     { id: "lobby-footprints", start: 154, jitter: 3, camera: "cam06", category: "空间异常", title: "湿脚印从门外延伸至值班室", visual: "wet-footprints", frames: ["assets/cam-lobby-wet-footprints-approved-v1.webp"], duration: 20, grace: 8, severity: 14, lead: { offset: -3, sender: "门卫老陈", text: "刚拖完大厅，怎么又有一排湿脚印？", kind: "real" } },
     { id: "stair-loop", start: 302, jitter: 3, camera: "cam05", category: "空间异常", title: "上下楼梯连接到同一层", visual: "space-repeat", duration: 19, grace: 6, severity: 16, lead: { offset: -3, sender: "403 林同学", text: "我走了两层，墙上还是写着4F。", kind: "real" } },
     { id: "hall-shadow-near", start: 316, jitter: 2, camera: "cam02", category: "人物异常", title: "人影突然加速逼近镜头", visual: "shadow-rush", frames: ["assets/cam-hall-shadow-mid-v2.webp", "assets/cam-hall-shadow-near-v2.webp"], duration: 15, grace: 4, severity: 18, lead: { offset: -2, sender: "值班系统", text: "CAM 03 检测到人员活动。", kind: "false" } },
@@ -80,7 +80,7 @@
     { id: "music-figure", sceneId: "music", start: 280, jitter: 3, category: "人物异常", title: "窗边人影出现，窗帘突然扬起", visual: "scene-still", frames: ["scene-preview/assets/music-figure.webp"], duration: 21, grace: 6, severity: 15, lead: { sender: "未知号码", text: "音乐教室的窗户开着吗？", kind: "real" } },
     { id: "dance-figure", sceneId: "dance", start: 64, jitter: 5, category: "人物异常", title: "白衣女人面对镜子，却没有倒影", visual: "scene-still", frames: ["scene-preview/assets/dance-figure.webp"], duration: 19, grace: 9, severity: 11, lead: { sender: "值班系统", text: "舞蹈教室检测到人员活动。", kind: "real" } },
     { id: "dance-desync", sceneId: "dance", start: 174, jitter: 4, category: "空间异常", title: "镜中出现与空教室不同步的动作", visual: "scene-still", frames: ["scene-preview/assets/dance-desync.webp"], duration: 20, grace: 8, severity: 13, lead: { sender: "未知号码", text: "舞蹈教室的镜子里刚才有人抬手。", kind: "real" } },
-    { id: "dance-line", sceneId: "dance", start: 305, jitter: 3, category: "人物异常", title: "镜中排出一列无人对应的身影", visual: "scene-still", frames: ["scene-preview/assets/dance-line.webp"], duration: 17, grace: 5, severity: 17, lead: { sender: "值班系统", text: "舞蹈教室画面人数无法核实。", kind: "real" } },
+    { id: "dance-line", sceneId: "dance", start: 206, jitter: 3, category: "人物异常", title: "镜中排出一列无人对应的身影", visual: "scene-still", frames: ["scene-preview/assets/dance-line.webp"], duration: 18, grace: 10, severity: 14, lead: { sender: "值班系统", text: "舞蹈教室画面人数无法核实。", kind: "real" } },
     { id: "elevator-die", sceneId: "elevator", start: 49, jitter: 4, category: "空间异常", title: "两部电梯的楼层屏同时显示 DIE", visual: "scene-still", frames: ["scene-preview/assets/elevator-floor.webp"], duration: 17, grace: 8, severity: 9, lead: { sender: "值班系统", text: "电梯厅的楼层显示器同时失去读数。", kind: "real" } },
     { id: "elevator-open", sceneId: "elevator", start: 186, jitter: 4, category: "门窗异常", title: "电梯门自行打开，轿厢一片黑暗", visual: "scene-still", frames: ["scene-preview/assets/elevator-open.webp"], duration: 19, grace: 8, severity: 12, lead: { sender: "值班系统", text: "电梯厅的开门声响了，呼叫记录却是空的。", kind: "real" } },
     { id: "elevator-footprints", sceneId: "elevator", start: 312, jitter: 2, category: "人物异常", title: "湿脚印走向紧闭的电梯门", visual: "scene-still", frames: ["scene-preview/assets/elevator-footprints.webp"], duration: 16, grace: 5, severity: 16, lead: { sender: "未知号码", text: "电梯厅的地板又湿了。", kind: "real" } },
@@ -131,6 +131,16 @@
         return shiftCameras[slots.find((slot) => slot !== camera)].code;
       }) };
       return { ...event, camera, lead, reportLocation: shiftCameras[camera].reportLocation || shiftCameras[camera].name, code };
+    });
+    // Spread the selected scenes across the shift. Their original order and
+    // late-night escalation survive, while the first event starts sooner and
+    // the final hour leaves room to use the phone between reports.
+    shiftEvents.sort((a, b) => a.start - b.start);
+    shiftEvents.forEach((event, index) => {
+      const evenStart = 12 + index * 314 / Math.max(1, shiftEvents.length - 1);
+      event.start = Math.round(event.start * 0.1 + evenStart * 0.9);
+      if (event.id === "duty-self") { event.duration = 14; event.grace = 16; }
+      if (event.start >= 280) event.grace = Math.max(event.grace, 10);
     });
     const shiftNarrative = narrative.map((item) => {
       if (item.id === "safe" && !slotByScene.dorm) return { ...item, text: "全楼信号正常。值班室门禁没有访客记录。" };

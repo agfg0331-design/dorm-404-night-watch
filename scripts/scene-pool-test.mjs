@@ -25,6 +25,10 @@ for (let seed = 0; seed < 120; seed += 1) {
   assert(selected.size === 5 && Object.keys(shift.cameras).length === 6, "没有抽到五个不重复场景");
   assert(shift.cameras.cam04.name === "值班室" && shift.cameras.cam04.sceneId === "duty", "值班室不是固定 CAM 04");
   const availableCodes = new Set(Object.values(shift.cameras).map((camera) => camera.code));
+  const starts = shift.events.map((event) => event.start).sort((a, b) => a - b);
+  const largestGap = Math.max(starts[0], ...starts.slice(1).map((start, index) => start - starts[index]));
+  assert(largestGap <= 29, `本局存在过长的空档：${largestGap} 分钟`);
+  assert(starts.filter((start) => start >= 300).length <= 4, "结尾前异常过于密集");
   for (const scene of Object.values(shift.cameras)) {
     assert(fs.existsSync(`public/game/${scene.image}`), `场景正常图缺失：${scene.image}`);
   }
@@ -58,6 +62,9 @@ assert(seenScenes.size === Object.keys(scenePool).length, "有场景永远不会
 
 const shift = createShift(404, ["music", "dance", "elevator", "lab", "dorm"]);
 assert(shift.events.filter((event) => event.sceneId !== "duty").length === 16, "新场景的异常没有完整进入各自池");
+assert(shift.events.find((event) => event.id === "dance-line").start < 240, "舞蹈教室人影仍在过暗的后期");
+const laundryShift = createShift(405, ["laundry", "music", "elevator", "lab", "dorm"]);
+assert(laundryShift.events.find((event) => event.id === "laundry-reflection").start < 210, "浴室镜中黑影仍在过暗的后期");
 const sim = new sandbox.NightShiftSimulation({ seed: 404, shift });
 const event = sim.eventQueue.find((item) => item.id === "dance-figure");
 sim.minute = event.actualStart + 1;

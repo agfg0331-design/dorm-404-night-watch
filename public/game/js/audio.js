@@ -52,6 +52,7 @@
         ringtone: "assets/audio/phone-old-ring.mp3",
         heartbeat: "assets/audio/heartbeat-fast.mp3",
         woodScrape: "assets/audio/wood-scrape.mp3",
+        chairFall: "assets/audio/chair-fall-floor.mp3",
         glassBreak: "assets/audio/glass-break.mp3",
         wind: "assets/audio/wind-ambience.mp3",
         breathing: "assets/audio/human-breathing.mp3",
@@ -451,10 +452,10 @@
       const cue = event.visual;
       if (cue === "chair-fall" && beat === "impact") {
         this.duck(2.2, 0.06);
-        this.playSample("woodScrape", { volume: 0.82, rate: 0.9 });
-        this.playSample("horrorHit", { volume: 0.55, rate: 0.84, offset: 0.02, duration: 1.5 });
-        this.tone(48, 0.72, { volume: 0.14, to: 27, type: "triangle" });
-        this.vibrate(3);
+        // The chair reaches the tile as its fallen frame appears. The recorded
+        // first crash and shorter rebound follow the earlier dragging cue.
+        this.playSample("chairFall", { volume: 0.86, rate: 1, pan: -0.24, attack: 0.006 });
+        if (navigator.vibrate) navigator.vibrate(90);
       } else if (cue === "window-break" && beat === "impact") {
         this.duck(2.8, 0.04);
         this.playSample("glassBreak", { volume: 0.95, rate: 0.96 });

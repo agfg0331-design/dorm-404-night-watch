@@ -40,3 +40,7 @@ The player approved these real recordings on 2026-09-25. Each source is marked C
 | `clock-real-ticking.mp3` | Mechanical clock ticking 2, LukaCafuka | https://freesound.org/people/LukaCafuka/sounds/784052/ |
 | `clock-gears-runaway.mp3` | Clockwork motor, robindouglasjohnson | https://freesound.org/people/robindouglasjohnson/sounds/698991/ |
 | `shadow-bone-fracture.mp3` | Bone Breaks (celery snaps), ericnorcross81 | https://freesound.org/people/ericnorcross81/sounds/574752/ |
+
+## Chair impact recording
+
+`chair-fall-floor.mp3` is a short edit of "Wooden chair falls on the ground" by Janijs, recorded with a Tascam DR-40 and published under Creative Commons 0: https://freesound.org/people/Janijs/sounds/686712/ . The first fall and its rebound were trimmed from the high-quality preview to coincide with CAM01's chair-fall frame; the preceding drag remains a separate cue.

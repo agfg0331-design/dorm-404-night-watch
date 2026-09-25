@@ -20,25 +20,27 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=mobile-landscape-20260925">
+  <link rel="stylesheet" href="style.css?v=guestbook-landscape-20260925">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
   <main class="game" id="game">
     <section class="view room-view active" id="roomView" aria-label="值班室第一视角">
-      <img class="room-background" id="roomBackground" src="assets/duty-room-normal.webp" alt="昏暗的宿舍楼值班室">
-      <div class="room-depth"></div>
-      <header class="room-hud">
-        <div><b>东区 4 号楼</b><span>夜间值班</span></div>
-        <time id="roomClock">00:00</time>
-      </header>
-      <button class="room-hotspot monitor-hotspot" id="enterMonitor" type="button">
-        <span>开始监控</span><small>点击屏幕正式开始值班</small>
-      </button>
-      <button class="room-hotspot phone-hotspot" id="openGuestbook" type="button">
-        <strong>查看 404 留言板</strong>
-      </button>
-      <p class="room-caption" id="roomCaption">左侧监控开始值班，右侧手机查看访客留言。</p>
+      <div class="room-scene">
+        <img class="room-background" id="roomBackground" src="assets/duty-room-normal.webp" alt="昏暗的宿舍楼值班室">
+        <div class="room-depth"></div>
+        <header class="room-hud">
+          <div><b>东区 4 号楼</b><span>夜间值班</span></div>
+          <time id="roomClock">00:00</time>
+        </header>
+        <button class="room-hotspot monitor-hotspot" id="enterMonitor" type="button">
+          <span>开始监控</span><small>点击屏幕正式开始值班</small>
+        </button>
+        <button class="room-hotspot phone-hotspot" id="openGuestbook" type="button">
+          <strong>查看 404 留言板</strong>
+        </button>
+        <p class="room-caption" id="roomCaption">左侧监控开始值班，右侧手机查看访客留言。</p>
+      </div>
     </section>
 
     <section class="view monitor-view" id="monitorView" aria-label="放大的监控画面">

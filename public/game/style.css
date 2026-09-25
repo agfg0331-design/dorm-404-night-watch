@@ -10,6 +10,7 @@ body.custom-brightness .game{filter:brightness(var(--game-brightness))}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .view{display:none;overflow:hidden;background:#030606}
 .view.active{display:block}
+.room-scene{position:absolute;inset:0}
 .room-background,.feed-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .room-background{filter:saturate(.7) brightness(.62);transform:scale(1.02);transition:filter 1.2s}
 .room-depth,.feed-grade{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 46% 47%,transparent 15%,rgba(1,4,4,.24) 58%,rgba(0,0,0,.82) 100%),linear-gradient(180deg,rgba(10,18,16,.08),rgba(2,5,5,.38))}
@@ -489,6 +490,16 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 }
 @keyframes rotatePhoneHint{0%,30%,100%{transform:rotate(-12deg)}55%,75%{transform:rotate(12deg)}}
 @media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  .room-view::before{content:"";position:absolute;inset:-2%;background:url("assets/duty-room-normal.webp") center/cover no-repeat;filter:blur(16px) brightness(.22);pointer-events:none}
+  .room-scene{inset:0 auto 0 50%;width:min(100vw,133.333dvh);transform:translateX(-50%)}
+  .room-scene::after{content:"";position:absolute;z-index:1;left:0;right:0;top:0;height:27%;background:linear-gradient(#020505 0%,rgba(2,5,5,.93) 68%,transparent);pointer-events:none}
+  .room-background{object-fit:contain;transform:none}
+  .room-hud,.room-hotspot,.room-caption{z-index:2}
+  .room-hud{left:.8rem;right:.8rem;top:.7rem}
+  .room-hotspot.monitor-hotspot{left:2%;top:27%;width:38%;height:43%}
+  .room-hotspot.phone-hotspot{left:69%;right:auto;top:70%;bottom:auto;width:20%;height:25%}
+  .monitor-hotspot span,.monitor-hotspot small,.phone-hotspot strong{opacity:1;transform:none}
+  .room-caption{bottom:max(.3rem,env(safe-area-inset-bottom))}
   .phone-composite{left:50%;top:calc(50% - min(9.3vw,20dvh));width:min(125vw,270dvh)}
   .phone-status{height:23px;padding-top:5px}
   .phone-title{height:44px;grid-template-columns:2.5rem 1fr 2.5rem}
@@ -499,5 +510,19 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
   .camera-dock{left:max(.5rem,env(safe-area-inset-left));right:max(6rem,env(safe-area-inset-right));bottom:.7rem;transform:none;overflow-x:auto}
   .camera-dock button{min-width:6.3rem;padding:.45rem .5rem}
   .phone-dock{right:max(.8rem,env(safe-area-inset-right))}
+  .guestbook-phone{width:min(86vw,760px);height:calc(100dvh - 16px);max-height:none;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);grid-template-rows:24px 44px 34px minmax(0,1fr) 28px;gap:0;padding:12px 14px;border-radius:24px;animation-duration:.25s}
+  .guestbook-phone::before{inset:7px;border-radius:18px}
+  .guestbook-speaker{top:5px;width:48px;height:3px}
+  .guestbook-status{grid-column:1/-1;grid-row:1;padding-right:32px;border-radius:9px 9px 0 0}
+  .guestbook-titlebar{grid-column:1/-1;grid-row:2;grid-template-columns:70px 1fr 26px}
+  .guestbook-sort{grid-column:1;grid-row:3}
+  .guestbook-list{grid-column:1;grid-row:4/6;min-height:0;padding:8px 10px;border-right:1px solid #aeb9b1}
+  .guestbook-compose{grid-column:2;grid-row:3/5;min-height:0;overflow-y:auto;padding:8px 10px 4px;border-top:0}
+  .guestbook-compose label{grid-template-columns:30px 1fr;gap:3px;margin-bottom:5px}
+  .guestbook-compose input,.guestbook-compose textarea{padding:5px}
+  .guestbook-compose>div{padding-left:33px}
+  .guestbook-compose button{min-height:32px;padding:5px 13px}
+  .guestbook-note{grid-column:2;grid-row:5;align-self:center;padding:0 25px 0 8px;text-align:center}
+  .guestbook-home{position:absolute;right:18px;bottom:15px;width:18px;height:18px;border-radius:50%}
 }
 @media(prefers-reduced-motion:reduce){.rotate-device-notice svg{animation:none}}

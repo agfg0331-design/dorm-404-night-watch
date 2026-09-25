@@ -6,7 +6,8 @@
   const qa = params.get("qa") === "1";
   const fast = params.get("fast") === "1";
   const startMinute = qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
-  const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 1800;
+  const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
+  const globalSignalAt = qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
   const shift = window.GameContent.createShift(shiftSeed);
@@ -18,7 +19,7 @@
     roomBackground: $("roomBackground"), roomClock: $("roomClock"), roomCaption: $("roomCaption"),
     enterMonitor: $("enterMonitor"), monitorPhone: $("monitorPhone"),
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
-    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"),
+    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
     eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
@@ -57,6 +58,10 @@
   let callTimeout = null;
   let callAnswerTimer = null;
   let callState = "idle";
+  let shiftStartedAt = 0;
+  let globalSignalStartedAt = 0;
+  let globalSignalFinished = false;
+  let globalSignalStage = "";
   let transitionLocked = false;
   let phoneTransitionTimer = null;
   let swipeStartY = null;
@@ -111,12 +116,12 @@
   const criticalAudioSamples = [
     "crtSwitch", "heelsFar", "heelsNear", "heelsStop", "woodScrape", "glassBreak",
     "drip1", "drip2", "drip3", "washer1", "washer2", "washer3", "doorShort",
-    "doorLong", "doorTense", "ringtone", "horrorHit", "heartbeat", "breathing",
+    "doorLong", "doorTense", "ringtone", "horrorHit", "heartbeat", "breathing", "tvStatic",
     ...((sceneIds) => [
       ...(sceneIds.includes("music") ? ["metalFrameFall", "chairFall", "badPiano", "curtainWind"] : []),
       ...(sceneIds.includes("dance") ? ["danceScreech", "danceWhispers"] : []),
       ...(sceneIds.includes("elevator") ? ["elevatorDoor", "elevatorDing"] : []),
-      ...(sceneIds.includes("lab") ? ["tvStatic", "robotVoices"] : [])
+      ...(sceneIds.includes("lab") ? ["robotVoices"] : [])
     ])(shift.sceneIds)
   ];
   let criticalAudioReady = null;
@@ -1046,7 +1051,8 @@
     await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
     const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
     if (missingSamples.length) await audio.loadSamples(missingSamples);
-    sim.start(performance.now());
+    shiftStartedAt = performance.now();
+    sim.start(shiftStartedAt);
     switchView("monitor");
     if (firstCamera) switchCamera(firstCamera);
     els.enterMonitor.classList.remove("syncing");
@@ -1128,12 +1134,34 @@
 
   let lastAmbientWarning = -1;
   let lastSimulationFrame = 0;
+  function syncGlobalSignal(now) {
+    if (!shiftStartedAt || globalSignalFinished || !sim.running || sim.finalStage) return;
+    if (!globalSignalStartedAt) {
+      if (now - shiftStartedAt < globalSignalAt) return;
+      globalSignalStartedAt = now;
+      sim.pauseFor(8000, now);
+      els.globalSignal.classList.remove("hidden");
+    }
+    const elapsed = now - globalSignalStartedAt;
+    if (elapsed >= 8000) {
+      globalSignalFinished = true;
+      els.globalSignal.classList.add("hidden");
+      els.globalSignal.removeAttribute("data-stage");
+      return;
+    }
+    const stage = elapsed < 2000 ? "snow-1" : elapsed < 6000 ? "duty" : "snow-2";
+    if (stage === globalSignalStage) return;
+    globalSignalStage = stage;
+    els.globalSignal.dataset.stage = stage;
+    if (stage !== "duty") audio.playSample("tvStatic", { volume: 0.58, duration: 2, filter: "highpass", frequency: 220 });
+  }
   function loop(now) {
     if (lastSimulationFrame && now - lastSimulationFrame < 1000 / 30) {
       requestAnimationFrame(loop);
       return;
     }
     lastSimulationFrame = now;
+    syncGlobalSignal(now);
     sim.step(now);
     const currentMinute = Math.floor(sim.minute);
     if (currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {

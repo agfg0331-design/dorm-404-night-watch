@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=feedback-20260926">
+  <link rel="stylesheet" href="style.css?v=pacing-20260926">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -164,6 +164,12 @@
       <div class="turn-vignette"></div>
       <p id="turnCaption">你把手从鼠标上移开。</p>
     </section>
+    <div class="global-signal hidden" id="globalSignal" aria-hidden="true">
+      <img src="assets/cam-duty-overhead.webp" alt="">
+      <div class="global-signal-snow"></div>
+      <div class="global-signal-scanlines"></div>
+      <span class="global-signal-label">CAM 01—06 / SIGNAL OVERRIDE</span>
+    </div>
   </main>
 
   <section class="overlay start-overlay" id="startOverlay">
@@ -293,11 +299,11 @@
   </aside>
 
   <script src="js/audio.js?v=feedback-20260926"></script>
-  <script src="js/anomalies.js?v=feedback-20260926"></script>
-  <script src="js/game.js?v=feedback-20260926"></script>
+  <script src="js/anomalies.js?v=pacing-20260926"></script>
+  <script src="js/game.js?v=pacing-20260926"></script>
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=flow-20260925"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/main.js?v=feedback-20260926"></script>
+  <script src="js/main.js?v=pacing-20260926"></script>
 </body>
 </html>

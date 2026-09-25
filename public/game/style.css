@@ -10,6 +10,13 @@ body.custom-brightness .game{filter:brightness(var(--game-brightness))}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .view{display:none;overflow:hidden;background:#030606}
 .view.active{display:block}
+.global-signal{position:fixed;z-index:85;inset:0;overflow:hidden;background:#020403;pointer-events:auto}
+.global-signal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.45) sepia(.12) hue-rotate(80deg) contrast(1.1) brightness(.7);opacity:0}
+.global-signal[data-stage="duty"] img{opacity:1}
+.global-signal-snow{position:absolute;inset:-8%;background:repeating-radial-gradient(circle at 21% 32%,#bacbc1 0 1px,#101814 1px 2px,transparent 2px 4px),repeating-linear-gradient(103deg,#d5e1d5 0 1px,#101a16 1px 3px,#61776c 3px 5px);background-size:11px 9px,17px 12px;animation:noise .075s steps(2) infinite;opacity:1}
+.global-signal[data-stage="duty"] .global-signal-snow{opacity:.08;mix-blend-mode:screen}
+.global-signal-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 3px,#0009 4px);pointer-events:none}
+.global-signal-label{position:absolute;left:3%;top:4%;padding:.38rem .55rem;background:#040807c9;color:#c9d8ce;font:600 clamp(.65rem,1.4vw,.95rem) ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 1px 5px #000}
 .room-scene{position:absolute;inset:0}
 .room-background,.feed-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .room-background{filter:saturate(.7) brightness(.62);transform:scale(1.02);transition:filter 1.2s}

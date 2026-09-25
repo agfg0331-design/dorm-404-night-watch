@@ -28,7 +28,11 @@ for (let seed = 0; seed < 120; seed += 1) {
   const starts = shift.events.map((event) => event.start).sort((a, b) => a - b);
   const largestGap = Math.max(starts[0], ...starts.slice(1).map((start, index) => start - starts[index]));
   assert(largestGap <= 29, `本局存在过长的空档：${largestGap} 分钟`);
-  assert(starts.filter((start) => start >= 300).length <= 4, "结尾前异常过于密集");
+  const earlyCount = starts.filter((start) => start < 120).length;
+  const middleCount = starts.filter((start) => start >= 120 && start < 260).length;
+  const lateCount = starts.filter((start) => start >= 260).length;
+  assert(earlyCount >= 4 && middleCount > earlyCount && lateCount < earlyCount, "异常没有集中于中期且减轻尾声负担");
+  assert(starts.at(-1) <= 305, "终局手机线索期间还有新异常");
   for (const scene of Object.values(shift.cameras)) {
     assert(fs.existsSync(`public/game/${scene.image}`), `场景正常图缺失：${scene.image}`);
   }

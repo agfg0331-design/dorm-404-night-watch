@@ -37,7 +37,7 @@
 
     constructor(options = {}) {
       this.callbacks = options.callbacks || {};
-      this.minuteMs = options.minuteMs || 1800;
+      this.minuteMs = options.minuteMs || 420000 / 360;
       this.startMinute = options.startMinute || 0;
       const providedSeed = Number(options.seed);
       this.seed = Number.isFinite(providedSeed) ? Math.trunc(providedSeed) : Math.floor(Math.random() * 99999);
@@ -96,18 +96,27 @@
       this.firedNarrative = new Set();
       this.firedFinalClues = new Set();
       this.firedInterference = new Set();
-      // Two sparse false leads break up the early quiet. Later, seeded leads
-      // become more frequent without replacing the genuine messages.
-      this.interferencePlan = [52, 94, 132, 171, 207, 245, 286, 320].map((base, index) => ({
-        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 9 : 13)), index
-      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 4 ? .78 : .88));
+      // Two early false leads, then progressively more interference. These
+      // messages only name feeds actually present in this shift.
+      this.interferencePlan = [38, 96, 131, 157, 184, 219, 247, 273, 299, 324].map((base, index) => ({
+        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 8 : 10)), index
+      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 7 ? .9 : .94));
       this.eventQueue = this.shift.events.map((event, index) => {
-        const leadOffset = event.start >= 280 ? -0.35 : -0.65;
+        const actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
+        const early = actualStart < 120;
+        const silentChance = actualStart >= 260 ? 0.45 : 0.22;
+        const silent = !early && this.#seededUnit(0x53494c00 + index) < silentChance;
+        // An early anomaly always has a genuine advance notice, even when its
+        // old scene-specific lead was intentionally deceptive.
+        const lead = early && event.lead.kind === "false"
+          ? { sender: "值班系统", text: `${this.cameras[event.camera].code}（${this.cameras[event.camera].name}）画面出现变化，请核对。`, kind: "real" }
+          : { ...event.lead };
         return {
           ...event,
-          lead: { ...event.lead, offset: leadOffset },
-          actualStart: clamp(event.start + this.jitter(index, event.jitter), 5, 340),
-          leadSent: false,
+          lead: { ...lead, offset: early ? -4.5 : -2.8 },
+          actualStart,
+          leadSent: silent,
+          silent,
           state: "waiting",
           progress: 0,
           seenChanging: false,
@@ -117,6 +126,7 @@
       }).sort((a, b) => a.actualStart - b.actualStart);
       this.activeEvents = [];
       this.lastFrame = 0;
+      this.pausedUntil = 0;
       this.callbacks.onReset?.(this.snapshot());
     }
 
@@ -130,6 +140,10 @@
       this.running = true;
       this.lastFrame = now;
       this.callbacks.onStart?.(this.snapshot());
+    }
+
+    pauseFor(duration, now = performance.now()) {
+      this.pausedUntil = Math.max(this.pausedUntil, now + duration);
     }
 
     setView(view) {
@@ -157,6 +171,10 @@
       if (!this.lastFrame) this.lastFrame = now;
       const elapsed = Math.min(250, now - this.lastFrame);
       this.lastFrame = now;
+      if (now < this.pausedUntil) {
+        this.callbacks.onTick?.(this.snapshot());
+        return;
+      }
       this.minute += (elapsed / this.minuteMs) * this.timeScale;
       const floorMinute = Math.floor(this.minute);
       if (floorMinute !== this.lastMinute) {
@@ -250,9 +268,7 @@
 
     processEvents() {
       this.eventQueue.forEach((event) => {
-        // Linked chat messages should lead players to an anomaly, not make them
-        // stare at an unchanged feed for seven or eight real seconds.
-        const messageLead = Math.max(event.lead.offset, -1.2);
+        const messageLead = event.lead.offset;
         if (!event.leadSent && this.minute >= event.actualStart + messageLead) {
           event.leadSent = true;
           this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });

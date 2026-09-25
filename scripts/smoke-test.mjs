@@ -80,7 +80,7 @@ for (const promptElement of ['id="audioCheckOverlay"', 'id="confirmHeadphones"',
   if (!html.includes(promptElement)) throw new Error(`耳机提示界面缺失：${promptElement}`);
 }
 if (!main.includes("function finishAudioCheck") || !main.includes('audioCheckOverlay.classList.remove("hidden", "closing")')) throw new Error("耳机提示交互流程缺失");
-if (!main.includes("async function beginShift") || !main.includes("sim.start(performance.now())")) throw new Error("点击监控正式开始值班的流程缺失");
+if (!main.includes("async function beginShift") || !main.includes("sim.start(shiftStartedAt)")) throw new Error("点击监控正式开始值班的流程缺失");
 const startBody = main.match(/async function startGame\(\)[\s\S]*?\n  }/)?.[0] || "";
 if (startBody.includes("sim.start(")) throw new Error("点击开始值班后计时仍提前启动");
 for (const anomalyLayer of ["rising-water", "machine-drum", "air-draft", "space-echo", "event-flash"]) {
@@ -212,8 +212,8 @@ if (!main.includes("allCameraSources") || !main.includes("cameraPreload") || !ma
 if (!main.includes("criticalAudioSamples") || !main.includes("audio.loadSamples(criticalAudioSamples)")) {
   throw new Error("关键事件音效没有在进入监控前预热");
 }
-if (!simulationSource.includes("Math.max(event.lead.offset, -1.2)")) {
-  throw new Error("手机线索到异常发生的等待时间仍然过长");
+if (!simulationSource.includes("early ? -4.5 : -2.8") || simulationSource.includes("Math.max(event.lead.offset, -1.2)")) {
+  throw new Error("前期手机线索没有提前送达，或中后期线索仍被强制压短");
 }
 if (!main.includes("cameraRequestToken += 1") || !main.includes('pendingCameraSource = null')) {
   throw new Error("连续切换镜头时旧图片请求未被取消");
@@ -234,7 +234,7 @@ for (const phoneEffect of ["phone-corruption-ghost", "phone-corruption-snow-hard
   if (!css.includes(phoneEffect)) throw new Error(`缺少手机污染效果：${phoneEffect}`);
 }
 if (!main.includes("queuePhoneCorruption") || !main.includes("triggerPhoneCorruption")) throw new Error("手机污染触发逻辑缺失");
-if (!main.includes(": 1800")) throw new Error("正常流程未扩展到约10.8分钟");
+if (!main.includes("420000 / 360")) throw new Error("正常流程未设置为约7分钟");
 if (!main.includes("eventVisualProgress")) throw new Error("异常画面加速逻辑缺失");
 for (const integratedFrame of [
   "cam-stairs-footprints-v3.webp",
@@ -290,7 +290,7 @@ if (!noTurnTest.ended) throw new Error("不回头分支未能进入结局");
 
 const reportTest = new sandbox.NightShiftSimulation({ seed: 404 });
 const event = reportTest.eventQueue[0];
-if (reportTest.eventQueue.some((item) => item.lead.offset < -0.75)) throw new Error("消息到异常开始的等待仍然过长");
+if (reportTest.eventQueue.some((item) => item.actualStart < 120 && (item.silent || item.lead.offset > -4))) throw new Error("前期异常缺少提前信息");
 reportTest.minute = event.actualStart + 1;
 reportTest.processEvents();
 if (!reportTest.report(event.camera, event.category).ok) throw new Error("正确上报未被识别");

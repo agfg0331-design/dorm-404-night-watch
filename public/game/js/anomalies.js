@@ -132,13 +132,17 @@
       }) };
       return { ...event, camera, lead, reportLocation: shiftCameras[camera].reportLocation || shiftCameras[camera].name, code };
     });
-    // Spread the selected scenes across the shift. Their original order and
-    // late-night escalation survive, while the first event starts sooner and
-    // the final hour leaves room to use the phone between reports.
+    // Keep scene escalation in order, but give the middle of the shift most
+    // of the events. The final run-up to the phone choice stays quieter.
     shiftEvents.sort((a, b) => a.start - b.start);
     shiftEvents.forEach((event, index) => {
-      const evenStart = 12 + index * 314 / Math.max(1, shiftEvents.length - 1);
-      event.start = Math.round(event.start * 0.1 + evenStart * 0.9);
+      const position = index / Math.max(1, shiftEvents.length - 1);
+      const target = position <= 0.3
+        ? 9 + position / 0.3 * 105
+        : position <= 0.85
+          ? 114 + (position - 0.3) / 0.55 * 144
+          : 258 + (position - 0.85) / 0.15 * 47;
+      event.start = Math.round(target);
       if (event.id === "duty-self") { event.duration = 14; event.grace = 16; }
       if (event.start >= 280) event.grace = Math.max(event.grace, 10);
     });

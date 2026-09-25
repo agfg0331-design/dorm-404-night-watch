@@ -523,7 +523,7 @@
     const offsetX = (width - 1448 * scale) / 2;
     const offsetY = (height - 1086 * scale) / 2;
     const masks = lobbyPrints.flatMap(([x, y, rx, ry, at]) => {
-      const opacity = clamp01((progress - at) * 16);
+      const opacity = clamp01((progress - at) * 36);
       return opacity ? [`radial-gradient(ellipse ${rx * scale}px ${ry * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, rgba(0,0,0,${opacity}) 48%, transparent 100%)`] : [];
     });
     frame.style.maskImage = masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)";
@@ -693,7 +693,7 @@
       "stairs-darkness": [[0.1, "douse-1"], [0.22, "step-1"], [0.36, "douse-2"], [0.49, "step-2"], [0.62, "douse-3"], [0.75, "step-3"], [0.86, "douse-4"], [0.96, "silence"]],
       "pipe-drip": [[0.14, "drop-1"], [0.36, "drop-2"], [0.62, "reverse"], [0.86, "ceiling-hit"]],
       "stair-steps": [[0.12, "step-1"], [0.3, "step-2"], [0.5, "step-3"], [0.7, "step-4"], [0.88, "step-5"]],
-      "wet-footprints": [[0.08, "step-1"], [0.18, "step-2"], [0.3, "step-3"], [0.39, "step-4"], [0.51, "step-5"], [0.59, "step-6"], [0.7, "step-7"], [0.78, "step-8"], [0.89, "step-9"], [0.94, "step-10"], [0.985, "stop"]],
+      "wet-footprints": [[0.08, "step-1"], [0.18, "step-2"], [0.3, "step-3"], [0.39, "step-4"], [0.51, "step-5"], [0.59, "step-6"], [0.7, "step-7"], [0.78, "step-8"], [0.91, "stop"]],
       "door-open": [[0.12, "handle"], [0.34, "creak"], [0.68, "open"], [0.9, "inside-breath"]],
       "machine-start": [[0.1, "click"], [0.3, "spin"], [0.56, "knock"], [0.82, "bang"]],
       "bed-curtain": [[0.18, "rustle"], [0.52, "breath"], [0.84, "head-turn"]],

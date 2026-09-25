@@ -101,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=duty-shadow-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=duty-shadow-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=duty-shadow-20260925"]) {
+for (const versionedAsset of ["style.css?v=duty-shadow-20260925", "js/audio.js?v=footprints-20260925", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=duty-shadow-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=footprints-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;
@@ -143,7 +143,7 @@ if (!/id: "lobby-double", start: 334[\s\S]*?duration: 8/.test(anomalies)) throw 
 for (const quietVisual of ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]) {
   if (!main.includes(`"${quietVisual}"`)) throw new Error(`主循环缺少安静异常节奏：${quietVisual}`);
 }
-for (const beat of ["douse-1", "douse-4", "step-10", "stop", "cloth", "outside", "echo", "hold"]) {
+for (const beat of ["douse-1", "douse-4", "step-8", "stop", "cloth", "outside", "echo", "hold"]) {
   if (!main.includes(`"${beat}"`)) throw new Error(`缺少细分异常节拍：${beat}`);
 }
 const quietAudioSection = audio.match(/else if \(cue === "stairs-darkness"\)[\s\S]*?else if \(cue === "light-flicker"\)/)?.[0] || "";

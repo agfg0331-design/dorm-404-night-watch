@@ -496,11 +496,18 @@
           this.duck(1.8, 0.06);
         } else if (beat.startsWith("step")) {
           const index = Math.max(1, Number(beat.split("-")[1] || 1));
-          if (index % 2 === 0) {
-            const closeness = index / 10;
-            this.playRandomDrip({ volume: 0.07 + closeness * 0.09, rate: 0.78 + closeness * 0.08, pan: 0.42 - closeness * 0.65 });
-            this.playSample(index < 6 ? "heelsFar" : "heelsNear", { volume: 0.06 + closeness * 0.09, rate: 0.86 + closeness * 0.08, offset: 0.7 + (index % 5) * 1.2, duration: 0.48, filter: "lowpass", frequency: 720 + closeness * 1700, pan: 0.38 - closeness * 0.62 });
-          }
+          // The approved lobby artwork contains eight distinct prints. Take
+          // one recorded shoe strike per print, moving from the doors inward.
+          const closeness = Math.min(1, index / 8);
+          const pan = 0.38 - closeness * 0.68 + (index % 2 ? -0.08 : 0.08);
+          const farOffsets = [0.5, 1.1, 1.7, 2.3];
+          const nearOffsets = [0.4, 0.9, 1.5, 2.0];
+          this.playSample(index <= 4 ? "heelsFar" : "heelsNear", {
+            volume: 0.13 + closeness * 0.17, rate: 0.92 + closeness * 0.08,
+            offset: index <= 4 ? farOffsets[index - 1] : nearOffsets[index - 5],
+            duration: 0.43, filter: "lowpass", frequency: 1050 + closeness * 3000, pan
+          });
+          this.playRandomDrip({ volume: 0.05 + closeness * 0.07, rate: 0.85 + closeness * 0.08, pan });
         }
       } else if (cue === "stair-steps" && beat.startsWith("step")) {
         const index = Math.max(1, Number(beat.split("-")[1] || 1));

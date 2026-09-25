@@ -11,6 +11,7 @@ for (const name of ["anomalies", "game"]) {
 const { scenePool, createShift } = sandbox.GameContent;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const names = Object.values(scenePool).map((scene) => scene.name);
+const earlyCategories = new Set(["物品移动", "人物异常", "灯光异常", "门窗异常", "空间异常", "未知异常"]);
 const combinations = new Set();
 const seenScenes = new Set();
 
@@ -31,6 +32,7 @@ for (let seed = 0; seed < 120; seed += 1) {
     const scene = shift.cameras[event.camera];
     assert(scene && scene.sceneId === event.sceneId, `异常刷在错误场景：${event.id}`);
     assert(event.category && event.lead.text && event.reportLocation === (scene.reportLocation || scene.name), `上报地点或手机线索缺失：${event.id}`);
+    if (event.start + (event.jitter || 0) < 180) assert(earlyCategories.has(event.category), `早期异常无法从当时的上报界面选择类别：${event.id}`);
     for (const [, code] of event.lead.text.matchAll(/(CAM 0[1-6])/g)) assert(availableCodes.has(code), `短信引用不存在的监控：${event.id}`);
     for (const source of event.frames || []) assert(fs.existsSync(`public/game/${source}`), `异常素材缺失：${source}`);
   }

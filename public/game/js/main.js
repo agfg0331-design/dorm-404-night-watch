@@ -555,6 +555,20 @@
     frame.style.clipPath = `polygon(${glass.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
   }
 
+  // Keep the surrounding monitors and room static while the approved shadow
+  // stands and snaps sideways. Both polygons include the original seated pose.
+  function clipDutyShadow(frame, folded) {
+    const width = els.monitorView.clientWidth;
+    const height = els.monitorView.clientHeight;
+    const scale = Math.max(width / 1672, height / 941);
+    const offsetX = (width - 1672 * scale) / 2;
+    const offsetY = (height - 941 * scale) / 2;
+    const outline = folded
+      ? [[478, 242], [815, 242], [815, 445], [918, 446], [918, 563], [850, 570], [850, 798], [748, 798], [748, 920], [480, 920]]
+      : [[466, 292], [742, 292], [742, 917], [466, 917]];
+    frame.style.clipPath = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+  }
+
   function renderEventFrames(event) {
     const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
     if (nextFrameEventKey !== renderedFrameEventKey) {
@@ -587,6 +601,13 @@
       setEventFrame(1, event.frames[1], clamp01((p - 0.39) / 0.2));
       setEventFrame(2, event.frames[2], clamp01((p - 0.66) / 0.18));
       els.eventFrames.forEach(clipLaundryMirror);
+    } else if (event.visual === "self-turn") {
+      // The seated silhouette first raises its head, then stands with both
+      // hands visible; only after that does its torso snap to the right.
+      setEventFrame(0, event.frames[0], clamp01((p - 0.35) / 0.12));
+      setEventFrame(1, event.frames[1], clamp01((p - 0.66) / 0.14));
+      clipDutyShadow(els.eventFrames[0], false);
+      clipDutyShadow(els.eventFrames[1], true);
     } else if (event.visual === "stairs-darkness") {
       // The three approved CCTV frames extinguish the lower flight, landing
       // lamp, then upper flight. Each new frame covers the preceding stage.

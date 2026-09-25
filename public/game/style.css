@@ -99,12 +99,10 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 
 /* CAM05 uses the approved camera frames in the event stack. */
 
-/* CAM04: the operator's head changes by degrees; the room itself never flashes. */
-.monitor-view.event-self-turn .duty-gaze{display:block}
-.duty-gaze .duty-body{position:absolute;left:35.4%;top:52.3%;width:11.2%;height:26.8%;clip-path:polygon(35% 0,65% 0,88% 18%,100% 100%,0 100%,12% 18%);background:linear-gradient(90deg,#030504,rgba(13,16,14,.98) 48%,#020303);opacity:clamp(0,calc((var(--event-progress) - .3) * 3.2),.97);transform-origin:50% 100%;transform:translate3d(0,calc(var(--event-progress) * -4.7vh),0) scaleX(calc(.88 + var(--event-progress) * .16)) scaleY(calc(.72 + var(--event-progress) * .38));will-change:transform,opacity}
-.duty-gaze .duty-head{position:absolute;left:38.05%;top:49.2%;width:5.7%;height:9.5%;border-radius:48% 52% 43% 47%;background:radial-gradient(ellipse at 50% 42%,#111411 0 38%,#030504 70%,transparent 74%);opacity:clamp(0,calc((var(--event-progress) - .06) * 4.2),.98);transform-origin:50% 80%;transform:translate3d(0,calc(var(--event-progress) * -5.35vh),0) rotate(calc(var(--event-progress) * -5deg)) scale(calc(.92 + var(--event-progress) * .2));will-change:transform,opacity}
-.duty-gaze .duty-face{position:absolute;left:38.9%;top:50.15%;width:3.95%;height:5.9%;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,rgba(22,27,24,.52),rgba(3,6,5,.98) 72%);opacity:clamp(0,calc((var(--event-progress) - .42) * 2.6),.64);transform:translate3d(0,calc(var(--event-progress) * -5.75vh),0) scale(calc(.7 + var(--event-progress) * .38));transform-origin:center bottom;will-change:transform,opacity}
-.duty-gaze .duty-face::before{content:"";position:absolute;left:21%;right:21%;top:38%;height:7%;background:linear-gradient(90deg,#020303 0 20%,transparent 21% 79%,#020303 80%);opacity:clamp(0,calc((var(--event-progress) - .68) * 2),.38)}
+/* CAM04: the original seated shadow raises its head before the approved frames. */
+.monitor-view.event-self-turn .duty-gaze{display:block;opacity:clamp(0,calc((.4 - var(--event-progress)) * 25),1)}
+.duty-gaze .duty-body,.duty-gaze .duty-face{display:none}
+.duty-gaze .duty-head{position:absolute;left:32.7%;top:50.2%;width:5.4%;height:8.4%;border-radius:48% 52% 43% 47%;background:#030403;opacity:clamp(0,calc((var(--event-progress) - .04) * 7),.9);transform-origin:50% 90%;transform:translate3d(0,calc(var(--event-progress) * -1.4vh),0) rotate(calc(var(--event-progress) * -6deg));will-change:transform,opacity}
 
 /* CAM03: the approved frame changes are clipped to the physical mirror. */
 

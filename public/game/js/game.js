@@ -291,13 +291,13 @@
         this.danger = clamp(this.danger - 7, 0, 100);
         this.trust = clamp(this.trust + 2, 0, 100);
         this.callbacks.onReport?.({ ok: true, event: match }, this.snapshot());
-        return { ok: true, message: "异常记录已提交", event: match };
+        return { ok: true, message: "报告已提交", event: match };
       }
       this.wrong += 1;
       this.trust = clamp(this.trust - 13, 0, 100);
       this.danger = clamp(this.danger + 3, 0, 100);
       this.callbacks.onReport?.({ ok: false }, this.snapshot());
-      return { ok: false, message: "异常记录已提交" };
+      return { ok: false, message: "报告已提交" };
     }
 
     missEvent(event) {

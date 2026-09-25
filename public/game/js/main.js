@@ -770,7 +770,7 @@
     const category = form.get("category");
     if (!category) { els.reportFeedback.textContent = "请选择异常类别。"; return; }
     const result = sim.report(els.reportCamera.value, category);
-    els.reportFeedback.textContent = "异常记录已提交";
+    els.reportFeedback.textContent = result.message;
     els.reportFeedback.style.color = "#6f826f";
     // Keep the report tab available so a player can correct an earlier guess.
     window.setTimeout(() => { els.reportFeedback.textContent = ""; }, 2300);

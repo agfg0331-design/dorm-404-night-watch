@@ -7,7 +7,8 @@ const sandbox = { window: {}, performance: { now: () => now }, console };
 sandbox.window = sandbox;
 vm.createContext(sandbox);
 for (const file of ["anomalies", "game"]) vm.runInContext(fs.readFileSync(`public/game/js/${file}.js`, "utf8"), sandbox);
-const sim = new sandbox.NightShiftSimulation({ seed: 12, callbacks: { onMessage: (message) => messages.push(message) } });
+const legacyScenes = ["dorm", "hall", "laundry", "stairs", "lobby"];
+const sim = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message) => messages.push(message) } });
 function assert(condition, reason) { if (!condition) throw new Error(reason); }
 function advance(minute) { sim.minute = minute; sim.processEvents(); }
 
@@ -56,7 +57,7 @@ assert(!sim.getVisibleEvent(), "旧漏报遮住终局 CAM 04 摄像头线索");
 assert(sim.activeEvents.includes(oldDuty), "终局线索不应删除旧漏报的补报资格");
 
 const interferenceMessages = [];
-const pacingSim = new sandbox.NightShiftSimulation({ seed: 12, callbacks: { onMessage: (message, state) => interferenceMessages.push({ ...message, minute: state.minute }) } });
+const pacingSim = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message, state) => interferenceMessages.push({ ...message, minute: state.minute }) } });
 for (let minute = 0; minute <= 335; minute++) {
   pacingSim.minute = minute;
   pacingSim.processEvents();

@@ -1,7 +1,6 @@
 (function () {
   "use strict";
 
-  const { events, narrative } = window.GameContent;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
   const FINAL_CHOICES = Object.freeze({ TURN: "TURN", STAY: "STAY" });
@@ -42,6 +41,9 @@
       this.startMinute = options.startMinute || 0;
       const providedSeed = Number(options.seed);
       this.seed = Number.isFinite(providedSeed) ? Math.trunc(providedSeed) : Math.floor(Math.random() * 99999);
+      this.shift = options.shift || window.GameContent.createShift(this.seed, options.sceneIds);
+      this.cameras = this.shift.cameras;
+      this.sceneIds = this.shift.sceneIds;
       this.#safeFinalChoice = this.#seededUnit(0x46494e41) < 0.5 ? FINAL_CHOICES.TURN : FINAL_CHOICES.STAY;
       this.#finalPlan = this.#buildFinalPlan();
       this.reset();
@@ -99,7 +101,7 @@
       this.interferencePlan = [52, 94, 132, 171, 207, 245, 286, 320].map((base, index) => ({
         at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 9 : 13)), index
       })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 4 ? .78 : .88));
-      this.eventQueue = events.map((event, index) => {
+      this.eventQueue = this.shift.events.map((event, index) => {
         const leadOffset = event.start >= 280 ? -0.35 : -0.65;
         return {
           ...event,
@@ -173,7 +175,7 @@
     }
 
     processNarrative() {
-      narrative.forEach((item) => {
+      this.shift.narrative.forEach((item) => {
         if (this.minute >= item.at && !this.firedNarrative.has(item.id)) {
           this.firedNarrative.add(item.id);
           this.pushMessage(item);
@@ -185,21 +187,22 @@
       this.interferencePlan.forEach(({ at, index }) => {
         if (this.minute < at || this.firedInterference.has(index)) return;
         this.firedInterference.add(index);
-        const cameras = Object.keys(window.GameContent.cameras);
+        const cameras = Object.keys(this.cameras);
         const active = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil);
         const empty = cameras.filter((camera) => !this.activeEvents.some((event) => event.camera === camera && !event.reported));
         const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
-        const code = window.GameContent.cameras[emptyCamera]?.code;
+        const emptyFeed = this.cameras[emptyCamera];
+        const code = emptyFeed?.code;
         let message;
         if ((index < 2 || index % 2 === 0) && code) {
           message = index === 0
-            ? { sender: "值班系统", text: `${code} 检测到短时人员活动，请核对画面。`, suspicious: true }
-            : { sender: "405 张同学", text: `我刚才看到 ${code} 那边有人经过，你看到了吗？`, suspicious: true };
+            ? { sender: "值班系统", text: `${code}（${emptyFeed.name}）检测到短时人员活动，请核对画面。`, suspicious: true }
+            : { sender: "405 张同学", text: `我刚才看到 ${emptyFeed.name} 那边有人经过，你看到了吗？`, suspicious: true };
         } else if (active) {
-          const activeCode = window.GameContent.cameras[active.camera].code;
+          const activeFeed = this.cameras[active.camera];
           message = index === 3
-            ? { sender: "值班系统", text: `${activeCode} 现场复核无异常。`, suspicious: true }
-            : { sender: "值班系统", text: `${activeCode} 画面状态正常。`, suspicious: true };
+            ? { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）现场复核无异常。`, suspicious: true }
+            : { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）画面状态正常。`, suspicious: true };
         }
         if (message) this.pushMessage(message);
       });
@@ -369,6 +372,7 @@
     snapshot() {
       return {
         minute: this.minute, view: this.view, currentCamera: this.currentCamera,
+        sceneIds: [...this.sceneIds],
         danger: this.danger, trust: this.trust, correct: this.correct, wrong: this.wrong,
         missed: this.missed, unread: this.unread, monitorFailed: this.monitorFailed,
         turnPrompted: this.turnPrompted, finalStage: this.finalStage, turning: this.turning, ended: this.ended,

@@ -38,7 +38,7 @@
     { id: "dorm-window", start: 201, jitter: 5, camera: "cam01", category: "门窗异常", title: "阳台玻璃受冲击后碎裂", visual: "window-break", frames: ["assets/cam-dorm-window-broken-v2.webp"], duration: 15, grace: 19, severity: 13, lead: { offset: -3, sender: "值班系统", text: "CAM 01 检测到瞬时高频撞击声。请核对门窗。", kind: "real" } },
     { id: "stairs-light", start: 220, jitter: 4, camera: "cam05", category: "灯光异常", title: "楼梯灯逐层向上熄灭", visual: "stairs-darkness", frames: ["assets/cam-stairs-blackout-1-approved-v1.webp", "assets/cam-stairs-blackout-2-approved-v1.webp", "assets/cam-stairs-blackout-3-approved-v1.webp"], duration: 17, grace: 9, severity: 9, lead: { offset: -3, sender: "401 刘同学", text: "楼梯灯是跟着脚步一层一层灭的。", kind: "real" } },
     { id: "duty-self", start: 239, jitter: 4, camera: "cam04", category: "人物异常", title: "值班室黑影抬头、起身并向右横折", visual: "self-turn", frames: ["assets/cam-duty-shadow-stand-approved-v1.webp", "assets/cam-duty-shadow-right-fold-approved-v1.webp"], duration: 22, grace: 13, severity: 15, lead: { offset: -3, sender: "值班系统", text: "CAM 04 坐姿识别异常。请确认值班员状态。", kind: "real" } },
-    { id: "hall-door", start: 256, jitter: 4, camera: "cam02", category: "门窗异常", title: "不存在的404房门缓慢打开", visual: "door-open", frames: ["assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp"], duration: 21, grace: 8, severity: 13, lead: { offset: -3, sender: "未知号码", text: "404的门开了。里面不是宿舍。", kind: "real" } },
+    { id: "hall-door", start: 256, jitter: 4, camera: "cam02", category: "门窗异常", title: "不存在的房门缓慢打开", visual: "door-open", frames: ["assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp"], duration: 21, grace: 8, severity: 13, lead: { offset: -3, sender: "未知号码", text: "走廊多出来的那扇门开了。里面不像宿舍。", kind: "real" } },
     { id: "laundry-reflection", start: 164, jitter: 2, camera: "cam03", category: "人物异常", title: "镜中出现未进入房间的人", visual: "mirror-reflection", frames: ["assets/cam-laundry-mirror-shadow-1-approved-v1.webp", "assets/cam-laundry-mirror-shadow-2-approved-v1.webp", "assets/cam-laundry-mirror-shadow-3-approved-v1.webp"], duration: 18, grace: 7, severity: 14, lead: { offset: -3, sender: "值班系统", text: "CAM 02 检测到人员活动。", kind: "false" } },
     { id: "lobby-footprints", start: 154, jitter: 3, camera: "cam06", category: "空间异常", title: "湿脚印从门外延伸至值班室", visual: "wet-footprints", frames: ["assets/cam-lobby-wet-footprints-approved-v1.webp"], duration: 20, grace: 8, severity: 14, lead: { offset: -3, sender: "门卫老陈", text: "刚拖完大厅，怎么又有一排湿脚印？", kind: "real" } },
     { id: "stair-loop", start: 302, jitter: 3, camera: "cam05", category: "空间异常", title: "上下楼梯连接到同一层", visual: "space-repeat", duration: 19, grace: 6, severity: 16, lead: { offset: -3, sender: "403 林同学", text: "我走了两层，墙上还是写着4F。", kind: "real" } },
@@ -60,5 +60,85 @@
     { id: "watching", at: 338, sender: "自己", text: "刚才那条消息不是我发的。", corrupt: true }
   ];
 
-  window.GameContent = { cameras, events, narrative, frameAssets };
+  // Camera slots stay put; a scene owns its own normal frame and anomaly pool.
+  // This keeps the existing six-button monitor and the CAM 04 ending intact.
+  const scenePool = {
+    dorm: { ...cameras.cam01, id: "dorm", reportLocation: "404宿舍" },
+    hall: { ...cameras.cam02, id: "hall", reportLocation: "四楼走廊" },
+    laundry: { ...cameras.cam03, id: "laundry", reportLocation: "公共洗衣房" },
+    stairs: { ...cameras.cam05, id: "stairs", reportLocation: "四楼楼梯间" },
+    lobby: { ...cameras.cam06, id: "lobby", reportLocation: "一楼大厅" },
+    music: { id: "music", name: "音乐教室", reportLocation: "音乐教室", location: "教学区", ambient: "dorm", image: "scene-preview/assets/music-normal.webp", corruptImage: "scene-preview/assets/music-normal.webp" },
+    dance: { id: "dance", name: "舞蹈教室", reportLocation: "舞蹈教室", location: "教学区", ambient: "dorm", image: "scene-preview/assets/dance-normal.webp", corruptImage: "scene-preview/assets/dance-normal.webp" },
+    elevator: { id: "elevator", name: "电梯厅", reportLocation: "电梯厅", location: "教学区", ambient: "hall", image: "scene-preview/assets/elevator-normal.webp", corruptImage: "scene-preview/assets/elevator-normal.webp" },
+    lab: { id: "lab", name: "机房", reportLocation: "机房", location: "教学区", ambient: "duty", image: "scene-preview/assets/lab-normal.webp", corruptImage: "scene-preview/assets/lab-normal.webp" }
+  };
+  const originalSceneByCamera = { cam01: "dorm", cam02: "hall", cam03: "laundry", cam05: "stairs", cam06: "lobby", cam04: "duty" };
+  const newSceneEvents = [
+    { id: "music-piano", sceneId: "music", start: 38, jitter: 4, category: "物品移动", title: "琴盖自行掀开，琴凳离开原位", visual: "scene-still", frames: ["scene-preview/assets/music-open.webp"], duration: 17, grace: 10, severity: 7, lead: { sender: "值班系统", text: "音乐教室传来一声琴键响。", kind: "real" } },
+    { id: "music-stands", sceneId: "music", start: 146, jitter: 4, category: "物品移动", title: "谱架集体转向并倒下一只", visual: "scene-still", frames: ["scene-preview/assets/music-stands.webp"], duration: 20, grace: 9, severity: 10, lead: { sender: "值班系统", text: "音乐教室传来金属落地声。", kind: "real" } },
+    { id: "music-figure", sceneId: "music", start: 280, jitter: 3, category: "人物异常", title: "窗边人影出现，窗帘突然扬起", visual: "scene-still", frames: ["scene-preview/assets/music-figure.webp"], duration: 21, grace: 6, severity: 15, lead: { sender: "未知号码", text: "音乐教室的窗户开着吗？", kind: "real" } },
+    { id: "dance-figure", sceneId: "dance", start: 64, jitter: 5, category: "人物异常", title: "白衣女人面对镜子，却没有倒影", visual: "scene-still", frames: ["scene-preview/assets/dance-figure.webp"], duration: 19, grace: 9, severity: 11, lead: { sender: "值班系统", text: "舞蹈教室检测到人员活动。", kind: "real" } },
+    { id: "dance-desync", sceneId: "dance", start: 174, jitter: 4, category: "空间异常", title: "镜中出现与空教室不同步的动作", visual: "scene-still", frames: ["scene-preview/assets/dance-desync.webp"], duration: 20, grace: 8, severity: 13, lead: { sender: "未知号码", text: "舞蹈教室的镜子里刚才有人抬手。", kind: "real" } },
+    { id: "dance-line", sceneId: "dance", start: 305, jitter: 3, category: "人物异常", title: "镜中排出一列无人对应的身影", visual: "scene-still", frames: ["scene-preview/assets/dance-line.webp"], duration: 17, grace: 5, severity: 17, lead: { sender: "值班系统", text: "舞蹈教室画面人数无法核实。", kind: "real" } },
+    { id: "elevator-die", sceneId: "elevator", start: 49, jitter: 4, category: "监控异常", title: "两部电梯的楼层屏同时显示 DIE", visual: "scene-still", frames: ["scene-preview/assets/elevator-floor.webp"], duration: 17, grace: 8, severity: 9, lead: { sender: "值班系统", text: "电梯厅的楼层显示器同时失去读数。", kind: "real" } },
+    { id: "elevator-open", sceneId: "elevator", start: 186, jitter: 4, category: "门窗异常", title: "电梯门自行打开，轿厢一片黑暗", visual: "scene-still", frames: ["scene-preview/assets/elevator-open.webp"], duration: 19, grace: 8, severity: 12, lead: { sender: "值班系统", text: "电梯厅的开门声响了，呼叫记录却是空的。", kind: "real" } },
+    { id: "elevator-footprints", sceneId: "elevator", start: 312, jitter: 2, category: "人物异常", title: "湿脚印走向紧闭的电梯门", visual: "scene-still", frames: ["scene-preview/assets/elevator-footprints.webp"], duration: 16, grace: 5, severity: 16, lead: { sender: "未知号码", text: "电梯厅的地板又湿了。", kind: "real" } },
+    { id: "lab-screen", sceneId: "lab", start: 80, jitter: 4, category: "监控异常", title: "机房一台熄灭的电脑自行亮起", visual: "scene-still", frames: ["scene-preview/assets/lab-screen.webp"], duration: 17, grace: 8, severity: 9, lead: { sender: "值班系统", text: "机房有一台终端在无人操作时开机。", kind: "real" } },
+    { id: "lab-feed", sceneId: "lab", start: 203, jitter: 4, category: "空间异常", title: "电脑屏幕同时显示值班室监控", visual: "scene-still", frames: ["scene-preview/assets/lab-feed.webp"], duration: 20, grace: 7, severity: 14, lead: { sender: "未知号码", text: "机房的电脑好像能看到值班室。", kind: "real" } },
+    { id: "lab-static", sceneId: "lab", start: 321, jitter: 2, category: "监控异常", title: "机房多台屏幕同时出现雪花", visual: "scene-still", frames: ["scene-preview/assets/lab-static.webp"], duration: 15, grace: 5, severity: 17, lead: { sender: "值班系统", text: "机房多台终端信号同时中断。", kind: "real" } }
+  ];
+  const originalEvents = events.map((event) => ({ ...event, sceneId: originalSceneByCamera[event.camera] }));
+  const allEvents = [...originalEvents, ...newSceneEvents];
+  Object.values(scenePool).forEach((scene) => {
+    scene.anomalies = allEvents.filter((event) => event.sceneId === scene.id);
+  });
+
+  function createShift(seed, forcedScenes) {
+    let value = (Number(seed) || 0) >>> 0;
+    // Mix nearby QA seeds before the shuffle so every scene remains reachable.
+    value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+    value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+    value = (value ^ (value >>> 16)) >>> 0;
+    const random = () => {
+      value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
+      return value / 4294967296;
+    };
+    const pool = Object.keys(scenePool);
+    for (let index = pool.length - 1; index > 0; index -= 1) {
+      const other = Math.floor(random() * (index + 1));
+      [pool[index], pool[other]] = [pool[other], pool[index]];
+    }
+    const selected = forcedScenes ? [...forcedScenes] : pool.slice(0, 5);
+    if (selected.length !== 5 || new Set(selected).size !== 5 || selected.some((id) => !scenePool[id])) {
+      throw new Error("每局必须选出五个不重复的有效监控场景");
+    }
+    const slots = ["cam01", "cam02", "cam03", "cam05", "cam06"];
+    const shiftCameras = { cam04: { ...cameras.cam04, sceneId: "duty" } };
+    selected.forEach((sceneId, index) => {
+      const slot = slots[index];
+      shiftCameras[slot] = { ...scenePool[sceneId], sceneId, code: `CAM ${slot.slice(-2)}`, key: slot.at(-1) };
+    });
+    const slotByScene = Object.fromEntries(selected.map((sceneId, index) => [sceneId, slots[index]]));
+    const shiftEvents = allEvents.filter((event) => event.sceneId === "duty" || slotByScene[event.sceneId]).map((event) => {
+      const camera = event.sceneId === "duty" ? "cam04" : slotByScene[event.sceneId];
+      const code = shiftCameras[camera].code;
+      const lead = { ...event.lead, text: event.lead.text.replace(/CAM 0[1-6]/g, (oldCode) => {
+        const oldScene = originalSceneByCamera[`cam${oldCode.slice(-2)}`];
+        const target = slotByScene[oldScene];
+        if (target) return shiftCameras[target].code;
+        // False leads still reference a feed that exists this run.
+        return shiftCameras[slots.find((slot) => slot !== camera)].code;
+      }) };
+      return { ...event, camera, lead, reportLocation: shiftCameras[camera].reportLocation || shiftCameras[camera].name, code };
+    });
+    const shiftNarrative = narrative.map((item) => {
+      if (item.id === "safe" && !slotByScene.dorm) return { ...item, text: "全楼信号正常。值班室门禁没有访客记录。" };
+      if (item.id === "wrong-floor" && !slotByScene.stairs) return { ...item, text: "刚才群里的照片，好像不是我们这栋楼。" };
+      return item;
+    });
+    return { seed: Number(seed) || 0, sceneIds: selected, cameras: shiftCameras, events: shiftEvents, narrative: shiftNarrative };
+  }
+
+  window.GameContent = { cameras, events, narrative, frameAssets, scenePool, createShift };
 })();

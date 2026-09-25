@@ -543,6 +543,18 @@
     frame.style.webkitMaskImage = mask;
   }
 
+  // The mirror appears only within its glass, while the actual laundry room
+  // stays empty. Map the glass corners through the feed's object-fit: cover.
+  function clipLaundryMirror(frame) {
+    const width = els.monitorView.clientWidth;
+    const height = els.monitorView.clientHeight;
+    const scale = Math.max(width / 1448, height / 1086);
+    const offsetX = (width - 1448 * scale) / 2;
+    const offsetY = (height - 1086 * scale) / 2;
+    const glass = [[786, 206], [1086, 208], [1075, 390], [783, 376]];
+    frame.style.clipPath = `polygon(${glass.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+  }
+
   function renderEventFrames(event) {
     const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
     if (nextFrameEventKey !== renderedFrameEventKey) {
@@ -568,6 +580,13 @@
         setEventFrame(index, source, p >= 0.06 && frameIndex === index ? 1 : 0);
         maskLobbyClock(els.eventFrames[index]);
       });
+    } else if (event.visual === "mirror-reflection") {
+      // First a faceless shadow appears, then it approaches the mirror and
+      // finally its grin becomes visible. Each later image covers the former.
+      setEventFrame(0, event.frames[0], clamp01((p - 0.08) / 0.21));
+      setEventFrame(1, event.frames[1], clamp01((p - 0.39) / 0.2));
+      setEventFrame(2, event.frames[2], clamp01((p - 0.66) / 0.18));
+      els.eventFrames.forEach(clipLaundryMirror);
     } else if (event.visual === "stairs-darkness") {
       // The three approved CCTV frames extinguish the lower flight, landing
       // lamp, then upper flight. Each new frame covers the preceding stage.

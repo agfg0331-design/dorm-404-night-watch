@@ -106,11 +106,7 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .duty-gaze .duty-face{position:absolute;left:38.9%;top:50.15%;width:3.95%;height:5.9%;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,rgba(22,27,24,.52),rgba(3,6,5,.98) 72%);opacity:clamp(0,calc((var(--event-progress) - .42) * 2.6),.64);transform:translate3d(0,calc(var(--event-progress) * -5.75vh),0) scale(calc(.7 + var(--event-progress) * .38));transform-origin:center bottom;will-change:transform,opacity}
 .duty-gaze .duty-face::before{content:"";position:absolute;left:21%;right:21%;top:38%;height:7%;background:linear-gradient(90deg,#020303 0 20%,transparent 21% 79%,#020303 80%);opacity:clamp(0,calc((var(--event-progress) - .68) * 2),.38)}
 
-/* CAM03: clipping guarantees the figure can exist only in the physical mirror. */
-.monitor-view.event-mirror-reflection .mirror-figure{display:block;clip-path:polygon(53.5% 18.4%,76% 18.4%,76% 42%,53.5% 42%)}
-.mirror-figure i{position:absolute;left:59.8%;top:18.8%;width:10.8%;height:23.3%;filter:drop-shadow(0 0 3px rgba(124,145,130,.18));opacity:clamp(0,calc((var(--event-progress) - .12) * 1.45),.86);transform-origin:center bottom;transform:translate3d(calc((1 - var(--event-progress)) * 2.2%),0,0) scale(calc(.48 + var(--event-progress) * .52));will-change:transform,opacity}
-.mirror-figure i::before{content:"";position:absolute;left:35%;top:3%;width:30%;height:27%;border-radius:44% 46% 43% 42%;background:linear-gradient(90deg,#050706,#171b19 44%,#050706)}
-.mirror-figure i::after{content:"";position:absolute;left:0;right:0;top:26%;bottom:0;clip-path:polygon(31% 0,69% 0,84% 12%,95% 39%,100% 100%,0 100%,5% 39%,16% 12%);background:linear-gradient(90deg,transparent 2%,#070a08 18%,#151a17 49%,#060807 83%,transparent 98%)}
+/* CAM03: the approved frame changes are clipped to the physical mirror. */
 
 /* CAM06: identical silhouettes use independent compositor animations; no box-shadow clone. */
 .monitor-view.event-lobby-double .lobby-twins{display:block}

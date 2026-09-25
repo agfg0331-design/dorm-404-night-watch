@@ -101,9 +101,10 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=handover-manual-20260925", "js/audio.js?v=chair-fall-20260925", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=duty-shadow-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=handover-manual-20260925"]) {
+for (const versionedAsset of ["style.css?v=mobile-landscape-20260925", "js/audio.js?v=chair-fall-20260925", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=duty-shadow-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=handover-manual-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
+if (!html.includes('class="rotate-device-notice"') || !html.includes('viewport-fit=cover') || !css.includes('@media(pointer:coarse) and (orientation:portrait)') || !css.includes('@media(pointer:coarse) and (orientation:landscape)') || !css.includes('top:calc(50% - min(9.3vw,20dvh))')) throw new Error("手机横屏提示或横屏手机画面适配缺失");
 for (let stage = 1; stage <= 4; stage += 1) {
   if (!fs.existsSync(`${gameRoot}/assets/handover-manual-${stage}.webp`)) throw new Error(`交班手册缺少第${stage}帧`);
 }

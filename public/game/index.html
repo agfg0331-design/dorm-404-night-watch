@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#080808">
   <meta name="description" content="午夜零点，你接手了404宿舍楼的夜班监控。观察六路监控，判断异常并及时上报——但请记住，不是所有信息都值得相信。">
   <title>404宿舍：夜间监控</title>
@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=handover-manual-20260925">
+  <link rel="stylesheet" href="style.css?v=mobile-landscape-20260925">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -279,6 +279,15 @@
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <aside class="rotate-device-notice" aria-label="手机横屏游玩提示">
+    <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <rect x="31" y="12" width="38" height="68" rx="7" transform="rotate(-90 50 46)"/>
+      <path d="M23 75a34 34 0 0 0 54 0m-4 5 4-5-7-1"/>
+    </svg>
+    <strong>请将手机横过来</strong>
+    <span>横屏后可完整查看监控、手机和交班手册</span>
+  </aside>
 
   <script src="js/audio.js?v=chair-fall-20260925"></script>
   <script src="js/anomalies.js?v=duty-shadow-20260925"></script>

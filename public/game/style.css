@@ -373,6 +373,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .toast{position:fixed;z-index:100;left:50%;bottom:7rem;transform:translate(-50%,15px);padding:.7rem 1rem;border:1px solid #53655b;background:rgba(4,9,7,.94);color:#ced8d1;font-size:.72rem;opacity:0;pointer-events:none;transition:.25s}
 .toast.visible{opacity:1;transform:translate(-50%,0)}
 .toast.error{border-color:#733035;color:#e1adb0}
+.rotate-device-notice{display:none}
 @keyframes noise{0%{transform:translate(0)}
 25%{transform:translate(-1%,1%)}
 50%{transform:translate(1%,-1%)}
@@ -480,3 +481,23 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 }
 @media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span,.lobby-twin{animation:none!important}}
 @media(max-width:760px) and (orientation:portrait){.briefing-viewport{display:flex;align-items:center;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none}.briefing-viewport::-webkit-scrollbar{display:none}.briefing-stage{width:max(100vw,760px)}.briefing-stage button{display:none}.briefing-overlay.ready .briefing-stage button{display:block;position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));width:min(90vw,390px);height:48px;font-size:.82rem;z-index:2}.briefing-overlay.ready .briefing-swipe-hint{display:block;position:absolute;top:calc(50% - min(45vw,214px) - 2rem);left:50%;transform:translateX(-50%);margin:0;color:#dfd2be;font-size:.8rem;letter-spacing:.12em;white-space:nowrap}}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:760px){
+  .rotate-device-notice{position:fixed;z-index:200;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center;background:radial-gradient(circle at center,#162019,#030706 76%);color:#e2e8df}
+  .rotate-device-notice svg{width:90px;height:90px;fill:none;stroke:#a7bbac;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;animation:rotatePhoneHint 2.6s ease-in-out infinite}
+  .rotate-device-notice strong{font-size:clamp(1.2rem,5vw,1.7rem);letter-spacing:.16em}
+  .rotate-device-notice span{max-width:18rem;color:#9faea2;font-size:.78rem;line-height:1.6}
+}
+@keyframes rotatePhoneHint{0%,30%,100%{transform:rotate(-12deg)}55%,75%{transform:rotate(12deg)}}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  .phone-composite{left:50%;top:calc(50% - min(9.3vw,20dvh));width:min(125vw,270dvh)}
+  .phone-status{height:23px;padding-top:5px}
+  .phone-title{height:44px;grid-template-columns:2.5rem 1fr 2.5rem}
+  .phone-title button{font-size:.67rem}.phone-title b{font-size:.76rem}.phone-title small{font-size:.55rem}
+  .phone-tabs button{height:34px;font-size:.75rem}
+  .phone-panel{height:calc(100% - 101px)}
+  .monitor-hud{left:max(1rem,env(safe-area-inset-left));right:max(1rem,env(safe-area-inset-right))}
+  .camera-dock{left:max(.5rem,env(safe-area-inset-left));right:max(6rem,env(safe-area-inset-right));bottom:.7rem;transform:none;overflow-x:auto}
+  .camera-dock button{min-width:6.3rem;padding:.45rem .5rem}
+  .phone-dock{right:max(.8rem,env(safe-area-inset-right))}
+}
+@media(prefers-reduced-motion:reduce){.rotate-device-notice svg{animation:none}}

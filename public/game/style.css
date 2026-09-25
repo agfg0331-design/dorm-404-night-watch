@@ -489,7 +489,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
   .rotate-device-notice span{max-width:18rem;color:#9faea2;font-size:.78rem;line-height:1.6}
 }
 @keyframes rotatePhoneHint{0%,30%,100%{transform:rotate(-12deg)}55%,75%{transform:rotate(12deg)}}
-@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+@media(orientation:landscape) and (max-height:600px){
   .room-view::before{content:"";position:absolute;inset:-2%;background:url("assets/duty-room-normal.webp") center/cover no-repeat;filter:blur(16px) brightness(.22);pointer-events:none}
   .room-scene{inset:0 auto 0 50%;width:min(100vw,133.333dvh);transform:translateX(-50%)}
   .room-scene::after{content:"";position:absolute;z-index:1;left:0;right:0;top:0;height:27%;background:linear-gradient(#020505 0%,rgba(2,5,5,.93) 68%,transparent);pointer-events:none}
@@ -525,4 +525,4 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
   .guestbook-note{grid-column:2;grid-row:5;align-self:center;padding:0 25px 0 8px;text-align:center}
   .guestbook-home{position:absolute;right:18px;bottom:15px;width:18px;height:18px;border-radius:50%}
 }
-@media(prefers-reduced-motion:reduce){.rotate-device-notice svg{animation:none}}
+@media(prefers-reduced-motion:reduce){.rotate-device-notice svg,.guestbook-phone{animation:none}}

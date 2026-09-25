@@ -298,4 +298,4 @@ if (reportTest.timeScale !== 0.42) throw new Error("上报期间时间未减速"
 
 if (Object.keys(sandbox.GameContent.cameras).length !== 6) throw new Error("监控场景未扩展到6路");
 
-console.log(`自检通过：${references.length} 个界面连接，${starts} 条原有事件链，6路监控、共享留言与双结局流程。`);
+console.log(`自检通过：${references.length} 个界面连接，${starts} 条本局事件链，6路监控、共享留言与双结局流程。`);

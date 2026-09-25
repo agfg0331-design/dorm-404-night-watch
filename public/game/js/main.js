@@ -26,7 +26,7 @@
     turnChoice: $("turnChoice"), dontTurn: $("dontTurn"), turnAround: $("turnAround"), turnSequence: $("turnSequence"),
     turnStart: $("turnStart"), turnMid: $("turnMid"), turnImage: $("turnImage"), turnCaption: $("turnCaption"), turnWarning: $("turnWarning"), startOverlay: $("startOverlay"), startGame: $("startGame"),
     audioCheckOverlay: $("audioCheckOverlay"), confirmHeadphones: $("confirmHeadphones"), skipHeadphones: $("skipHeadphones"),
-    briefingOverlay: $("briefingOverlay"), confirmBriefing: $("confirmBriefing"),
+    briefingOverlay: $("briefingOverlay"), briefingViewport: $("briefingViewport"), briefingFrame: $("briefingFrame"), confirmBriefing: $("confirmBriefing"),
     settingsOverlay: $("settingsOverlay"), settingsForm: $("settingsForm"), openSettings: $("openSettings"), closeSettings: $("closeSettings"),
     masterVolume: $("masterVolume"), bgmVolume: $("bgmVolume"), sfxVolume: $("sfxVolume"), brightness: $("brightness"),
     masterVolumeValue: $("masterVolumeValue"), bgmVolumeValue: $("bgmVolumeValue"), sfxVolumeValue: $("sfxVolumeValue"), brightnessValue: $("brightnessValue"),
@@ -61,6 +61,8 @@
   let lastAudioTensionKey = "";
   let shiftStarting = false;
   let audioPromptResolving = false;
+  let manualPreload = null;
+  const manualFrames = [1, 2, 3, 4].map((frame) => `assets/handover-manual-${frame}.webp`);
   const renderedText = new WeakMap();
   let renderedUnread = -1;
   let renderedPhase = -1;
@@ -882,6 +884,8 @@
 
   async function startGame() {
     els.startGame.disabled = true;
+    // Load and decode the approved page-flip frames while the headphone prompt is shown.
+    manualPreload ||= Promise.all(manualFrames.map((source) => preloadImage(source, true)));
     const oldText = els.startGame.innerHTML;
     els.startGame.textContent = "正在进入值班室……";
     await audio.setEnabled(true);
@@ -893,17 +897,42 @@
     window.requestAnimationFrame(() => els.confirmHeadphones.focus({ preventScroll: true }));
   }
 
-  function finishAudioCheck() {
+  function showManualFrame(index) {
+    els.briefingFrame.src = manualFrames[index];
+    els.briefingFrame.alt = index === 3 ? "翻开的夜班交班手册，说明监控、手机消息、异常上报和变化会消失" : `夜班交班手册正在翻动，第${index + 1}帧`;
+    if (window.matchMedia("(max-width:760px) and (orientation:portrait)").matches) {
+      const travel = els.briefingViewport.scrollWidth - els.briefingViewport.clientWidth;
+      // Begin on the right, where the closed cover lies; pan left as it opens.
+      els.briefingViewport.scrollLeft = index === 3 ? 0 : index === 2 ? travel / 2 : travel;
+    }
+  }
+
+  async function finishAudioCheck() {
     if (audioPromptResolving) return;
     audioPromptResolving = true;
     els.confirmHeadphones.disabled = true;
     els.skipHeadphones.disabled = true;
+    await manualPreload;
     els.audioCheckOverlay.classList.add("closing");
     window.setTimeout(() => {
       els.audioCheckOverlay.classList.add("hidden");
       els.audioCheckOverlay.classList.remove("closing");
       els.briefingOverlay.classList.remove("hidden");
-      els.confirmBriefing.focus({ preventScroll: true });
+      els.briefingOverlay.classList.remove("ready");
+      els.confirmBriefing.disabled = true;
+      const finishOpening = () => {
+        showManualFrame(3);
+        els.briefingOverlay.classList.add("ready");
+        els.confirmBriefing.disabled = false;
+        els.confirmBriefing.focus({ preventScroll: true });
+      };
+      showManualFrame(0);
+      if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) finishOpening();
+      else {
+        window.setTimeout(() => showManualFrame(1), 420);
+        window.setTimeout(() => showManualFrame(2), 860);
+        window.setTimeout(finishOpening, 1300);
+      }
     }, 220);
   }
 
@@ -929,10 +958,20 @@
   els.confirmHeadphones.addEventListener("click", finishAudioCheck);
   els.skipHeadphones.addEventListener("click", finishAudioCheck);
   els.confirmBriefing.addEventListener("click", () => {
-    els.briefingOverlay.classList.add("hidden");
-    els.startOverlay.classList.add("hidden");
-    setViewElement("room");
-    els.enterMonitor.focus({ preventScroll: true });
+    els.confirmBriefing.disabled = true;
+    els.briefingOverlay.classList.remove("ready");
+    const enterRoom = () => {
+      els.briefingOverlay.classList.add("hidden");
+      els.startOverlay.classList.add("hidden");
+      setViewElement("room");
+      els.enterMonitor.focus({ preventScroll: true });
+    };
+    if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) enterRoom();
+    else {
+      // Turn the same three pages back before returning to the desk.
+      [2, 1, 0].forEach((frame, index) => window.setTimeout(() => showManualFrame(frame), 180 + index * 220));
+      window.setTimeout(enterRoom, 810);
+    }
   });
   els.enterMonitor.addEventListener("click", () => beginShift());
   els.monitorPhone.addEventListener("click", () => switchView("phone-messages"));

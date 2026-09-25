@@ -545,7 +545,13 @@
     }
     if (!event?.frames?.length) return;
     const p = eventVisualProgress(event);
-    if (event.visual === "shadow-walk") {
+    if (event.visual === "stairs-darkness") {
+      // The three approved CCTV frames extinguish the lower flight, landing
+      // lamp, then upper flight. Each new frame covers the preceding stage.
+      setEventFrame(0, event.frames[0], clamp01((p - 0.1) / 0.12));
+      setEventFrame(1, event.frames[1], clamp01((p - 0.36) / 0.12));
+      setEventFrame(2, event.frames[2], clamp01((p - 0.62) / 0.12));
+    } else if (event.visual === "shadow-walk") {
       setEventFrame(0, event.frames[1], clamp01((p - 0.16) / 0.28) * (1 - clamp01((p - 0.64) / 0.2)));
       setEventFrame(1, event.frames[2], clamp01((p - 0.58) / 0.28));
     } else if (event.visual === "shadow-rush") {

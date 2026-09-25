@@ -97,13 +97,7 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .monitor-view.event-light-flicker .feed-image{animation:flicker .31s steps(2) infinite}
 .stairs-darkness,.duty-gaze,.mirror-figure,.lobby-twins,.footprint-trail{display:none;position:absolute;inset:0;pointer-events:none}
 
-/* CAM05: four local masks advance from the remote upper flight to the camera-side landing. */
-.monitor-view.event-stairs-darkness .stairs-darkness{display:block}
-.stairs-darkness i{position:absolute;background:#010303;mix-blend-mode:multiply;will-change:opacity}
-.stairs-darkness i:nth-child(1){inset:0 19% 48% 48%;clip-path:polygon(33% 0,100% 0,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .08) * 8),.82)}
-.stairs-darkness i:nth-child(2){inset:23% 11% 22% 44%;clip-path:polygon(28% 0,100% 0,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .3) * 8),.84)}
-.stairs-darkness i:nth-child(3){inset:48% 12% 7% 31%;clip-path:polygon(43% 0,100% 5%,100% 100%,0 100%);opacity:clamp(0,calc((var(--event-progress) - .54) * 8),.78)}
-.stairs-darkness i:nth-child(4){inset:0;background:radial-gradient(ellipse at 35% 30%,transparent 0 12%,rgba(0,2,2,.38) 34%,rgba(0,1,1,.86) 100%);opacity:clamp(0,calc((var(--event-progress) - .76) * 6),.9)}
+/* CAM05 uses the approved camera frames in the event stack. */
 
 /* CAM04: the operator's head changes by degrees; the room itself never flashes. */
 .monitor-view.event-self-turn .duty-gaze{display:block}

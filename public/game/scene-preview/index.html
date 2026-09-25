@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新增监控场景 · 第一阶段预览</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;background:#0b1013;color:#d8e2e4}
+    *{box-sizing:border-box}body{margin:0 auto;max-width:1300px;padding:24px 18px 72px}
+    header{border-bottom:1px solid #34444a;padding-bottom:20px;margin-bottom:28px}
+    h1{font-size:clamp(23px,4vw,38px);margin:4px 0 10px}h2{font-size:23px;margin:0 0 5px}
+    p{line-height:1.6}.intro{color:#a7b8bc;max-width:75ch}.status{display:inline-block;background:#183139;color:#b7e0e5;border:1px solid #34535c;border-radius:100px;padding:7px 13px;font-size:13px}
+    section{margin:36px 0 54px}.sub{color:#91a6ab;margin:0 0 18px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    article{background:#151d21;border:1px solid #354248;border-radius:10px;overflow:hidden}
+    .frame{aspect-ratio:4/3;display:grid;place-items:center;background:#10181b;position:relative}
+    .frame img{display:block;width:100%;height:100%;object-fit:cover}
+    .frame:has(img):after{content:"阶段一 · 静态画面";position:absolute;left:12px;top:12px;background:#071013bb;color:#c6d9da;font:11px ui-monospace,monospace;padding:5px 8px}
+    .pending{border-bottom:1px solid #28363b;background:repeating-linear-gradient(135deg,#10181b,#10181b 15px,#151e21 15px,#151e21 30px);color:#82979b;text-align:center;padding:18px}
+    .pending strong{display:block;color:#b3c5c8;margin-bottom:7px}
+    .copy{padding:15px 17px 19px}.copy h3{font-size:17px;margin:0 0 7px}.copy p{color:#afc1c5;margin:0;font-size:14px}
+    .tag{font-size:11px;color:#77bac6;margin-right:9px;letter-spacing:.08em}
+    footer{color:#8ca0a5;border-top:1px solid #34444a;padding-top:18px;font-size:14px}
+    @media(max-width:730px){.grid{grid-template-columns:1fr}body{padding:18px 12px 50px}}
+  </style>
+</head>
+<body>
+  <header>
+    <span class="status">第一阶段 · 16 / 16 张视觉预览</span>
+    <h1>新增监控场景预览</h1>
+    <p class="intro">《404宿舍：夜间监控》的四个候选场景。每个场景包含一张正常图、三张异常图；点击图片可放大对比。本页与正式游戏流程完全独立。</p>
+  </header>
+
+  <section>
+    <h2>01 音乐教室</h2><p class="sub">固定俯视机位，钢琴、琴凳、三只谱架和四张椅子组成可反复比对的物体基线。</p>
+    <div class="grid">
+      <article><div class="frame"><a href="assets/music-normal.webp" target="_blank"><img src="assets/music-normal.webp" alt="音乐教室正常监控画面"></a></div><div class="copy"><h3><span class="tag">正常 · 已完成</span>无人值守</h3><p>琴盖闭合，琴凳居中，三只谱架都朝向钢琴。</p></div></article>
+      <article><div class="frame"><a href="assets/music-open.webp" target="_blank" aria-label="放大查看 music-open"><img src="assets/music-open.webp" alt="music-open 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 01</span>琴盖与琴凳</h3><p>琴盖掀起，琴凳退到右后方；变化集中在画面左侧，便于玩家发现。</p></div></article>
+      <article><div class="frame"><a href="assets/music-stands.webp" target="_blank" aria-label="放大查看 music-stands"><img src="assets/music-stands.webp" alt="music-stands 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 02</span>谱架转向</h3><p>三只谱架同时转向镜头，其中一只倾倒，形成清晰的形状差异。</p></div></article>
+      <article><div class="frame"><a href="assets/music-figure.webp" target="_blank" aria-label="放大查看 music-figure"><img src="assets/music-figure.webp" alt="音乐教室窗边人影和扬起的窗帘" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 03</span>窗边人影与扬起的窗帘</h3><p>教室里无人，窗边多出站立的人影，两侧窗帘突然被风掀向室内。</p></div></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>02 舞蹈教室</h2><p class="sub">镜墙与把杆是主要参照物；一类异常是人站在实景却没有倒影，另两类发生在镜面内部。</p>
+    <div class="grid">
+      <article><div class="frame"><a href="assets/dance-normal.webp" target="_blank"><img src="assets/dance-normal.webp" alt="舞蹈教室正常监控画面"></a></div><div class="copy"><h3><span class="tag">正常 · 已完成</span>空镜</h3><p>镜面准确反射空房间，把杆连续，地板无遮挡。</p></div></article>
+      <article><div class="frame"><a href="assets/dance-figure.webp" target="_blank" aria-label="放大查看 dance-figure"><img src="assets/dance-figure.webp" alt="白衣女人黑发垂至脚边，背对监控、面朝镜墙却没有倒影" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 01</span>没有倒影的女人</h3><p>白衣女人的黑发垂至脚边。她站在教室里背对监控、面朝镜墙，镜中对应位置却是空的。</p></div></article>
+      <article><div class="frame"><a href="assets/dance-desync.webp" target="_blank" aria-label="放大查看 dance-desync"><img src="assets/dance-desync.webp" alt="dance-desync 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 02</span>动作不同步</h3><p>镜中轮廓抬起双手，实景依然无人。</p></div></article>
+      <article><div class="frame"><a href="assets/dance-line.webp" target="_blank" aria-label="放大查看 dance-line"><img src="assets/dance-line.webp" alt="dance-line 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 03</span>队列</h3><p>镜墙深处多出一排模糊站立的人影，实景地面始终空着。</p></div></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>03 电梯厅</h2><p class="sub">两扇电梯门及楼层灯是核心观察点，异常必须在正常机位下可辨认。</p>
+    <div class="grid">
+      <article><div class="frame"><a href="assets/elevator-normal.webp" target="_blank" aria-label="放大查看 elevator-normal"><img src="assets/elevator-normal.webp" alt="elevator-normal 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">正常</span>夜间候梯区</h3><p>两部电梯门闭合，楼层显示稳定，金属门反光中无人。</p></div></article>
+      <article><div class="frame"><a href="assets/elevator-floor.webp" target="_blank" aria-label="放大查看 elevator-floor"><img src="assets/elevator-floor.webp" alt="两部电梯的楼层屏同时显示 DIE" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 01</span>双屏显示 DIE</h3><p>左右两部电梯的红色楼层屏同时显示“DIE”，两扇门仍然关闭。</p></div></article>
+      <article><div class="frame"><a href="assets/elevator-open.webp" target="_blank" aria-label="放大查看 elevator-open"><img src="assets/elevator-open.webp" alt="elevator-open 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 02</span>门后全黑</h3><p>左门开到一半，轿厢内完全不见轮廓，右侧门保持关闭。</p></div></article>
+      <article><div class="frame"><a href="assets/elevator-footprints.webp" target="_blank" aria-label="放大查看 elevator-footprints"><img src="assets/elevator-footprints.webp" alt="电梯厅地面湿脚印通向关闭的电梯门" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 03</span>通向电梯的湿脚印</h3><p>空走廊里多出一串湿脚印，一直走到关闭的右侧电梯门前；画面中没有人。</p></div></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>04 机房</h2><p class="sub">屏幕阵列提供清晰的正常与异常对照；文字和数字异常后续需要人工校验。</p>
+    <div class="grid">
+      <article><div class="frame"><a href="assets/lab-normal.webp" target="_blank" aria-label="放大查看 lab-normal"><img src="assets/lab-normal.webp" alt="lab-normal 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">正常</span>断电后的机房</h3><p>多排电脑黑屏，座椅收齐，设备柜保留少量指示灯。</p></div></article>
+      <article><div class="frame"><a href="assets/lab-screen.webp" target="_blank" aria-label="放大查看 lab-screen"><img src="assets/lab-screen.webp" alt="lab-screen 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 01</span>单屏亮起</h3><p>只有最后一排靠窗的电脑亮起，显示模糊的人脸轮廓。</p></div></article>
+      <article><div class="frame"><a href="assets/lab-feed.webp" target="_blank" aria-label="放大查看 lab-feed"><img src="assets/lab-feed.webp" alt="lab-feed 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 02</span>监控套监控</h3><p>前排数台屏幕同时显示值班室固定机位，画面中多出值班员背后的暗影。</p></div></article>
+      <article><div class="frame"><a href="assets/lab-static.webp" target="_blank" aria-label="放大查看 lab-static"><img src="assets/lab-static.webp" alt="lab-static 监控示意图" loading="lazy"></a></div><div class="copy"><h3><span class="tag">异常 03</span>集体雪花</h3><p>多台屏幕出现不同步的雪花噪点，仍有屏幕保持熄灭。</p></div></article>
+    </div>
+  </section>
+  <footer>本页仅用于视觉审核。四个场景尚未接入正式监控流程。</footer>
+</body>
+</html>

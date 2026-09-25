@@ -1,7 +1,6 @@
 (function () {
   "use strict";
 
-  const { cameras, events, frameAssets } = window.GameContent;
   const audio = window.NightAudio;
   const params = new URLSearchParams(location.search);
   const qa = params.get("qa") === "1";
@@ -9,6 +8,9 @@
   const startMinute = qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
   const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 1800;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
+  const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
+  const shift = window.GameContent.createShift(shiftSeed);
+  const { cameras, events } = shift;
   const $ = (id) => document.getElementById(id);
 
   const els = {
@@ -39,6 +41,15 @@
   };
 
   const phone = new window.PhoneSystem(els.messageList);
+  // All six labels and report locations come from the same per-shift camera map.
+  Object.entries(cameras).forEach(([slot, camera]) => {
+    const label = document.querySelector(`.camera-dock [data-camera="${slot}"] span`);
+    if (label) label.textContent = camera.name;
+    const option = els.reportCamera.querySelector(`option[value="${slot}"]`);
+    if (option) option.textContent = `${camera.code}｜${camera.reportLocation || camera.name}`;
+  });
+  els.cameraImage.src = cameras.cam01.image;
+  els.cameraName.textContent = cameras.cam01.name;
   let previousView = "room";
   let currentTab = "messages";
   let toastTimer = null;
@@ -86,7 +97,8 @@
   preloadImage("assets/phone-view-integrated-v2.webp", true);
   const allCameraSources = [...new Set([
     ...Object.values(cameras).flatMap((camera) => [camera.image, camera.corruptImage]),
-    ...frameAssets
+    ...events.flatMap((event) => event.frames || []),
+    "assets/cam-duty-empty-v1.webp", "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
   ])];
   // All six feeds and their event frames are small enough to decode while the player
   // is still on the title/duty-room screens. This prevents the previous feed from
@@ -104,7 +116,8 @@
   const sim = new window.NightShiftSimulation({
     minuteMs,
     startMinute,
-    ...(Number.isFinite(requestedSeed) ? { seed: Math.trunc(requestedSeed) } : {}),
+    seed: shiftSeed,
+    shift,
     callbacks: {
       onTick: render,
       onView: () => render(sim.snapshot()),

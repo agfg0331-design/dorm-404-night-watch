@@ -101,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=lobby-guestbook-height-20260925", "js/audio.js?v=chair-fall-20260925", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=duty-shadow-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=handover-manual-20260925"]) {
+for (const versionedAsset of ["style.css?v=lobby-guestbook-height-20260925", "js/audio.js?v=scene-pool-20260925", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=scene-pool-20260925", "js/game.js?v=scene-pool-20260925", "js/main.js?v=scene-pool-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 if (!html.includes('class="rotate-device-notice"') || !html.includes('viewport-fit=cover') || !css.includes('@media(pointer:coarse) and (orientation:portrait)') || !css.includes('@media(orientation:landscape) and (max-height:600px)') || !css.includes('top:calc(50% - min(9.3vw,20dvh))')) throw new Error("手机横屏提示或横屏手机画面适配缺失");
@@ -273,7 +273,7 @@ const simulation = new sandbox.NightShiftSimulation({
 });
 simulation.running = true;
 for (let now = 0; now <= 36200; now += 100) simulation.step(now);
-if (!simulation.finalStage || simulation.ended || starts !== 20 || prompts !== 1 || simulation.minute !== 360) {
+if (!simulation.finalStage || simulation.ended || starts !== simulation.eventQueue.length || prompts !== 1 || simulation.minute !== 360) {
   throw new Error(`最终选择阶段异常：${JSON.stringify({ ended: simulation.ended, finalStage: simulation.finalStage, starts, prompts, minute: simulation.minute })}`);
 }
 simulation.chooseTurn(true);
@@ -298,4 +298,4 @@ if (reportTest.timeScale !== 0.42) throw new Error("上报期间时间未减速"
 
 if (Object.keys(sandbox.GameContent.cameras).length !== 6) throw new Error("监控场景未扩展到6路");
 
-console.log(`自检通过：${references.length} 个界面连接，${starts} 条事件链，6路监控、共享留言与双结局流程。`);
+console.log(`自检通过：${references.length} 个界面连接，${starts} 条本局事件链，6路监控、共享留言与双结局流程。`);

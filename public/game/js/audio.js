@@ -413,7 +413,7 @@
 
     playEventCue(event) {
       const cue = event.visual;
-      const quietCue = ["stairs-darkness", "clock-reverse", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"].includes(cue);
+      const quietCue = ["stairs-darkness", "clock-reverse", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double", "scene-still"].includes(cue);
       if (!quietCue) this.duck(1.1, 0.24);
       if (cue === "chair-fall") {
         this.playSample("woodScrape", { volume: 0.2, rate: 0.76, filter: "lowpass", frequency: 2500 });

@@ -530,6 +530,19 @@
     frame.style.webkitMaskImage = frame.style.maskImage;
   }
 
+  // Mask the approved frame changes to the wall clock itself. The other CCTV
+  // scenery must stay motionless as the clock rocks and its hands spin.
+  function maskLobbyClock(frame) {
+    const width = els.monitorView.clientWidth;
+    const height = els.monitorView.clientHeight;
+    const scale = Math.max(width / 1448, height / 1086);
+    const x = 170 * scale + (width - 1448 * scale) / 2;
+    const y = 179 * scale + (height - 1086 * scale) / 2;
+    const mask = `radial-gradient(ellipse ${146 * scale}px ${135 * scale}px at ${x}px ${y}px, #000 82%, transparent 100%)`;
+    frame.style.maskImage = mask;
+    frame.style.webkitMaskImage = mask;
+  }
+
   function renderEventFrames(event) {
     const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
     if (nextFrameEventKey !== renderedFrameEventKey) {
@@ -545,7 +558,17 @@
     }
     if (!event?.frames?.length) return;
     const p = eventVisualProgress(event);
-    if (event.visual === "stairs-darkness") {
+    if (event.visual === "clock-reverse") {
+      // First the whole clock jerks sideways. Then the two opposing poses and
+      // the blurred spinning-hands pose loop inside the static lobby feed.
+      const frameIndex = p < 0.16 ? 0 : p < 0.4
+        ? Math.floor(performance.now() / 240) % 2
+        : [2, 0, 2, 1][Math.floor(performance.now() / 95) % 4];
+      event.frames.forEach((source, index) => {
+        setEventFrame(index, source, p >= 0.06 && frameIndex === index ? 1 : 0);
+        maskLobbyClock(els.eventFrames[index]);
+      });
+    } else if (event.visual === "stairs-darkness") {
       // The three approved CCTV frames extinguish the lower flight, landing
       // lamp, then upper flight. Each new frame covers the preceding stage.
       setEventFrame(0, event.frames[0], clamp01((p - 0.1) / 0.12));
@@ -576,10 +599,10 @@
     } else if (event.visual === "wet-footprints") {
       setEventFrame(0, event.frames[0], 1);
       revealLobbyPrints(els.eventFrames[0], p);
-    } else if (["pipe-drip", "machine-start", "clock-reverse", "door-open"].includes(event.visual) && event.frames.length > 1) {
+    } else if (["pipe-drip", "machine-start", "door-open"].includes(event.visual) && event.frames.length > 1) {
       setEventFrame(0, event.frames[0], clamp01((p - 0.04) / 0.2) * (1 - clamp01((p - 0.56) / 0.18)));
       setEventFrame(1, event.frames[1], clamp01((p - 0.46) / 0.24));
-    } else if (["door-open", "machine-start", "clock-reverse"].includes(event.visual)) {
+    } else if (["door-open", "machine-start"].includes(event.visual)) {
       setEventFrame(0, event.frames[0], clamp01((p - 0.04) / 0.34));
     } else {
       setEventFrame(0, event.frames[0], p);

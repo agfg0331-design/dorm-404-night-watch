@@ -101,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=stairs-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=stairs-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=stairs-20260925"]) {
+for (const versionedAsset of ["style.css?v=clock-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=clock-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=clock-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;
@@ -122,6 +122,13 @@ for (let stage = 1; stage <= 3; stage++) {
   if (!main.includes(`setEventFrame(${stage - 1}, event.frames[${stage - 1}]`)) throw new Error(`楼梯第${stage}阶段未接入事件帧`);
 }
 if (css.includes(".monitor-view.event-stairs-darkness .stairs-darkness{display:block}")) throw new Error("楼梯旧遮罩仍覆盖确认后的画面");
+const clockDefinition = anomalies.match(/\{ id: "lobby-clock"[^\n]+/)?.[0] || "";
+for (let stage = 1; stage <= 3; stage++) {
+  const asset = `assets/cam-lobby-clock-shake-${stage}-approved-v1.webp`;
+  if (!clockDefinition.includes(asset) || !fs.existsSync(`${gameRoot}/${asset}`)) throw new Error(`挂钟缺少已确认的第${stage}阶段画面`);
+}
+if (!main.includes("maskLobbyClock(els.eventFrames[index])") || !main.includes("Math.floor(performance.now() / 95)")) throw new Error("挂钟未限制在钟面内快速轮播");
+if (css.includes("event-clock-reverse .event-frame-stack img{transform:scale(1.16)")) throw new Error("旧挂钟局部放大仍会破坏新画面定位");
 if (!css.includes("@keyframes twinEcho") || !css.includes("animation-delay:.72s")) throw new Error("大厅双人缺少延迟同步动作");
 if (css.includes("event-lobby-double .extra-shadow") || css.includes("event-self-turn .extra-shadow")) throw new Error("专属人物异常仍被通用 extra-shadow 规则覆盖");
 if (!/id: "lobby-double", start: 334[\s\S]*?duration: 8/.test(anomalies)) throw new Error("大厅双人必须在05:42断流前完成演出");
@@ -217,8 +224,9 @@ for (const integratedFrame of [
   "cam-laundry-drip-reverse-v4.webp",
   "cam-laundry-machine-mid-v4.webp",
   "cam-laundry-machine-violent-v4.webp",
-  "cam-lobby-clock-mid-v4.webp",
-  "cam-lobby-clock-final-v4.webp",
+  "cam-lobby-clock-shake-1-approved-v1.webp",
+  "cam-lobby-clock-shake-2-approved-v1.webp",
+  "cam-lobby-clock-shake-3-approved-v1.webp",
   "cam-hall-door-mid-v4.webp",
   "cam-hall-door-open-v4.webp"
 ]) {

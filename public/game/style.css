@@ -151,8 +151,7 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .monitor-view.event-bed-curtain[data-event-stage="4"] .event-frame-stack{animation:curtainAdvance .9s cubic-bezier(.2,.8,.2,1) both}
 
 .monitor-view.event-clock-reverse .reverse-clock{display:none}
-.monitor-view.event-clock-reverse .event-frame-stack img{transform:scale(1.16);transform-origin:9% 12%}
-.monitor-view.event-clock-reverse[data-event-stage="3"] .event-frame-stack,.monitor-view.event-clock-reverse[data-event-stage="4"] .event-frame-stack{animation:clockKick .24s steps(2) infinite}
+.monitor-view.event-clock-reverse .event-frame-stack img{transition:opacity 0s}
 
 .monitor-view.event-space-repeat .space-echo{display:block;z-index:2;inset:5% 7%;border:1px solid rgba(177,205,190,.25);box-shadow:calc(var(--event-progress) * 18px) 0 0 rgba(61,105,86,.24),calc(var(--event-progress) * -22px) 0 0 rgba(119,19,28,.2),inset 0 0 60px rgba(0,0,0,.7);opacity:calc(.18 + var(--event-progress) * .74);transform:perspective(900px) translateZ(calc(var(--event-progress) * 95px)) rotateY(calc(var(--event-progress) * 2deg));animation:spacePulse .84s steps(3) infinite}
 .monitor-view.event-space-repeat[data-event-stage="4"] .feed-image{animation:spaceCollapse .28s steps(2) infinite}

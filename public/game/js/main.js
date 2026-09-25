@@ -492,7 +492,7 @@
   }
 
   function clamp01(value) { return Math.max(0, Math.min(1, value)); }
-  const quietAnomalyVisuals = new Set(["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]);
+  const quietAnomalyVisuals = new Set(["stairs-darkness", "clock-reverse", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]);
   const hardEventBeats = new Set(["surge", "ceiling-hit", "bang", "head-turn", "presence", "collapse"]);
 
   function eventVisualProgress(event) {
@@ -690,15 +690,15 @@
     }
     const stagedBeats = {
       "light-flicker": [[0.08, "arc-1"], [0.28, "arc-2"], [0.52, "blackout"], [0.78, "surge"]],
-      "stairs-darkness": [[0.1, "douse-1"], [0.22, "step-1"], [0.36, "douse-2"], [0.49, "step-2"], [0.62, "douse-3"], [0.75, "step-3"], [0.86, "douse-4"], [0.96, "silence"]],
+      "stairs-darkness": [[0.1, "douse-1"], [0.22, "step-1"], [0.36, "douse-2"], [0.49, "step-2"], [0.62, "douse-3"], [0.75, "step-3"], [0.96, "silence"]],
       "pipe-drip": [[0.14, "drop-1"], [0.36, "drop-2"], [0.62, "reverse"], [0.86, "ceiling-hit"]],
       "stair-steps": [[0.12, "step-1"], [0.3, "step-2"], [0.5, "step-3"], [0.7, "step-4"], [0.88, "step-5"]],
       "wet-footprints": [[0.08, "step-1"], [0.18, "step-2"], [0.3, "step-3"], [0.39, "step-4"], [0.51, "step-5"], [0.59, "step-6"], [0.7, "step-7"], [0.78, "step-8"], [0.91, "stop"]],
       "door-open": [[0.12, "handle"], [0.34, "creak"], [0.68, "open"], [0.9, "inside-breath"]],
       "machine-start": [[0.1, "click"], [0.3, "spin"], [0.56, "knock"], [0.82, "bang"]],
       "bed-curtain": [[0.18, "rustle"], [0.52, "breath"], [0.84, "head-turn"]],
-      "clock-reverse": [[0.14, "tick-1"], [0.32, "tick-2"], [0.5, "tick-3"], [0.68, "tick-4"], [0.86, "tick-5"]],
-      "self-turn": [[0.38, "cloth"], [0.7, "breath"], [0.94, "look"]],
+      "clock-reverse": [[0.4, "spin-start"]],
+      "self-turn": [[0.38, "cloth"], [0.66, "snap"], [0.94, "look"]],
       "duty-extra": [[0.18, "breath"], [0.55, "whisper"], [0.86, "presence"]],
       "lobby-double": [[0.12, "outside"], [0.42, "inside"], [0.72, "echo"], [0.94, "hold"]],
       "space-repeat": [[0.18, "slip"], [0.48, "repeat"], [0.82, "collapse"]]

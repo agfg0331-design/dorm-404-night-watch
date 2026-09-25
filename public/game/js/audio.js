@@ -36,6 +36,10 @@
         drip2: "assets/audio/drip_single_02.mp3",
         drip3: "assets/audio/drip_single_03.mp3",
         fluorescent: "assets/audio/fluorescent_buzz_loop_20s.mp3",
+        stairDouse: "assets/audio/stairs-fluorescent-douse.mp3",
+        clockTicks: "assets/audio/clock-real-ticking.mp3",
+        clockGears: "assets/audio/clock-gears-runaway.mp3",
+        boneFracture: "assets/audio/shadow-bone-fracture.mp3",
         heelsFar: "assets/audio/heels_far_to_near.mp3",
         heelsNear: "assets/audio/heels_near_walk.mp3",
         heelsStop: "assets/audio/heels_stop_outside.mp3",
@@ -408,7 +412,7 @@
 
     playEventCue(event) {
       const cue = event.visual;
-      const quietCue = ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"].includes(cue);
+      const quietCue = ["stairs-darkness", "clock-reverse", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"].includes(cue);
       if (!quietCue) this.duck(1.1, 0.24);
       if (cue === "chair-fall") {
         this.playSample("woodScrape", { volume: 0.2, rate: 0.76, filter: "lowpass", frequency: 2500 });
@@ -438,7 +442,8 @@
       } else if (cue === "bed-curtain") {
         this.playSample("breathing", { volume: 0.1, rate: 0.8, offset: 0.4, duration: 1.2, filter: "lowpass", frequency: 1400 });
       } else if (cue === "clock-reverse") {
-        this.tone(1240, 0.05, { volume: 0.035, to: 680, type: "square" });
+        // Recorded wall-clock ticks establish the clock before its hands run wild.
+        this.playSample("clockTicks", { volume: 0.32, duration: 15, filter: "highpass", frequency: 120, pan: -0.58, attack: 0.35 });
       }
     }
 
@@ -476,7 +481,8 @@
           this.duck(1.8, 0.04);
         } else if (beat.startsWith("douse")) {
           const index = Number(beat.split("-")[1] || 1);
-          this.tone(92 - index * 5, 0.055, { volume: 0.018 + index * 0.004, to: 54, type: "square" });
+          // One real fluorescent shutdown per approved darkening frame.
+          this.playSample("stairDouse", { volume: 0.37 + index * 0.08, rate: 1.04 - index * 0.04, filter: "highpass", frequency: 95, pan: -0.42 + index * 0.25 });
         } else if (beat.startsWith("step")) {
           const index = Number(beat.split("-")[1] || 1);
           this.playSample(index < 3 ? "heelsFar" : "heelsNear", { volume: 0.1 + index * 0.035, rate: 0.9 + index * 0.035, offset: 1.2 + index * 1.45, duration: 0.62, filter: "lowpass", frequency: 850 + index * 720, pan: -0.25 + index * 0.2 });
@@ -532,13 +538,14 @@
         else if (beat === "breath") { this.duck(1.1, 0.18); this.breath(2); }
         else { this.duck(1.5, 0.06); this.playSample("horrorHit", { volume: 0.6, rate: 0.78, duration: 1.3 }); this.tone(47, 0.72, { volume: 0.14, to: 26, type: "triangle" }); this.vibrate(3); }
       } else if (cue === "clock-reverse") {
-        const index = Number(beat.split("-")[1] || 1);
-        this.duck(0.28, Math.max(0.18, 0.5 - index * 0.06));
-        this.tone(1280 + index * 110, 0.055, { volume: 0.045 + index * 0.014, to: 260, type: "square" });
-        if (index === 5) { this.tone(44, 0.7, { volume: 0.14, to: 25, type: "triangle" }); this.vibrate(2); }
+        if (beat === "spin-start") {
+          // Accelerate the physical clockwork recording with the rotating hands.
+          const gear = this.playSample("clockGears", { volume: 0.66, rate: 0.86, filter: "lowpass", frequency: 5400, pan: -0.58, attack: 0.65 });
+          if (gear) gear.source.playbackRate.linearRampToValueAtTime(1.6, this.ctx.currentTime + 17);
+        }
       } else if (cue === "self-turn") {
         if (beat === "cloth") this.playSample("woodScrape", { volume: 0.065, rate: 1.42, duration: 0.72, filter: "lowpass", frequency: 980, pan: -0.08 });
-        else if (beat === "breath") this.breath(1);
+        else if (beat === "snap") this.playSample("boneFracture", { volume: 0.65, rate: 0.94, filter: "lowpass", frequency: 4800, pan: -0.18, attack: 0.008 });
         else if (beat === "look") this.duck(1.45, 0.045);
       } else if (cue === "lobby-double") {
         if (beat === "inside") this.tone(43, 0.7, { volume: 0.045, to: 32, type: "triangle" });

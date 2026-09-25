@@ -29,3 +29,14 @@ The following files were supplied by the project owner and processed specificall
 - `drip_single_01.mp3`, `drip_single_02.mp3`, `drip_single_03.mp3`
 - `room_night_loop_60s.mp3`, `fluorescent_buzz_loop_20s.mp3`
 - `crt_switch_short.mp3`, `crt_glitch_medium.mp3`, `crt_severe_static.mp3`
+
+## Approved recorded anomaly sounds
+
+The player approved these real recordings on 2026-09-25. Each source is marked Creative Commons 0 on its Freesound page. The shipped MP3 files are short edits from the corresponding high-quality previews, trimmed and faded to fit the staged CCTV artwork.
+
+| Local file | Recording and author | CC0 source |
+| --- | --- | --- |
+| `stairs-fluorescent-douse.mp3` | Fluorescent lights turning on and off, ThabzMalik | https://freesound.org/people/ThabzMalik/sounds/767055/ |
+| `clock-real-ticking.mp3` | Mechanical clock ticking 2, LukaCafuka | https://freesound.org/people/LukaCafuka/sounds/784052/ |
+| `clock-gears-runaway.mp3` | Clockwork motor, robindouglasjohnson | https://freesound.org/people/robindouglasjohnson/sounds/698991/ |
+| `shadow-bone-fracture.mp3` | Bone Breaks (celery snaps), ericnorcross81 | https://freesound.org/people/ericnorcross81/sounds/574752/ |

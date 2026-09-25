@@ -57,7 +57,16 @@
         wind: "assets/audio/wind-ambience.mp3",
         breathing: "assets/audio/human-breathing.mp3",
         horrorAmbience: "assets/audio/horror-ambience.mp3",
-        horrorHit: "assets/audio/horror-hit.mp3"
+        horrorHit: "assets/audio/horror-hit.mp3",
+        metalFrameFall: "assets/audio/scene-metal-frame-fall.mp3",
+        badPiano: "assets/audio/scene-bad-piano.mp3",
+        curtainWind: "assets/audio/scene-curtain-wind.mp3",
+        elevatorDoor: "assets/audio/scene-elevator-door.mp3",
+        elevatorDing: "assets/audio/scene-elevator-ding.mp3",
+        danceScreech: "assets/audio/scene-dance-screech.mp3",
+        danceWhispers: "assets/audio/scene-dance-whispers.mp3",
+        tvStatic: "assets/audio/scene-tv-static.mp3",
+        robotVoices: "assets/audio/scene-robot-voices.mp3"
       };
     }
 
@@ -94,7 +103,11 @@
       const url = this.sampleUrls[key];
       if (!url) return Promise.resolve(null);
       const promise = (async () => {
-        const response = await fetch(url);
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        let response;
+        try { response = await fetch(url, { signal: controller.signal }); }
+        finally { window.clearTimeout(timeout); }
         if (!response.ok) throw new Error(`audio ${response.status}: ${url}`);
         const data = await response.arrayBuffer();
         const buffer = await this.ctx.decodeAudioData(data.slice(0));
@@ -110,7 +123,8 @@
     }
 
     playSample(key, options = {}) {
-      if (!this.enabled || !this.ctx || !this.sampleBuffers.has(key)) return null;
+      if (!this.enabled || !this.ctx) return null;
+      if (!this.sampleBuffers.has(key)) return null;
       const source = this.ctx.createBufferSource();
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
@@ -450,7 +464,45 @@
 
     playEventBeat(event, beat) {
       const cue = event.visual;
-      if (cue === "chair-fall" && beat === "impact") {
+      if (cue === "scene-still") {
+        // New scenes keep their own cues; a generic scene-still event has no sound.
+        if (event.id === "music-stands" && beat === "fall") {
+          this.duck(1.7, 0.07);
+          // Both recordings start on the same image frame: one metal frame and
+          // the existing chair hitting the classroom floor.
+          this.playSample("metalFrameFall", { volume: 0.8, pan: 0.22, attack: 0.006 });
+          this.playSample("chairFall", { volume: 0.57, pan: 0.22, attack: 0.006 });
+        } else if (event.id === "music-piano" && beat === "open") {
+          this.playSample("badPiano", { volume: 0.48, duration: 6.8, offset: 1.3, pan: -0.34, filter: "lowpass", frequency: 5600 });
+        } else if (event.id === "music-figure" && beat === "curtain") {
+          this.playSample("curtainWind", { volume: 0.45, duration: 7, pan: 0.45, filter: "lowpass", frequency: 5000 });
+        } else if (event.id === "dance-figure" && beat === "blackout") {
+          this.duck(0.85, 0.035);
+          this.playSample("danceScreech", { volume: 0.77, attack: 0.006, pan: 0.04 });
+        } else if (event.id === "dance-line" && beat === "appear") {
+          this.playSample("danceWhispers", { volume: 0.47, duration: 6, pan: -0.15, filter: "lowpass", frequency: 5600 });
+          this.playSample("danceWhispers", { volume: 0.26, duration: 5.4, delay: 0.16, offset: 0.7, rate: 0.92, pan: 0.37, filter: "lowpass", frequency: 4200 });
+        } else if (event.id === "elevator-die" && beat === "die") {
+          this.playSample("elevatorDing", { volume: 0.6, pan: 0.02 });
+        } else if (event.id === "elevator-open" && beat === "open") {
+          this.duck(1.8, 0.14);
+          this.playSample("elevatorDoor", { volume: 0.73, pan: -0.14, filter: "lowpass", frequency: 5500 });
+        } else if (event.id === "elevator-footprints" && beat.startsWith("step-")) {
+          const index = Number(beat.slice(5));
+          const near = index >= 3;
+          this.playSample(near ? "heelsNear" : "heelsFar", {
+            volume: 0.19 + index * 0.045, offset: near ? 0.8 + (index - 3) * 0.75 : 1.1 + index * 0.8,
+            duration: 0.45, rate: 0.93 + index * 0.025, pan: 0.36 - index * 0.17,
+            filter: "lowpass", frequency: 1300 + index * 650
+          });
+        } else if (["lab-screen", "lab-static"].includes(event.id) && beat === "screen") {
+          this.playSample("tvStatic", { volume: event.id === "lab-screen" ? 0.35 : 0.57, duration: event.id === "lab-screen" ? 3 : 6, pan: event.id === "lab-screen" ? -0.46 : 0, filter: "highpass", frequency: 220 });
+        } else if (event.id === "lab-feed" && beat === "screens") {
+          this.playSample("robotVoices", { volume: 0.43, duration: 5.2, pan: -0.35, filter: "lowpass", frequency: 6200 });
+          this.playSample("robotVoices", { volume: 0.34, duration: 4.5, delay: 0.19, offset: 0.8, rate: 0.85, pan: 0.34, filter: "lowpass", frequency: 4500 });
+          this.playSample("robotVoices", { volume: 0.24, duration: 3.8, delay: 0.42, offset: 1.4, rate: 1.12, pan: 0.02, filter: "lowpass", frequency: 3200 });
+        }
+      } else if (cue === "chair-fall" && beat === "impact") {
         this.duck(2.2, 0.06);
         // The chair reaches the tile as its fallen frame appears. The recorded
         // first crash and shorter rebound follow the earlier dragging cue.

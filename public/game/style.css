@@ -41,6 +41,9 @@ body.custom-brightness .game{filter:brightness(var(--game-brightness))}
 .feed-image{filter:saturate(.55) sepia(.12) hue-rotate(80deg) contrast(1.05) brightness(.72);transition:filter .5s,transform .3s,opacity .07s linear;will-change:opacity}
 .event-frame-stack{position:absolute;z-index:3;inset:0;pointer-events:none;overflow:hidden;transition:opacity .07s linear;will-change:opacity}
 .event-frame-stack img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:saturate(.55) sepia(.12) hue-rotate(80deg) contrast(1.05) brightness(.72);transition:opacity .42s ease;will-change:opacity,transform}
+.monitor-view.event-scene-still .event-frame-stack img{transition:opacity .05s linear}
+.dance-power-cut{position:absolute;z-index:6;inset:0;background:#000;opacity:0;pointer-events:none;transition:none}
+.monitor-view.dance-blackout .dance-power-cut{opacity:1}
 .event-layer,.event-frame-stack{transition:opacity .55s ease}.monitor-view.event-clearing .event-layer,.monitor-view.event-clearing .event-frame-stack{opacity:0}
 .feed-grade{z-index:2;background:radial-gradient(circle at center,transparent 35%,rgba(0,0,0,.52) 100%),linear-gradient(180deg,rgba(22,52,40,.1),rgba(0,5,3,.32));mix-blend-mode:multiply}
 .scanlines,.noise,.glitch-band{position:absolute;inset:0;z-index:5;pointer-events:none}

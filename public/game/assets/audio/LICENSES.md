@@ -44,3 +44,19 @@ The player approved these real recordings on 2026-09-25. Each source is marked C
 ## Chair impact recording
 
 `chair-fall-floor.mp3` is a short edit of "Wooden chair falls on the ground" by Janijs, recorded with a Tascam DR-40 and published under Creative Commons 0: https://freesound.org/people/Janijs/sounds/686712/ . The first fall and its rebound were trimmed from the high-quality preview to coincide with CAM01's chair-fall frame; the preceding drag remains a separate cue.
+
+## New-scene recordings (bundled CC0 previews)
+
+These nine short MP3 edits were downloaded and trimmed with `node scripts/vendor-scene-audio.mjs`. Each linked source page marks the recording Creative Commons 0. The existing `chair-fall-floor.mp3` is mixed with the metal-frame fall in the music classroom. All scene cues are now served from `assets/audio` alongside the older game sounds.
+
+| Game cue | Recording | Source |
+| --- | --- | --- |
+| Music classroom, fallen music stand | Metal ladder drops, jaimage | https://freesound.org/people/jaimage/sounds/269693/ |
+| Music classroom, piano | Piano playing badly, TylerAM | https://freesound.org/people/TylerAM/sounds/389673/ |
+| Music classroom, window | Howling wind through window, tomhannen | https://freesound.org/people/tomhannen/sounds/486599/ |
+| Elevator hall, door | Large metal lift door opening, lolamadeus | https://freesound.org/people/lolamadeus/sounds/161228/ |
+| Elevator hall, DIE | Elevator ding, collierhs_colinlib | https://freesound.org/people/collierhs_colinlib/sounds/588718/ |
+| Dance classroom, sudden blackout | Electric Failure – High Voltage Power Down #2, ATP2-kh | https://freesound.org/people/ATP2-kh/sounds/844244/ |
+| Dance classroom, group of figures | Crowd of demonic whispers, ShangusBurger | https://freesound.org/people/ShangusBurger/sounds/763804/ |
+| Computer lab, one screen and static | TV Static, Gaiamuse | https://freesound.org/people/Gaiamuse/sounds/50500/ |
+| Computer lab, multiple displays | Robot kind of high pitch sounds, mrsorbias | https://freesound.org/people/mrsorbias/sounds/586535/ |

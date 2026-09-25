@@ -107,7 +107,13 @@
   const criticalAudioSamples = [
     "crtSwitch", "heelsFar", "heelsNear", "heelsStop", "woodScrape", "glassBreak",
     "drip1", "drip2", "drip3", "washer1", "washer2", "washer3", "doorShort",
-    "doorLong", "doorTense", "ringtone", "horrorHit", "heartbeat", "breathing"
+    "doorLong", "doorTense", "ringtone", "horrorHit", "heartbeat", "breathing",
+    ...((sceneIds) => [
+      ...(sceneIds.includes("music") ? ["metalFrameFall", "chairFall", "badPiano", "curtainWind"] : []),
+      ...(sceneIds.includes("dance") ? ["danceScreech", "danceWhispers"] : []),
+      ...(sceneIds.includes("elevator") ? ["elevatorDoor", "elevatorDing"] : []),
+      ...(sceneIds.includes("lab") ? ["tvStatic", "robotVoices"] : [])
+    ])(shift.sceneIds)
   ];
 
   applySettings(false);
@@ -421,7 +427,7 @@
     const visibleEvent = state.view === "monitor" ? state.visibleEvent : null;
     // The mirror figure is deliberately silent: keep the ordinary laundry-room
     // ambience running so sight and sound contradict one another.
-    const eventFocused = Boolean(visibleEvent && visibleEvent.visual !== "mirror-reflection");
+    const eventFocused = Boolean(visibleEvent && visibleEvent.visual !== "mirror-reflection" && visibleEvent.id !== "dance-desync");
     if (renderedEventFocus !== eventFocused) {
       renderedEventFocus = eventFocused;
       audio.setEventFocus(eventFocused);
@@ -545,6 +551,28 @@
     frame.style.webkitMaskImage = frame.style.maskImage;
   }
 
+  // Reveal only the footprints from the elevator artwork, preserving the
+  // normal hallway underneath. Their six groups share the six footstep beats.
+  const elevatorPrints = [
+    [212, 492, .16], [267, 518, .16], [320, 587, .28],
+    [426, 638, .4], [494, 700, .54], [627, 746, .54],
+    [752, 812, .68], [946, 812, .82], [1093, 771, .82]
+  ];
+
+  function revealElevatorPrints(frame, progress) {
+    const width = els.monitorView.clientWidth;
+    const height = els.monitorView.clientHeight;
+    const scale = Math.max(width / 1448, height / 1086);
+    const offsetX = (width - 1448 * scale) / 2;
+    const offsetY = (height - 1086 * scale) / 2;
+    const masks = elevatorPrints.flatMap(([x, y, at]) => {
+      const opacity = clamp01((progress - at) * 35);
+      return opacity ? [`radial-gradient(ellipse ${58 * scale}px ${45 * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, rgba(0,0,0,${opacity}) 62%, transparent 100%)`] : [];
+    });
+    frame.style.maskImage = masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)";
+    frame.style.webkitMaskImage = frame.style.maskImage;
+  }
+
   // Mask the approved frame changes to the wall clock itself. The other CCTV
   // scenery must stay motionless as the clock rocks and its hands spin.
   function maskLobbyClock(frame) {
@@ -597,8 +625,12 @@
         frame.style.transformOrigin = "";
       });
     }
-    if (!event?.frames?.length) return;
+    if (!event?.frames?.length) {
+      els.monitorView.classList.remove("dance-blackout");
+      return;
+    }
     const p = eventVisualProgress(event);
+    els.monitorView.classList.toggle("dance-blackout", event.id === "dance-figure" && p >= 0.11 && p < 0.19);
     if (event.visual === "clock-reverse") {
       // First the whole clock jerks sideways. Then the two opposing poses and
       // the blurred spinning-hands pose loop inside the static lobby feed.
@@ -609,6 +641,15 @@
         setEventFrame(index, source, p >= 0.06 && frameIndex === index ? 1 : 0);
         maskLobbyClock(els.eventFrames[index]);
       });
+    } else if (event.visual === "scene-still") {
+      const reveal = {
+        "music-piano": 0.18, "music-stands": 0.22, "music-figure": 0.24,
+        "dance-figure": 0.19, "dance-desync": 0.22, "dance-line": 0.24,
+        "elevator-die": 0.2, "elevator-open": 0.18, "elevator-footprints": 0.16,
+        "lab-screen": 0.2, "lab-feed": 0.2, "lab-static": 0.2
+      }[event.id] ?? 0.2;
+      setEventFrame(0, event.frames[0], p >= reveal ? 1 : 0);
+      if (event.id === "elevator-footprints") revealElevatorPrints(els.eventFrames[0], p);
     } else if (event.visual === "mirror-reflection") {
       // First a faceless shadow appears, then it approaches the mirror and
       // finally its grin becomes visible. Each later image covers the former.
@@ -695,11 +736,34 @@
     fireEventBeat(event, beat, hardBeats.has(beat) ? "impact-hard" : quiet ? null : "impact-soft");
   }
 
+  function fireSceneBeats(event, beats, progress) {
+    const fired = eventBeatState.get(event.id) || new Set();
+    for (const [point, beat] of beats) {
+      if (progress < point || fired.has(beat)) continue;
+      // If the player switches into a feed after the change, do not make a
+      // fallen stand or already-open door sound as if it just happened.
+      if (progress - point <= 0.075) fireEventBeat(event, beat, beat === "fall" ? "impact-hard" : null);
+      else fired.add(beat);
+    }
+    eventBeatState.set(event.id, fired);
+  }
+
   function syncEventBeat(event, audible = true) {
     if (!audible) return;
     const p = eventVisualProgress(event);
     if (event.visual === "chair-fall" && p >= 0.2) fireEventBeat(event, "impact", "impact-hard", audible);
     if (event.visual === "window-break" && p >= 0.28) fireEventBeat(event, "impact", "impact-hard", audible);
+    if (event.visual === "scene-still") {
+      const sceneBeats = {
+        "music-piano": [[0.18, "open"]], "music-stands": [[0.22, "fall"]], "music-figure": [[0.24, "curtain"]],
+        "dance-figure": [[0.11, "blackout"]], "dance-line": [[0.24, "appear"]],
+        "elevator-die": [[0.2, "die"]], "elevator-open": [[0.18, "open"]],
+        "elevator-footprints": [[0.16, "step-0"], [0.28, "step-1"], [0.4, "step-2"], [0.54, "step-3"], [0.68, "step-4"], [0.82, "step-5"]],
+        "lab-screen": [[0.2, "screen"]], "lab-feed": [[0.2, "screens"]], "lab-static": [[0.2, "screen"]]
+      };
+      fireSceneBeats(event, sceneBeats[event.id] || [], p);
+      return;
+    }
     if (["shadow-walk", "shadow-rush"].includes(event.visual)) {
       fireDueBeats(event, [0.08, 0.2, 0.32, 0.44, 0.56, 0.68, 0.8, 0.92].map((point, index) => [point, `step-${index}`]), p);
     }

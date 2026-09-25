@@ -507,6 +507,29 @@
     frame.style.opacity = String(clamp01(opacity));
   }
 
+  // Reveal the approved CCTV artwork a shoe at a time, using small feathered
+  // masks over the actual prints. Both images keep the same fixed camera angle.
+  const lobbyPrints = [
+    [903, 630, 34, 34, .08], [958, 654, 36, 39, .18],
+    [829, 696, 38, 42, .3], [861, 748, 40, 45, .39],
+    [713, 795, 46, 50, .51], [731, 869, 48, 54, .59],
+    [586, 921, 53, 58, .7], [546, 961, 55, 62, .78]
+  ];
+
+  function revealLobbyPrints(frame, progress) {
+    const width = els.monitorView.clientWidth;
+    const height = els.monitorView.clientHeight;
+    const scale = Math.max(width / 1448, height / 1086);
+    const offsetX = (width - 1448 * scale) / 2;
+    const offsetY = (height - 1086 * scale) / 2;
+    const masks = lobbyPrints.flatMap(([x, y, rx, ry, at]) => {
+      const opacity = clamp01((progress - at) * 16);
+      return opacity ? [`radial-gradient(ellipse ${rx * scale}px ${ry * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, rgba(0,0,0,${opacity}) 48%, transparent 100%)`] : [];
+    });
+    frame.style.maskImage = masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)";
+    frame.style.webkitMaskImage = frame.style.maskImage;
+  }
+
   function renderEventFrames(event) {
     const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
     if (nextFrameEventKey !== renderedFrameEventKey) {
@@ -545,9 +568,8 @@
       setEventFrame(0, event.frames[0], 1);
       els.eventFrames[0].style.clipPath = `inset(${(1 - reveal) * 100}% 0 0 0)`;
     } else if (event.visual === "wet-footprints") {
-      const reveal = clamp01((p - 0.04) / 0.78);
       setEventFrame(0, event.frames[0], 1);
-      els.eventFrames[0].style.clipPath = `inset(0 0 ${(1 - reveal) * 100}% 0)`;
+      revealLobbyPrints(els.eventFrames[0], p);
     } else if (["pipe-drip", "machine-start", "clock-reverse", "door-open"].includes(event.visual) && event.frames.length > 1) {
       setEventFrame(0, event.frames[0], clamp01((p - 0.04) / 0.2) * (1 - clamp01((p - 0.56) / 0.18)));
       setEventFrame(1, event.frames[1], clamp01((p - 0.46) / 0.24));

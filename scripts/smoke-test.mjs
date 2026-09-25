@@ -101,7 +101,7 @@ if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) thro
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
 if (!css.includes("body.custom-brightness .game")) throw new Error("默认亮度仍可能对整个游戏施加滤镜");
-for (const versionedAsset of ["style.css?v=flow-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=anomaly-20260919", "js/game.js?v=flow-20260925", "js/main.js?v=flow-20260925"]) {
+for (const versionedAsset of ["style.css?v=footprints-20260925", "js/audio.js?v=anomaly-20260919", "js/phone.js?v=neutral-status-20260918", "js/handoff.js?v=handoff-20260919", "js/anomalies.js?v=footprints-20260925", "js/game.js?v=flow-20260925", "js/main.js?v=footprints-20260925"]) {
   if (!html.includes(versionedAsset)) throw new Error(`核心资源缺少缓存版本标识：${versionedAsset}`);
 }
 const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;
@@ -113,8 +113,8 @@ for (const mapping of ['id: "stairs-light"[\\s\\S]*?visual: "stairs-darkness"', 
   if (!(new RegExp(mapping)).test(anomalies)) throw new Error(`异常视觉映射缺失：${mapping}`);
 }
 const footprintsDefinition = anomalies.match(/\{ id: "lobby-footprints"[^\n]+/)?.[0] || "";
-if (footprintsDefinition.includes("frames:")) throw new Error("大厅湿脚印仍会整帧替换画面");
-if ((css.match(/\.footprint-trail i:nth-child\(/g) || []).length !== 10) throw new Error("湿脚印没有按10个独立脚印推进");
+if (!footprintsDefinition.includes('frames: ["assets/cam-lobby-wet-footprints-approved-v1.webp"]') || !fs.existsSync("public/game/assets/cam-lobby-wet-footprints-approved-v1.webp")) throw new Error("大厅缺少确认后的湿脚印画面");
+if (!main.includes("revealLobbyPrints(els.eventFrames[0], p)") || !css.includes(".monitor-view.event-wet-footprints .footprint-trail{display:none}")) throw new Error("湿脚印未逐个遮罩显现或仍被旧脚印覆盖");
 if (!css.includes("@keyframes twinEcho") || !css.includes("animation-delay:.72s")) throw new Error("大厅双人缺少延迟同步动作");
 if (css.includes("event-lobby-double .extra-shadow") || css.includes("event-self-turn .extra-shadow")) throw new Error("专属人物异常仍被通用 extra-shadow 规则覆盖");
 if (!/id: "lobby-double", start: 334[\s\S]*?duration: 8/.test(anomalies)) throw new Error("大厅双人必须在05:42断流前完成演出");

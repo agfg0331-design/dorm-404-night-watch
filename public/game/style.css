@@ -129,7 +129,7 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .monitor-view.event-lobby-double[data-event-stage="3"] .lobby-twin.inside,.monitor-view.event-lobby-double[data-event-stage="4"] .lobby-twin.inside{animation-delay:.72s}
 
 /* CAM06: ten independent prints reveal irregularly and stop as a pair at the duty-room threshold. */
-.monitor-view.event-wet-footprints .footprint-trail{display:block}
+.monitor-view.event-wet-footprints .footprint-trail{display:none}
 .footprint-trail i{position:absolute;left:var(--x);top:var(--y);width:1.15%;height:3.25%;border-radius:62% 38% 55% 45%;background:radial-gradient(ellipse at 52% 24%,rgba(8,15,13,.82) 0 28%,transparent 31%),radial-gradient(ellipse at 48% 76%,rgba(4,10,8,.76) 0 35%,transparent 38%);opacity:clamp(0,calc((var(--event-progress) - var(--at)) * 15),.82);transform:rotate(var(--r));will-change:opacity}
 .footprint-trail i:nth-child(1){--x:69%;--y:58%;--at:.08;--r:78deg}.footprint-trail i:nth-child(2){--x:63.5%;--y:60.5%;--at:.18;--r:99deg}.footprint-trail i:nth-child(3){--x:57%;--y:61%;--at:.3;--r:80deg}.footprint-trail i:nth-child(4){--x:50.5%;--y:64%;--at:.39;--r:101deg}.footprint-trail i:nth-child(5){--x:43.5%;--y:64.5%;--at:.51;--r:81deg}.footprint-trail i:nth-child(6){--x:36.5%;--y:67%;--at:.59;--r:100deg}.footprint-trail i:nth-child(7){--x:29.5%;--y:66.5%;--at:.7;--r:80deg}.footprint-trail i:nth-child(8){--x:22.5%;--y:68.5%;--at:.78;--r:101deg}.footprint-trail i:nth-child(9){--x:15.8%;--y:66.3%;--at:.89;--r:82deg}.footprint-trail i:nth-child(10){--x:12.9%;--y:69%;--at:.94;--r:99deg}
 .rising-water,.machine-drum,.air-draft,.space-echo,.event-flash{display:none;position:absolute;pointer-events:none}

@@ -16,7 +16,7 @@
     "assets/cam-stairs-footprints-v3.webp", "assets/cam-lobby-door-open-v3.webp",
     "assets/cam-laundry-drip-mid-v4.webp", "assets/cam-laundry-drip-reverse-v4.webp",
     "assets/cam-laundry-machine-mid-v4.webp", "assets/cam-laundry-machine-violent-v4.webp",
-    "assets/cam-lobby-clock-mid-v4.webp", "assets/cam-lobby-clock-final-v4.webp",
+    "assets/cam-lobby-clock-mid-v4.webp", "assets/cam-lobby-clock-final-v4.webp", "assets/cam-lobby-wet-footprints-approved-v1.webp",
     "assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp", "assets/cam-lobby-normal-v2.webp",
     "assets/cam-duty-empty-v1.webp",
     "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
@@ -37,7 +37,7 @@
     { id: "duty-self", start: 239, jitter: 4, camera: "cam04", category: "人物异常", title: "值班员抬头注视摄像头", visual: "self-turn", duration: 22, grace: 13, severity: 15, lead: { offset: -3, sender: "值班系统", text: "CAM 04 坐姿识别异常。请确认值班员状态。", kind: "real" } },
     { id: "hall-door", start: 256, jitter: 4, camera: "cam02", category: "门窗异常", title: "不存在的404房门缓慢打开", visual: "door-open", frames: ["assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp"], duration: 21, grace: 8, severity: 13, lead: { offset: -3, sender: "未知号码", text: "404的门开了。里面不是宿舍。", kind: "real" } },
     { id: "laundry-reflection", start: 272, jitter: 3, camera: "cam03", category: "人物异常", title: "镜中出现未进入房间的人", visual: "mirror-reflection", duration: 18, grace: 7, severity: 14, lead: { offset: -3, sender: "值班系统", text: "CAM 02 检测到人员活动。", kind: "false" } },
-    { id: "lobby-footprints", start: 287, jitter: 3, camera: "cam06", category: "空间异常", title: "湿脚印从门外延伸至值班室", visual: "wet-footprints", duration: 20, grace: 8, severity: 14, lead: { offset: -3, sender: "门卫老陈", text: "刚拖完大厅，怎么又有一排湿脚印？", kind: "real" } },
+    { id: "lobby-footprints", start: 154, jitter: 3, camera: "cam06", category: "空间异常", title: "湿脚印从门外延伸至值班室", visual: "wet-footprints", frames: ["assets/cam-lobby-wet-footprints-approved-v1.webp"], duration: 20, grace: 8, severity: 14, lead: { offset: -3, sender: "门卫老陈", text: "刚拖完大厅，怎么又有一排湿脚印？", kind: "real" } },
     { id: "stair-loop", start: 302, jitter: 3, camera: "cam05", category: "空间异常", title: "上下楼梯连接到同一层", visual: "space-repeat", duration: 19, grace: 6, severity: 16, lead: { offset: -3, sender: "403 林同学", text: "我走了两层，墙上还是写着4F。", kind: "real" } },
     { id: "hall-shadow-near", start: 316, jitter: 2, camera: "cam02", category: "人物异常", title: "人影突然加速逼近镜头", visual: "shadow-rush", frames: ["assets/cam-hall-shadow-mid-v2.webp", "assets/cam-hall-shadow-near-v2.webp"], duration: 15, grace: 4, severity: 18, lead: { offset: -2, sender: "值班系统", text: "CAM 03 检测到人员活动。", kind: "false" } },
     { id: "duty-extra", start: 326, jitter: 2, camera: "cam04", category: "人物异常", title: "值班员身后出现第二个人", visual: "duty-extra", duration: 18, grace: 4, severity: 19, lead: { offset: -2, sender: "自己", text: "别看 CAM 04。", kind: "false" } },

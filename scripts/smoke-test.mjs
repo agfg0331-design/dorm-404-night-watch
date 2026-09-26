@@ -91,6 +91,8 @@ for (const source of [...new Set(localRefs.filter((value) => value.endsWith(".we
   if (bytes > 200_000) throw new Error(`优化后的画面过大：${source} (${bytes} bytes)`);
 }
 if (!css.includes("phoneLift") || !css.includes("phoneLower")) throw new Error("手机拿起/放回动画缺失");
+if (!main.includes('els.monitorPhone.disabled = unavailable') || !main.includes('els.phoneView.classList.toggle("phone-unavailable", unavailable)') || !css.includes('.phone-view.active.phone-unavailable{pointer-events:none}')) throw new Error("演出期间手机未统一禁用");
+if (!/function syncGlobalSignal\(now\)[\s\S]*?putPhoneAwayForShow\(\)/.test(main) || !/function handleFakeDawn\(stage\)[\s\S]*?putPhoneAwayForShow\(\)/.test(main)) throw new Error("监控演出开始时未收起手机");
 if (!css.includes("skewX(1.85deg)")) throw new Error("手机屏幕透视贴合缺失");
 for (const retiredPhoneEffect of ["filter:blur(8px) brightness(.48)", "filter:blur(7px) brightness(.42)", "backdrop-filter:blur(1.5px)"]) {
   if (css.includes(retiredPhoneEffect)) throw new Error(`手机动画仍包含高开销逐帧滤镜：${retiredPhoneEffect}`);

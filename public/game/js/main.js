@@ -311,8 +311,31 @@
     if (promptPending && view.startsWith("phone")) window.setTimeout(revealTurnChoice, 700);
   }
 
+  function phoneUnavailable() {
+    return (globalSignalStartedAt > 0 && !globalSignalFinished) ||
+      ["pre", "bright", "post"].includes(sim.fakeDawnStage) || sim.terminalStage;
+  }
+
+  function setPhoneAvailability() {
+    const unavailable = phoneUnavailable();
+    els.monitorPhone.disabled = unavailable;
+    els.phoneView.classList.toggle("phone-unavailable", unavailable);
+    els.monitorPhone.setAttribute("aria-label", unavailable ? "手机暂不可用" : "打开手机");
+    els.monitorPhone.querySelector("small").textContent = unavailable ? "暂不可用" : "手机";
+  }
+
+  function putPhoneAwayForShow() {
+    window.clearTimeout(phoneTransitionTimer);
+    transitionLocked = false;
+    audio.stopReportTension();
+    els.phoneView.classList.remove("active", "lowering");
+    sim.setView("monitor");
+    setViewElement("monitor");
+    setPhoneAvailability();
+  }
+
   function openPhone(tab = "messages") {
-    if (transitionLocked || sim.ended || sim.turning || sim.terminalStage || ["pre", "bright", "post"].includes(sim.fakeDawnStage)) return;
+    if (transitionLocked || sim.ended || sim.turning || phoneUnavailable()) return;
     if (!sim.view.startsWith("phone")) previousView = sim.view === "room" ? "room" : "monitor";
     transitionLocked = true;
     window.clearTimeout(phoneTransitionTimer);
@@ -459,6 +482,7 @@
 
   function beginFinalBlackout() {
     finalBlackoutPending = true;
+    setPhoneAvailability();
     // Let an already visible phone corruption finish instead of cutting it
     // off with the final call. An unopened queued effect cannot block the end.
     if (phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
@@ -474,10 +498,8 @@
       els.phoneCorruption.className = "phone-corruption";
       els.phoneCorruption.setAttribute("aria-hidden", "true");
       window.clearTimeout(phoneCorruptionTimer);
-      els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
-      transitionLocked = false;
-      sim.setView("monitor");
-      setViewElement("monitor");
+      els.phoneView.classList.remove("phone-corrupting");
+      putPhoneAwayForShow();
       els.monitorView.classList.add("fake-dawn-quiet");
       audio.enterFakeDawn();
     } else if (stage === "bright") {
@@ -491,6 +513,7 @@
       els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");
       els.monitorView.style.removeProperty("--fake-dawn-light");
       audio.exitFakeDawn();
+      setPhoneAvailability();
       if (testShow === "fake-dawn") sim.pauseFor(24 * 60 * 60 * 1000);
     }
   }
@@ -505,6 +528,7 @@
     els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
     sim.setView("monitor");
     setViewElement("monitor");
+    setPhoneAvailability();
     els.signalError.querySelector("b").textContent = "SIGNAL LOST";
     els.signalError.querySelector("span").textContent = "CAM 01—06 / CONNECTION FAILED";
     els.signalError.querySelector("small").textContent = "所有监控连接中断";
@@ -1270,6 +1294,7 @@
       if (now - shiftStartedAt < globalSignalAt) return;
       globalSignalStartedAt = now;
       sim.pauseFor(8000, now);
+      putPhoneAwayForShow();
       els.globalSignal.dataset.mode = globalSignalMode;
       els.globalSignal.querySelector(".global-signal-label").textContent = globalSignalMode === "cascade" ? "CAM 01—06 / CONNECTION LOST" : "CAM 01—06 / SIGNAL OVERRIDE";
       els.globalSignal.classList.remove("hidden");
@@ -1277,6 +1302,7 @@
     const elapsed = now - globalSignalStartedAt;
     if (elapsed >= 8000) {
       globalSignalFinished = true;
+      setPhoneAvailability();
       els.globalSignal.classList.add("hidden");
       els.globalSignal.removeAttribute("data-stage");
       els.globalSignal.removeAttribute("data-mode");

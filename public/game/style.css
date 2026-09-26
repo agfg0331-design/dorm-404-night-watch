@@ -104,6 +104,9 @@ body.no-screen-shake .phone-dock.ringing,body.no-screen-shake .phone-hotspot.rin
 .phone-dock>.mini-phone::before{left:.19rem;right:.19rem;top:.32rem;bottom:.36rem}
 .phone-dock>.mini-phone::after{bottom:.1rem;width:.3rem;height:.1rem}
 .phone-dock small{display:block;color:#87978d;font-size:.58rem;letter-spacing:.1em}
+.phone-dock:disabled{cursor:not-allowed;border-color:#59645c;background:rgba(2,5,5,.93);opacity:.62;box-shadow:none}
+.phone-dock:disabled .mini-phone::before{background:#17211d}
+.phone-dock:disabled small{color:#bbc5bd;letter-spacing:0}
 .phone-dock .unread-badge{right:-.35rem;top:-.35rem}
 .phone-dock.ringing,.phone-hotspot.ringing{animation:phoneShake .12s linear 6;box-shadow:0 0 30px #a5273066}
 .event-layer{position:absolute;inset:0;z-index:4;pointer-events:none;--event-progress:0}
@@ -211,6 +214,7 @@ body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contra
 .monitor-view.fake-dawn-bright .feed-grade{opacity:calc(1 - var(--fake-dawn-light,0) * .78)}
 .phone-view{z-index:24;background:transparent;overflow:hidden;pointer-events:none;contain:layout paint style;isolation:isolate}
 .phone-view.active{display:block;pointer-events:auto}
+.phone-view.active.phone-unavailable{pointer-events:none}
 .phone-view::before{content:"";position:absolute;inset:0;background:rgba(0,2,2,.3);opacity:0;will-change:opacity;animation:phoneBackdropIn .48s ease-out both}
 .phone-view::after{content:"";position:absolute;z-index:4;inset:0;pointer-events:none;background:radial-gradient(circle at 68% 50%,transparent 12%,rgba(2,6,5,.08) 43%,rgba(0,0,0,.5) 100%),repeating-linear-gradient(180deg,transparent 0 3px,rgba(5,13,10,.025) 4px)}
 .phone-composite{position:absolute;z-index:1;left:50%;top:50%;width:max(125vw,calc(118vh * 1.33333));aspect-ratio:1448/1086;transform:translate3d(-50%,-50%,0);transform-origin:75% 86%;background:url("assets/phone-view-integrated-v2.webp") center/100% 100% no-repeat;backface-visibility:hidden;contain:layout paint style;will-change:transform,opacity;animation:phoneLift .48s cubic-bezier(.16,.82,.22,1) both}

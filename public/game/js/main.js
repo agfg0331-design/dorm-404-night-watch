@@ -20,7 +20,7 @@
     roomBackground: $("roomBackground"), roomClock: $("roomClock"), roomCaption: $("roomCaption"),
     enterMonitor: $("enterMonitor"), monitorPhone: $("monitorPhone"),
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
-    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"),
+    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
     eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
@@ -50,6 +50,21 @@
     const option = els.reportCamera.querySelector(`option[value="${slot}"]`);
     if (option) option.textContent = `${camera.code}｜${camera.reportLocation || camera.name}`;
   });
+  const globalSignalMode = (shiftSeed & 1) === 0 ? "cascade" : "snow";
+  const globalSignalFeeds = Object.entries(cameras).sort(([a], [b]) => a.localeCompare(b)).map(([, camera]) => {
+    const feed = document.createElement("div");
+    feed.className = "global-signal-feed";
+    const image = document.createElement("img");
+    image.src = camera.image;
+    image.alt = "";
+    const name = document.createElement("b");
+    name.textContent = `${camera.code} / ${camera.name}`;
+    const status = document.createElement("small");
+    status.textContent = "LIVE";
+    feed.append(image, name, status);
+    els.globalSignalGrid.append(feed);
+    return { feed, status };
+  });
   els.cameraImage.src = cameras.cam01.image;
   els.cameraName.textContent = cameras.cam01.name;
   let previousView = "room";
@@ -63,6 +78,7 @@
   let globalSignalStartedAt = 0;
   let globalSignalFinished = false;
   let globalSignalStage = "";
+  let globalSignalDisconnected = 0;
   let transitionLocked = false;
   let phoneTransitionTimer = null;
   let swipeStartY = null;
@@ -1216,6 +1232,8 @@
       if (now - shiftStartedAt < globalSignalAt) return;
       globalSignalStartedAt = now;
       sim.pauseFor(8000, now);
+      els.globalSignal.dataset.mode = globalSignalMode;
+      els.globalSignal.querySelector(".global-signal-label").textContent = globalSignalMode === "cascade" ? "CAM 01—06 / CONNECTION LOST" : "CAM 01—06 / SIGNAL OVERRIDE";
       els.globalSignal.classList.remove("hidden");
     }
     const elapsed = now - globalSignalStartedAt;
@@ -1223,6 +1241,21 @@
       globalSignalFinished = true;
       els.globalSignal.classList.add("hidden");
       els.globalSignal.removeAttribute("data-stage");
+      els.globalSignal.removeAttribute("data-mode");
+      if (globalSignalMode === "cascade") audio.playSample("crtSwitch", { volume: 0.42, duration: 0.5 });
+      return;
+    }
+    if (globalSignalMode === "cascade") {
+      const disconnected = Math.min(6, 1 + Math.floor(elapsed / 950));
+      if (disconnected !== globalSignalDisconnected) {
+        globalSignalDisconnected = disconnected;
+        globalSignalFeeds.forEach(({ feed, status }, index) => {
+          const lost = index < disconnected;
+          feed.classList.toggle("is-disconnected", lost);
+          status.textContent = lost ? "CONNECTION LOST" : "LIVE";
+        });
+        audio.playSample(disconnected === 6 ? "crtSevere" : "crtSwitch", { volume: disconnected === 6 ? 0.45 : 0.29, duration: disconnected === 6 ? 0.7 : 0.35 });
+      }
       return;
     }
     const stage = elapsed < 2000 ? "snow-1" : elapsed < 6000 ? "duty" : "snow-2";

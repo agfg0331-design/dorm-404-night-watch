@@ -17,6 +17,17 @@ body.custom-brightness .game{filter:brightness(var(--game-brightness))}
 .global-signal[data-stage="duty"] .global-signal-snow{opacity:.08;mix-blend-mode:screen}
 .global-signal-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 3px,#0009 4px);pointer-events:none}
 .global-signal-label{position:absolute;left:3%;top:4%;padding:.38rem .55rem;background:#040807c9;color:#c9d8ce;font:600 clamp(.65rem,1.4vw,.95rem) ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 1px 5px #000}
+.global-signal-grid{position:absolute;inset:9% 5% 6%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:1.2%;opacity:0;pointer-events:none}
+.global-signal[data-mode="cascade"] .global-signal-grid{opacity:1}
+.global-signal[data-mode="cascade"] .global-signal-snow{opacity:.08;mix-blend-mode:screen;pointer-events:none}
+.global-signal-feed{position:relative;min-width:0;min-height:0;overflow:hidden;border:1px solid #52645b;background:#020403;box-shadow:inset 0 0 25px #000}
+.global-signal-feed img{opacity:1;filter:saturate(.35) contrast(1.15) brightness(.63);transition:opacity .12s}
+.global-signal-feed.is-disconnected img{opacity:0}
+.global-signal-feed::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 3px,#0008 4px);pointer-events:none}
+.global-signal-feed b,.global-signal-feed small{position:absolute;z-index:1;left:4%;font:600 clamp(.6rem,1.15vw,.85rem) ui-monospace,monospace;letter-spacing:.08em;text-shadow:0 2px 5px #000}
+.global-signal-feed b{top:5%;color:#e0e9e0}.global-signal-feed small{bottom:5%;color:#b4c5b9}
+.global-signal-feed.is-disconnected small{top:50%;bottom:auto;left:50%;width:100%;transform:translate(-50%,-50%);text-align:center;color:#dce6df;font-size:clamp(.68rem,1.35vw,1rem)}
+@media(orientation:portrait){.global-signal-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr))}}
 .room-scene{position:absolute;inset:0}
 .room-background,.feed-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .room-background{filter:saturate(.7) brightness(.62);transform:scale(1.02);transition:filter 1.2s}

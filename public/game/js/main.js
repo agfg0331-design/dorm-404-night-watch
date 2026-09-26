@@ -680,6 +680,7 @@
     els.monitorView.classList.toggle("event-clearing", Boolean(event?.resolvingUntil && event.resolvingUntil - performance.now() < 550));
     if (renderedCameraId !== sim.currentCamera) {
       renderedCameraId = sim.currentCamera;
+      els.monitorView.dataset.scene = camera.sceneId;
       els.cameraCode.textContent = camera.code;
       els.cameraName.textContent = camera.name;
       els.cameraImage.alt = `${camera.name}监控画面`;
@@ -1082,12 +1083,12 @@
   }
 
   function switchCamera(cameraId) {
-    if (!cameras[cameraId] || sim.turning || sim.terminalStage || (showLocked && showLocked !== "phone") || finalBlackoutStarted || cameraId === sim.currentCamera) return;
+    if (!cameras[cameraId] || sim.turning || sim.terminalStage || (showLocked && showLocked !== "phone" && showLocked !== "fake-dawn") || finalBlackoutStarted || cameraId === sim.currentCamera) return;
     // Clear overlays before changing the simulation camera so no event from the
     // previous feed survives for a frame on slower phones.
     els.eventFrames.forEach((frame) => { frame.style.opacity = "0"; });
     sim.setCamera(cameraId);
-    audio.switchCamera();
+    if (showLocked !== "fake-dawn") audio.switchCamera();
     audio.setScene(cameras[cameraId].ambient);
   }
 

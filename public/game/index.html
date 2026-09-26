@@ -39,6 +39,7 @@
         <button class="room-hotspot phone-hotspot" id="openGuestbook" type="button">
           <strong>查看 404 留言板</strong>
         </button>
+        <button class="archive-entry" id="openArchive" type="button"><span>值班档案</span><small>ARCHIVE / 04</small></button>
         <p class="room-caption" id="roomCaption">左侧监控开始值班，右侧手机查看访客留言。</p>
       </div>
     </section>
@@ -226,6 +227,31 @@
     <p class="briefing-swipe-hint" aria-hidden="true">左右滑动查看手册</p>
   </section>
 
+  <section class="overlay archive-overlay hidden" id="archiveOverlay" aria-label="值班档案">
+    <div class="archive-case" role="dialog" aria-modal="true" aria-labelledby="archiveTitle" aria-describedby="archiveNote">
+      <header class="archive-header">
+        <div><small>EAST BLOCK 04 / RECORD OFFICE</small><h2 id="archiveTitle">值班档案<span> / ARCHIVE</span></h2></div>
+        <button id="closeArchive" type="button" aria-label="关闭值班档案">×</button>
+      </header>
+      <div class="archive-body">
+        <aside class="archive-rail" aria-label="档案概览">
+          <p>档案索引 <b>04—06</b></p>
+          <div class="archive-progress" id="archiveProgress"></div>
+          <small id="archiveNote">仅记录你亲眼见过的画面。存档保存在这台设备的浏览器中。</small>
+        </aside>
+        <section class="archive-register" aria-label="档案条目">
+          <nav class="archive-tabs" aria-label="档案类别">
+            <button type="button" class="active" data-archive-tab="anomaly" aria-selected="true">监控异常 <span id="archiveAnomalyCount">0/0</span></button>
+            <button type="button" data-archive-tab="show" aria-selected="false">系统演出 <span id="archiveShowCount">0/0</span></button>
+            <button type="button" data-archive-tab="ending" aria-selected="false">值班结局 <span id="archiveEndingCount">0/0</span></button>
+          </nav>
+          <div class="archive-list" id="archiveList" aria-live="polite"></div>
+          <footer>RECORDS ARE LOCAL　·　NO SYNC AVAILABLE <span id="archiveFooter">FILE 01</span></footer>
+        </section>
+      </div>
+    </div>
+  </section>
+
   <section class="overlay guestbook-overlay hidden" id="guestbookOverlay" aria-label="404访客留言板">
     <div class="guestbook-phone" role="dialog" aria-modal="true" aria-labelledby="guestbookTitle">
       <div class="guestbook-speaker" aria-hidden="true"></div>
@@ -320,7 +346,8 @@
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=board-safety-20260926"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/main.js?v=pa-voice-20260927"></script>
+  <script src="js/archive.js?v=archive-20260927"></script>
+  <script src="js/main.js?v=archive-20260927"></script>
   <script src="js/test-module.js?v=major-shows-20260926"></script>
 </body>
 </html>

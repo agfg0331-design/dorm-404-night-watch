@@ -472,6 +472,7 @@
       line.textContent = index % 3 === 1 && type === "flood" ? "404不存在" : phrase;
     });
     els.phoneCorruption.className = `phone-corruption active phone-corruption-${type}`;
+    if (!qa && (type === "snow" || type === "snow-hard" || type === "flood")) window.GameArchive.recordShow(type === "flood" ? "phone-flood" : "phone-snow");
     els.phoneCorruption.setAttribute("aria-hidden", "false");
     els.phoneView.classList.add("phone-corrupting");
     audio.phoneInterference(type);
@@ -535,6 +536,7 @@
       audio.enterFakeDawn();
     } else if (stage === "bright") {
       els.monitorView.classList.add("fake-dawn-bright");
+      if (!qa) window.GameArchive.recordShow("fake-dawn");
       audio.startFakeDawnBirds();
     } else if (stage === "post") {
       els.monitorView.classList.remove("fake-dawn-bright");
@@ -553,6 +555,7 @@
   function startPaOverride(now) {
     paFinished = true;
     showLocked = "pa";
+    if (!qa) window.GameArchive.recordShow("pa-override");
     sim.pauseFor(14000, now);
     putPhoneAwayForShow();
     els.paStatus.classList.add("active");
@@ -626,6 +629,7 @@
     finalBlackoutPending = false;
     finalBlackoutStarted = true;
     showLocked = "final";
+    if (!qa) window.GameArchive.recordShow("final-blackout");
     pendingPhoneCorruption = null;
     window.clearTimeout(phoneTransitionTimer);
     transitionLocked = false;
@@ -679,6 +683,7 @@
     // lift/lower animation so mobile browsers can keep the phone on the compositor.
     if (state.view === "monitor" && !monitorFailed) renderCamera();
     const visibleEvent = state.view === "monitor" && !monitorFailed ? state.visibleEvent : null;
+    if (!qa && visibleEvent && !showLocked) window.GameArchive.recordAnomaly(visibleEvent.id);
     // The mirror figure is deliberately silent: keep the ordinary laundry-room
     // ambience running so sight and sound contradict one another.
     const eventFocused = Boolean(visibleEvent && visibleEvent.visual !== "mirror-reflection" && visibleEvent.id !== "dance-desync");
@@ -1205,6 +1210,7 @@
   }
 
   function showEnding(kind, state) {
+    if (!qa) window.GameArchive.recordEnding(kind, state.finalDecision);
     audio.stopRingtone();
     audio.stopReportTension();
     audio.resolveEnding(kind);
@@ -1416,7 +1422,7 @@
       else if (event.key === "Escape") { event.preventDefault(); finishAudioCheck(); }
       return;
     }
-    if (!els.guestbookOverlay.classList.contains("hidden")) return;
+    if (!els.guestbookOverlay.classList.contains("hidden") || !document.getElementById("archiveOverlay").classList.contains("hidden")) return;
     if (["1", "2", "3", "4", "5", "6"].includes(event.key) && !sim.ended && !sim.finalStage) {
       const camera = `cam0${event.key}`;
       if (!sim.running && els.startOverlay.classList.contains("hidden")) beginShift(camera);
@@ -1436,6 +1442,7 @@
       if (showLocked) return;
       showLocked = "global";
       globalSignalStartedAt = now;
+      if (!qa) window.GameArchive.recordShow(globalSignalMode);
       sim.pauseFor(8000, now);
       putPhoneAwayForShow();
       els.globalSignal.dataset.mode = globalSignalMode;

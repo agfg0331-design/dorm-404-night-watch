@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=archive-20260927">
+  <link rel="stylesheet" href="style.css?v=ledger-20260927">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -39,8 +39,8 @@
         <button class="room-hotspot phone-hotspot" id="openGuestbook" type="button">
           <strong>查看 404 留言板</strong>
         </button>
-        <button class="archive-entry" id="openArchive" type="button"><span>值班档案</span><small>ARCHIVE / 04</small></button>
-        <p class="room-caption" id="roomCaption">左侧监控开始值班，右侧手机查看访客留言。</p>
+        <button class="archive-entry" id="openArchive" type="button" aria-label="翻开桌上的值班记录本，查看档案"><span>翻开值班记录本</span></button>
+        <p class="room-caption" id="roomCaption">监控开始值班 · 桌上记录本查看档案 · 手机查看留言</p>
       </div>
     </section>
 
@@ -235,18 +235,18 @@
       </header>
       <div class="archive-body">
         <aside class="archive-rail" aria-label="档案概览">
-          <p>档案索引 <b>04—06</b></p>
           <div class="archive-progress" id="archiveProgress"></div>
-          <small id="archiveNote">仅记录你亲眼见过的画面。存档保存在这台设备的浏览器中。</small>
-        </aside>
-        <section class="archive-register" aria-label="档案条目">
           <nav class="archive-tabs" aria-label="档案类别">
             <button type="button" class="active" data-archive-tab="anomaly" aria-selected="true">监控异常 <span id="archiveAnomalyCount">0/0</span></button>
             <button type="button" data-archive-tab="show" aria-selected="false">系统演出 <span id="archiveShowCount">0/0</span></button>
             <button type="button" data-archive-tab="ending" aria-selected="false">值班结局 <span id="archiveEndingCount">0/0</span></button>
           </nav>
+          <small id="archiveNote">仅记录你亲眼见过的画面。存档保存在这台设备的浏览器中。</small>
+        </aside>
+        <section class="archive-register" aria-label="档案条目">
+          <div class="archive-page-heading"><span>编号</span><span>文件名称</span><span>状态</span></div>
           <div class="archive-list" id="archiveList" aria-live="polite"></div>
-          <footer>RECORDS ARE LOCAL　·　NO SYNC AVAILABLE <span id="archiveFooter">FILE 01</span></footer>
+          <footer>本机存档 · 无云端同步 <span id="archiveFooter">FILE 01</span></footer>
         </section>
       </div>
     </div>

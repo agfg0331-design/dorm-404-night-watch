@@ -104,16 +104,27 @@
       this.eventQueue = this.shift.events.map((event, index) => {
         const actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
         const early = actualStart < 120;
-        const silentChance = actualStart >= 260 ? 0.45 : 0.22;
-        const silent = !early && this.#seededUnit(0x53494c00 + index) < silentChance;
-        // An early anomaly always has a genuine advance notice, even when its
-        // old scene-specific lead was intentionally deceptive.
-        const lead = early && event.lead.kind === "false"
-          ? { sender: "值班系统", text: `${this.cameras[event.camera].code}（${this.cameras[event.camera].name}）画面出现变化，请核对。`, kind: "real" }
+        const priority = event.hintPriority || "standard";
+        const late = actualStart >= 260;
+        const hintChance = {
+          essential: 1,
+          featured: late ? 0.78 : 0.88,
+          standard: late ? 0.48 : 0.66,
+          subtle: late ? 0.32 : 0.48
+        }[priority];
+        const silent = !early && this.#seededUnit(0x53494c00 + index) >= hintChance;
+        // Early notices and important multi-stage notices point to the actual
+        // feed even if the original scene text was an intentional false lead.
+        const lead = (early || priority === "essential" || priority === "featured") && event.lead.kind === "false"
+          ? { sender: "值班系统", text: `${this.cameras[event.camera].code}（${this.cameras[event.camera].name}）的记录与巡楼登记不一致，需人工复核。`, kind: "real" }
           : { ...event.lead };
+        const feed = this.cameras[event.camera];
+        if (priority === "essential" && !lead.text.includes(feed.code) && !lead.text.includes(feed.name)) {
+          lead.text = `${feed.code}（${feed.name}）：${lead.text}`;
+        }
         return {
           ...event,
-          lead: { ...lead, offset: early ? -4.5 : -2.8 },
+          lead: { ...lead, offset: early ? -4.5 : priority === "essential" ? -5 : priority === "featured" ? -4 : -2.8 },
           actualStart,
           leadSent: silent,
           silent,

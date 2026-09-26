@@ -89,7 +89,17 @@
     { id: "lab-static", sceneId: "lab", start: 321, jitter: 2, category: "监控异常", title: "机房多台屏幕同时出现雪花", visual: "scene-still", frames: ["scene-preview/assets/lab-static.webp"], duration: 15, grace: 5, severity: 17, lead: { sender: "值班系统", text: "机房多台终端信号同时中断。", kind: "real" } }
   ];
   const originalEvents = events.map((event) => ({ ...event, sceneId: originalSceneByCamera[event.camera] }));
-  const allEvents = [...originalEvents, ...newSceneEvents];
+  // Important multi-stage performances need a real lead so players can reach
+  // the feed in time. Other events may or may not be announced each shift.
+  const hintPriority = {
+    essential: new Set(["duty-self", "hall-shadow", "laundry-reflection", "lobby-clock", "stairs-light"]),
+    featured: new Set(["laundry-machine", "dorm-window", "hall-door", "dorm-curtain", "stair-loop", "hall-shadow-near", "duty-extra", "music-figure", "dance-figure", "dance-line", "elevator-open", "lab-feed"]),
+    subtle: new Set(["hall-light", "laundry-drip", "lobby-door", "music-piano", "music-stands", "elevator-die", "lab-screen", "dance-desync"])
+  };
+  const allEvents = [...originalEvents, ...newSceneEvents].map((event) => ({
+    ...event,
+    hintPriority: Object.entries(hintPriority).find(([, ids]) => ids.has(event.id))?.[0] || "standard"
+  }));
   Object.values(scenePool).forEach((scene) => {
     scene.anomalies = allEvents.filter((event) => event.sceneId === scene.id);
   });

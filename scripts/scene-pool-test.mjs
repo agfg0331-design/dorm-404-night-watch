@@ -39,6 +39,7 @@ for (let seed = 0; seed < 120; seed += 1) {
   for (const event of shift.events) {
     const scene = shift.cameras[event.camera];
     assert(scene && scene.sceneId === event.sceneId, `异常刷在错误场景：${event.id}`);
+    assert(["essential", "featured", "standard", "subtle"].includes(event.hintPriority), `异常未分配提示权重：${event.id}`);
     assert(event.category && event.lead.text && event.reportLocation === (scene.reportLocation || scene.name), `上报地点或手机线索缺失：${event.id}`);
     if (event.start + (event.jitter || 0) < 180) assert(earlyCategories.has(event.category), `早期异常无法从当时的上报界面选择类别：${event.id}`);
     for (const [, code] of event.lead.text.matchAll(/(CAM 0[1-6])/g)) assert(availableCodes.has(code), `短信引用不存在的监控：${event.id}`);

@@ -212,8 +212,8 @@ if (!main.includes("allCameraSources") || !main.includes("cameraPreload") || !ma
 if (!main.includes("criticalAudioSamples") || !main.includes("audio.loadSamples(criticalAudioSamples)")) {
   throw new Error("关键事件音效没有在进入监控前预热");
 }
-if (!simulationSource.includes("early ? -4.5 : -2.8") || simulationSource.includes("Math.max(event.lead.offset, -1.2)")) {
-  throw new Error("前期手机线索没有提前送达，或中后期线索仍被强制压短");
+if (!simulationSource.includes("early ? -4.5") || !simulationSource.includes('priority === "essential" ? -5') || simulationSource.includes("Math.max(event.lead.offset, -1.2)")) {
+  throw new Error("前期或关键多段异常没有提前提示");
 }
 if (!main.includes("cameraRequestToken += 1") || !main.includes('pendingCameraSource = null')) {
   throw new Error("连续切换镜头时旧图片请求未被取消");

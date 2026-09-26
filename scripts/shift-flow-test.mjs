@@ -85,6 +85,7 @@ for (const id of ["duty-self", "hall-shadow", "laundry-reflection", "lobby-clock
 }
 const dutyNotice = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message) => messages.push(message) } });
 const dutyMoment = dutyNotice.eventQueue.find((event) => event.id === "duty-self");
+assert(dutyMoment.lead.text.includes("CAM 04") && !/CAM 0[1-356]/.test(dutyMoment.lead.text), "固定值班室提示的监控编号被随机映射到别处");
 dutyNotice.minute = dutyMoment.actualStart + dutyMoment.lead.offset;
 dutyNotice.processEvents();
 assert(messages.some((message) => message.linkedEvent === "duty-self" && message.text.includes("CAM 04")), "监控室起身人影出现前没有实际送出提示");

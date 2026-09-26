@@ -135,6 +135,7 @@
       const code = shiftCameras[camera].code;
       const lead = { ...event.lead, text: event.lead.text.replace(/CAM 0[1-6]/g, (oldCode) => {
         const oldScene = originalSceneByCamera[`cam${oldCode.slice(-2)}`];
+        if (oldScene === "duty") return shiftCameras.cam04.code;
         const target = slotByScene[oldScene];
         if (target) return shiftCameras[target].code;
         // False leads still reference a feed that exists this run.

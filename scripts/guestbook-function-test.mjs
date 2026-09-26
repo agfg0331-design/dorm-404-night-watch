@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { onRequestGet, onRequestPost } from "../functions/api/board.js";
 import { onRequestPost as onVote } from "../functions/api/board/[id]/vote.js";
+import { onRequestDelete } from "../functions/api/board/[id].js";
+import { onRequestPost as onReport } from "../functions/api/board/[id]/report.js";
 import { onRequestGet as onHandoffGet, onRequestPost as onHandoffPost } from "../functions/api/handoff.js";
 
 class D1Statement {
@@ -177,4 +179,27 @@ data = await json(await onHandoffPost({
 }), 429);
 assert.match(data.error, /30 秒/);
 
-console.log("D1 接口自检通过：公共留言板与独立交班留言的保存、读取、过滤和限流均正常。");
+const post = (visitor, nickname, content, ip = "203.0.113.1") => onRequestPost({
+  request: new Request("https://example.test/api/board", {
+    method: "POST", headers: { ...headers, "X-Board-Visitor": visitor, "CF-Connecting-IP": ip },
+    body: JSON.stringify({ nickname, content, visitorId: visitor })
+  }), env
+});
+await json(await post("long-name", "一".repeat(17), "正常留言"), 400);
+await json(await post("long-body", "夜班", "一".repeat(181)), 400);
+await json(await post("blocked", "夜班", "你 去 死"), 400);
+data = await json(await post("markup", "夜班", "<img onerror=alert(1)>\n只是文字"), 201);
+assert.equal(data.message.content, "<img onerror=alert(1)>\n只是文字");
+const id = data.message.id;
+const reportRequest = () => new Request(`https://example.test/api/board/${id}/report`, {
+  method: "POST", headers, body: JSON.stringify({ reason: "不当内容", visitorId: "device-a" })
+});
+await json(await onReport({ request: reportRequest(), env, params: { id: String(id) } }), 201);
+await json(await onReport({ request: reportRequest(), env, params: { id: String(id) } }), 429);
+await json(await onRequestDelete({ request: new Request(`https://example.test/api/board/${id}`, { method: "DELETE" }), env, params: { id: String(id) } }), 401);
+env.BOARD_ADMIN_TOKEN = "test-secret-only";
+await json(await onRequestDelete({ request: new Request(`https://example.test/api/board/${id}`, { method: "DELETE", headers: { Authorization: "Bearer wrong" } }), env, params: { id: String(id) } }), 403);
+await json(await onRequestDelete({ request: new Request(`https://example.test/api/board/${id}`, { method: "DELETE", headers: { Authorization: "Bearer test-secret-only" } }), env, params: { id: String(id) } }), 200);
+await json(await onRequestDelete({ request: new Request(`https://example.test/api/board/${id}`, { method: "DELETE", headers: { Authorization: "Bearer test-secret-only" } }), env, params: { id: String(id) } }), 404);
+assert.equal(env.DB.database.prepare("SELECT COUNT(*) AS count FROM guestbook_reports").get().count, 0);
+console.log("D1 接口自检通过：留言、交班、输入校验、举报、限频与管理员删除正常。");

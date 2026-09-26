@@ -1,7 +1,9 @@
+import { containsBlockedTerm } from "./board-terms.js";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, X-Board-Visitor",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Board-Visitor, Authorization",
   "Cache-Control": "no-store"
 };
 
@@ -47,8 +49,22 @@ export async function ensureSchema(env) {
       visitor_hash TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS guestbook_post_ips (
+      message_id INTEGER PRIMARY KEY,
+      ip_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS guestbook_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id INTEGER NOT NULL,
+      visitor_hash TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare("CREATE INDEX IF NOT EXISTS guestbook_messages_created_at ON guestbook_messages(created_at DESC)"),
     db.prepare("CREATE INDEX IF NOT EXISTS guestbook_votes_message_id ON guestbook_votes(message_id)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS guestbook_post_ips_recent ON guestbook_post_ips(ip_hash, created_at)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS guestbook_reports_message ON guestbook_reports(message_id, created_at)"),
     db.prepare("CREATE INDEX IF NOT EXISTS handoff_messages_created_at ON handoff_messages(created_at DESC)")
   ]);
   return db;
@@ -61,15 +77,22 @@ export async function visitorHash(request, bodyId = "") {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function cleanText(value, max) {
-  return String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s{3,}/g, "  ").trim().slice(0, max);
+export async function ipHash(request) {
+  const ip = request.headers.get("cf-connecting-ip");
+  if (!ip) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`404-guestbook-ip-v1:${ip}`));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function cleanText(value) {
+  return String(value ?? "").replace(/\r\n?/g, "\n").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").trim();
 }
 
 function contentError(content) {
   if (!content) return "留言不能为空。";
   if (content.length > 180) return "留言最多 180 个字。";
   if (/(https?:\/\/|www\.|javascript:|<script)/i.test(content)) return "留言中不能包含链接或脚本。";
-  if (/(操你妈|草你妈|傻逼|去死)/i.test(content)) return "这条留言包含不合适的内容。";
+  if (containsBlockedTerm(content)) return "这条留言暂时无法发布，请修改后再试。";
   if (/(.)\1{11,}/u.test(content)) return "请不要重复刷屏。";
   return "";
 }
@@ -125,12 +148,19 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   try {
     const payload = await request.json();
-    const nickname = cleanText(payload.nickname, 16);
-    const content = cleanText(payload.content, 181);
+    if (!payload || typeof payload.nickname !== "string" || typeof payload.content !== "string" ||
+        payload.nickname.length > 256 || payload.content.length > 4096) {
+      return boardJson({ error: "留言格式或长度不正确。" }, { status: 400 });
+    }
+    const nickname = cleanText(payload.nickname);
+    const content = cleanText(payload.content);
     const invalid = contentError(content);
     if (!nickname) return boardJson({ error: "请填写昵称。" }, { status: 400 });
+    if (nickname.length > 16) return boardJson({ error: "昵称最多 16 个字。" }, { status: 400 });
+    if (containsBlockedTerm(nickname)) return boardJson({ error: "这条留言暂时无法发布，请修改后再试。" }, { status: 400 });
     if (invalid) return boardJson({ error: invalid }, { status: 400 });
     const hash = await visitorHash(request, payload.visitorId);
+    const addressHash = await ipHash(request);
     const db = await ensureSchema(env);
     const recent = await db.prepare(`SELECT COUNT(*) AS count, MAX(created_at) AS latest
       FROM guestbook_messages
@@ -140,9 +170,16 @@ export async function onRequestPost({ request, env }) {
       const latest = new Date(`${String(recent.latest).replace(" ", "T")}Z`).getTime();
       if (Number.isFinite(latest) && Date.now() - latest < 30_000) return boardJson({ error: "请等 30 秒再发送下一条留言。" }, { status: 429 });
     }
+    // Shared networks get a generous ceiling; the device-specific cooldown remains primary.
+    if (addressHash) {
+      const ipRecent = await db.prepare(`SELECT COUNT(*) AS count FROM guestbook_post_ips
+        WHERE ip_hash = ? AND created_at > datetime('now', '-1 hour')`).bind(addressHash).first();
+      if (Number(ipRecent?.count || 0) >= 20) return boardJson({ error: "当前网络发送过于频繁，请稍后再试。" }, { status: 429 });
+    }
     const inserted = await db.prepare("INSERT INTO guestbook_messages (nickname, content, visitor_hash) VALUES (?, ?, ?)")
       .bind(nickname, content, hash).run();
     const id = Number(inserted.meta?.last_row_id);
+    if (addressHash) await db.prepare("INSERT INTO guestbook_post_ips (message_id, ip_hash) VALUES (?, ?)").bind(id, addressHash).run();
     const message = await db.prepare(`SELECT id, nickname, content,
       strftime('%Y-%m-%dT%H:%M:%SZ', created_at) AS createdAt
       FROM guestbook_messages WHERE id = ?`).bind(id).first();

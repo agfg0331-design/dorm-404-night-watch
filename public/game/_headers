@@ -5,10 +5,13 @@
   Cache-Control: no-cache
 
 /*.css
-  Cache-Control: no-cache
+  Cache-Control: public, max-age=3600, must-revalidate
 
 /js/*
-  Cache-Control: no-cache
+  Cache-Control: public, max-age=86400
+
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /*.js
   Content-Type: application/javascript; charset=utf-8

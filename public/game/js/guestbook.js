@@ -20,13 +20,8 @@
   let loading = false;
   let messages = [];
   let localVotes = readVotes();
-  const apiBase = location.hostname.endsWith(".edgeone.dev")
-    ? "https://dorm-404-night-watch.agfg0331.chatgpt.site"
-    : "";
-  const apiUrl = (path) => `${apiBase}${path}`;
-
   async function requestJson(path, options = {}) {
-    const response = await fetch(apiUrl(path), options);
+    const response = await fetch(path, options);
     const type = response.headers.get("content-type") || "";
     if (!type.includes("application/json")) throw new Error("留言接口尚未完成部署。");
     const data = await response.json();
@@ -74,6 +69,12 @@
       const content = document.createElement("p"); content.textContent = message.content;
       const votes = document.createElement("div"); votes.className = "guest-votes";
       votes.append(makeButton("赞", 1, message), makeButton("踩", -1, message));
+      const report = document.createElement("button");
+      report.type = "button";
+      report.dataset.report = String(message.id);
+      report.textContent = "举报";
+      report.setAttribute("aria-label", `举报 ${message.nickname} 的留言`);
+      votes.append(report);
       article.append(header, content, votes);
       ui.list.append(article);
     }
@@ -141,10 +142,24 @@
       ui.content.value = ""; ui.counter.textContent = "0 / 180";
       setNote("留言已写入 404 终端。");
       await load();
-    } catch (error) { setNote(error.message || "留言发送失败。", true); }
+    } catch (error) { setNote(/暂时无法发布/.test(error.message) ? "这条留言暂时无法发布，请修改后再试。" : error.message || "留言发送失败。", true); }
     finally { submit.disabled = false; }
   });
   ui.list.addEventListener("click", async (event) => {
+    const report = event.target.closest("button[data-report]");
+    if (report) {
+      if (report.disabled || !window.confirm("确认举报这条留言？值班记录会交给管理员查看。")) return;
+      report.disabled = true;
+      try {
+        await requestJson(`/api/board/${report.dataset.report}/report`, {
+          method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId },
+          body: JSON.stringify({ reason: "不当内容", visitorId })
+        });
+        setNote("举报已记录，感谢提醒。");
+      } catch (error) { setNote(error.message || "举报暂时无法提交。", true); }
+      finally { report.disabled = false; }
+      return;
+    }
     const button = event.target.closest("button[data-vote]");
     if (!button || button.disabled) return;
     button.disabled = true;

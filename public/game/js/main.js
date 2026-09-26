@@ -1170,13 +1170,15 @@
     }
   }
 
-  async function finishAudioCheck() {
+  function finishAudioCheck() {
     if (audioPromptResolving) return;
     audioPromptResolving = true;
     els.confirmHeadphones.disabled = true;
     els.skipHeadphones.disabled = true;
-    await manualPreload;
     els.audioCheckOverlay.classList.add("closing");
+    // Optional image decoding continues in the background; it must never hold the transition.
+    const preloadDeadline = new Promise((resolve) => window.setTimeout(resolve, 1200));
+    void Promise.race([manualPreload || Promise.resolve(), preloadDeadline]).catch(() => {});
     window.setTimeout(() => {
       els.audioCheckOverlay.classList.add("hidden");
       els.audioCheckOverlay.classList.remove("closing");

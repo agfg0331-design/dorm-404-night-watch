@@ -26,6 +26,22 @@ CREATE TABLE IF NOT EXISTS handoff_messages (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS guestbook_post_ips (
+  message_id INTEGER PRIMARY KEY,
+  ip_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS guestbook_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  message_id INTEGER NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS guestbook_messages_created_at ON guestbook_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS guestbook_votes_message_id ON guestbook_votes(message_id);
+CREATE INDEX IF NOT EXISTS guestbook_post_ips_recent ON guestbook_post_ips(ip_hash, created_at);
+CREATE INDEX IF NOT EXISTS guestbook_reports_message ON guestbook_reports(message_id, created_at);
 CREATE INDEX IF NOT EXISTS handoff_messages_created_at ON handoff_messages(created_at DESC);

@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=show-phone-lock-20260926">
+  <link rel="stylesheet" href="style.css?v=board-safety-20260926">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -76,17 +76,17 @@
       <div class="scanlines"></div><div class="noise"></div><div class="glitch-band"></div>
       <div class="signal-error" id="signalError"><b>UNKNOWN SIGNAL</b><span>CAMERA FEED ERROR</span><small>正在尝试重新连接……</small></div>
       <header class="monitor-hud top">
-        <div><i class="rec"></i><b id="cameraCode">CAM 01</b><span id="cameraName">404宿舍</span></div>
+        <div><i class="rec"></i><b id="cameraCode">CAM 01</b><span id="cameraName">CAM 01</span></div>
         <time id="monitorTime">00:00:00</time>
       </header>
       <div class="event-status" id="eventStatus"></div>
       <nav class="camera-dock" aria-label="监控切换">
-        <button class="active" data-camera="cam01" type="button"><kbd>1</kbd><span>404宿舍</span></button>
-        <button data-camera="cam02" type="button"><kbd>2</kbd><span>四楼走廊</span></button>
-        <button data-camera="cam03" type="button"><kbd>3</kbd><span>公共洗衣房</span></button>
-        <button data-camera="cam04" type="button"><kbd>4</kbd><span>值班室</span></button>
-        <button data-camera="cam05" type="button"><kbd>5</kbd><span>四楼楼梯间</span></button>
-        <button data-camera="cam06" type="button"><kbd>6</kbd><span>一楼大厅</span></button>
+        <button class="active" data-camera="cam01" type="button"><kbd>1</kbd><span>CAM 01</span></button>
+        <button data-camera="cam02" type="button"><kbd>2</kbd><span>CAM 02</span></button>
+        <button data-camera="cam03" type="button"><kbd>3</kbd><span>CAM 03</span></button>
+        <button data-camera="cam04" type="button"><kbd>4</kbd><span>CAM 04</span></button>
+        <button data-camera="cam05" type="button"><kbd>5</kbd><span>CAM 05</span></button>
+        <button data-camera="cam06" type="button"><kbd>6</kbd><span>CAM 06</span></button>
       </nav>
       <button class="phone-dock" id="monitorPhone" type="button" aria-label="打开手机">
         <span class="mini-phone" aria-hidden="true"><i></i></span><i class="unread-badge" id="monitorUnread">0</i><small>手机</small>
@@ -111,12 +111,12 @@
             <form id="reportForm">
               <label>异常区域
                 <select id="reportCamera">
-                  <option value="cam01">CAM 01｜404宿舍</option>
-                  <option value="cam02">CAM 02｜四楼走廊</option>
-                  <option value="cam03">CAM 03｜公共洗衣房</option>
-                  <option value="cam04">CAM 04｜值班室</option>
-                  <option value="cam05">CAM 05｜四楼楼梯间</option>
-                  <option value="cam06">CAM 06｜一楼大厅</option>
+                  <option value="cam01">CAM 01</option>
+                  <option value="cam02">CAM 02</option>
+                  <option value="cam03">CAM 03</option>
+                  <option value="cam04">CAM 04</option>
+                  <option value="cam05">CAM 05</option>
+                  <option value="cam06">CAM 06</option>
                 </select>
               </label>
               <fieldset><legend>异常类别</legend><div class="category-grid">
@@ -320,9 +320,9 @@
   <script src="js/anomalies.js?v=hint-priority-fix-20260926"></script>
   <script src="js/game.js?v=fake-dawn-20260926"></script>
   <script src="js/phone.js?v=neutral-status-20260918"></script>
-  <script src="js/guestbook.js?v=test-entry-20260926"></script>
+  <script src="js/guestbook.js?v=board-safety-20260926"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/main.js?v=perf-audio-20260926"></script>
+  <script src="js/main.js?v=manual-fast-20260926"></script>
   <script src="js/test-module.js?v=test-module-20260926"></script>
 </body>
 </html>

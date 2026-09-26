@@ -88,6 +88,7 @@
       this.missed = 0;
       this.unread = 0;
       this.monitorFailed = false;
+      this.terminalStage = false;
       this.turnPrompted = false;
       this.finalStage = false;
       this.turning = false;
@@ -170,7 +171,7 @@
     }
 
     get timeScale() {
-      if (this.finalStage) return 0;
+      if (this.finalStage || this.terminalStage) return 0;
       if (this.view === "phone-report") return 0.3;
       if (this.view === "phone-messages") return 0.65;
       if (this.turning) return 0.12;
@@ -195,7 +196,7 @@
         this.processFinalClues();
         this.processMilestones();
       }
-      if (this.finalStage) {
+      if (this.finalStage || this.terminalStage) {
         this.callbacks.onTick?.(this.snapshot());
         return;
       }
@@ -258,14 +259,17 @@
     processMilestones() {
       if (this.minute >= 342 && !this.monitorFailed) {
         this.monitorFailed = true;
+        this.terminalStage = true;
         this.callbacks.onMonitorFail?.(this.snapshot());
-        this.pushMessage({ sender: "值班系统", text: "CAMERA FEED INTERRUPTED", corrupt: true });
       }
-      if (this.minute >= 347 && !this.firedNarrative.has("self-call")) {
-        this.firedNarrative.add("self-call");
-        this.callbacks.onSelfCall?.(this.snapshot());
-      }
-      if (this.minute >= 353) this.promptTurn();
+      // The final call begins after the phone effect and ten seconds of real
+      // silence. It is not tied to the accelerated clock anymore.
+    }
+
+    beginFinalCall() {
+      if (!this.terminalStage || this.firedNarrative.has("self-call") || this.ended) return;
+      this.firedNarrative.add("self-call");
+      this.callbacks.onSelfCall?.(this.snapshot());
     }
 
     promptTurn() {

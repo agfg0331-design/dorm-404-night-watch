@@ -113,9 +113,20 @@ now = 9000;
 paused.step(now);
 assert(paused.minute >= 0 && paused.minute < 3, "全监控演出结束后产生了异常计时跳跃");
 let prompts = 0;
-const phoneFinal = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onTurnPrompt: () => { prompts += 1; } } });
-phoneFinal.minute = 347;
-phoneFinal.promptTurn();
+let failures = 0;
+let calls = 0;
+const phoneFinal = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: {
+  onMonitorFail: () => { failures += 1; }, onSelfCall: () => { calls += 1; }, onTurnPrompt: () => { prompts += 1; }
+} });
+phoneFinal.minute = 342;
 phoneFinal.processMilestones();
-assert(prompts === 1 && phoneFinal.finalStage && phoneFinal.minute === 360 && phoneFinal.timeScale === 0, "接听结尾电话后未立即进入唯一的最终选择");
+assert(failures === 1 && phoneFinal.monitorFailed && phoneFinal.terminalStage && phoneFinal.timeScale === 0, "终局监控故障后时间没有冻结");
+phoneFinal.minute = 359;
+phoneFinal.processMilestones();
+assert(calls === 0 && prompts === 0, "静音未结束就自动来电或跳到结局选择");
+phoneFinal.beginFinalCall();
+phoneFinal.beginFinalCall();
+assert(calls === 1, "静音结束后的来电没有触发或重复触发");
+phoneFinal.promptTurn();
+assert(prompts === 1 && phoneFinal.finalStage && phoneFinal.minute === 360 && phoneFinal.timeScale === 0, "接听结尾电话后未进入唯一的最终选择");
 console.log("夜班流程自检通过：误报持续、改报解除、漏报保留与补报、中期有限干扰。");

@@ -8,6 +8,7 @@
       this.sfxBus = null;
       this.bgmBus = null;
       this.enabled = false;
+      this.silenced = false;
       this.volumes = { master: 0.72, bgm: 0.38, sfx: 0.88 };
       this.scene = "duty";
       this.ambientTimer = null;
@@ -128,7 +129,7 @@
     }
 
     playSample(key, options = {}) {
-      if (!this.enabled || !this.ctx) return null;
+      if (!this.enabled || !this.ctx || this.silenced) return null;
       if (!this.sampleBuffers.has(key)) return null;
       const source = this.ctx.createBufferSource();
       const gain = this.ctx.createGain();
@@ -172,13 +173,13 @@
       this.master.gain.cancelScheduledValues(now);
       this.sfxBus.gain.cancelScheduledValues(now);
       this.bgmBus.gain.cancelScheduledValues(now);
-      this.master.gain.setTargetAtTime(Math.max(0.0001, this.volumes.master), now, 0.03);
+      this.master.gain.setTargetAtTime(this.silenced ? 0.0001 : Math.max(0.0001, this.volumes.master), now, 0.03);
       this.sfxBus.gain.setTargetAtTime(Math.max(0.0001, this.volumes.sfx), now, 0.03);
       this.bgmBus.gain.setTargetAtTime(Math.max(0.0001, this.volumes.bgm), now, 0.08);
     }
 
     startBgm() {
-      if (!this.enabled || !this.ctx || this.bgmNodes.length) return;
+      if (!this.enabled || !this.ctx || this.silenced || this.bgmNodes.length) return;
       const makeDrone = (key, frequency, type, volume) => {
         const osc = this.ctx.createOscillator();
         const filter = this.ctx.createBiquadFilter();
@@ -222,7 +223,7 @@
     }
 
     startRecordedAmbience() {
-      if (!this.enabled || !this.ctx || this.ambienceSources.length) return;
+      if (!this.enabled || !this.ctx || this.silenced || this.ambienceSources.length) return;
       [
         ["horrorAmbience", 0.07, 0.93, 0],
         ["wind", 0.045, 0.87, 9.5],
@@ -272,6 +273,28 @@
       this.finalNodes = [];
     }
 
+    enterSilence() {
+      this.silenced = true;
+      this.stopScene();
+      this.stopReportTension();
+      this.stopBgm();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setTargetAtTime(0.0001, now, 0.015);
+    }
+
+    exitSilence() {
+      if (!this.silenced) return;
+      this.silenced = false;
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setTargetAtTime(Math.max(0.0001, this.volumes.master), now, 0.04);
+      // The ordinary ambience stays off. The call breaks the silence, and the
+      // final-choice score starts only after the player answers or declines.
+    }
+
     duck(duration = 1.2, amount = 0.25) {
       if (!this.enabled || !this.ctx || !this.bgmBus) return;
       window.clearTimeout(this.duckTimer);
@@ -286,7 +309,7 @@
     }
 
     tone(frequency, duration, options = {}) {
-      if (!this.enabled || !this.ctx) return;
+      if (!this.enabled || !this.ctx || this.silenced) return;
       const now = this.ctx.currentTime + (options.delay || 0);
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -302,7 +325,7 @@
     }
 
     noise(duration, options = {}) {
-      if (!this.enabled || !this.ctx) return;
+      if (!this.enabled || !this.ctx || this.silenced) return;
       const rate = this.ctx.sampleRate;
       const buffer = this.ctx.createBuffer(1, Math.ceil(rate * duration), rate);
       const data = buffer.getChannelData(0);
@@ -350,7 +373,7 @@
     setScene(scene) {
       this.scene = scene || "duty";
       this.stopScene();
-      if (!this.enabled || !this.ctx) return;
+      if (!this.enabled || !this.ctx || this.silenced) return;
       const loop = () => {
         this.playAmbientDetail();
         const nextDelay = this.scene === "laundry" ? 4000 + Math.random() * 8000 : 3600 + Math.random() * 6200;

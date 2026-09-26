@@ -96,7 +96,7 @@ for (const retiredPhoneEffect of ["filter:blur(8px) brightness(.48)", "filter:bl
   if (css.includes(retiredPhoneEffect)) throw new Error(`手机动画仍包含高开销逐帧滤镜：${retiredPhoneEffect}`);
 }
 if (main.includes("void els.phoneView.offsetWidth")) throw new Error("手机动画仍通过强制同步布局重启");
-if (!main.includes('if (state.view === "monitor") renderCamera()')) throw new Error("手机动画期间仍在更新隐藏监控图层");
+if (!main.includes('if (state.view === "monitor" && !monitorFailed) renderCamera()')) throw new Error("手机动画或终局断连期间仍在更新隐藏监控图层");
 if (!main.includes("1000 / 30") || !main.includes("renderedFrameEventKey")) throw new Error("主循环或事件图层仍缺少性能限流");
 if (!main.includes("phoneTransitionTimer") || !main.includes('classList.contains("lowering")')) throw new Error("手机动画仍可能吞掉返回输入或发生计时器竞争");
 if (css.includes(".camera-dock{position:absolute;z-index:10;left:50%;bottom:1.25rem;transform:translateX(-50%);display:flex;gap:.35rem;padding:.45rem;background:rgba(2,7,6,.78);border:1px solid var(--line);backdrop-filter")) throw new Error("监控底栏仍在使用实时背景模糊");
@@ -202,6 +202,7 @@ for (const retired of ['footsteps: "assets/audio/footsteps-tunnel.mp3"', 'doorOp
 }
 if (!main.includes("audio.glitch(true)")) throw new Error("严重监控故障未接入专用CRT音效");
 if (!main.includes("audio.startRingtone()") || !main.includes("audio.stopRingtone()")) throw new Error("来电铃声未接入接听/拒接流程");
+if (!main.includes("audio.enterSilence()") || !main.includes("audio.exitSilence()") || !main.includes("finalSilenceMs") || !audio.includes("this.stopBgm();")) throw new Error("监控断连后的十秒全静音未接入");
 if (!main.includes("audio.setTension(currentPhase, state.danger)")) throw new Error("BGM 未随阶段和危险值变化");
 if (!audio.includes("setEventFocus(focused)") || !main.includes("audio.setEventFocus")) throw new Error("异常期间环境杂音未被抑制");
 if (css.includes(".monitor-view.event-pipe-drip .rising-water{display:block")) throw new Error("旧的发光滴水浮层仍在启用");
@@ -274,7 +275,12 @@ const simulation = new sandbox.NightShiftSimulation({
 });
 simulation.running = true;
 for (let now = 0; now <= 36200; now += 100) simulation.step(now);
-if (!simulation.finalStage || simulation.ended || starts !== simulation.eventQueue.length || prompts !== 1 || simulation.minute !== 360) {
+if (!simulation.terminalStage || simulation.ended || starts !== simulation.eventQueue.length || prompts !== 0 || simulation.minute < 342 || simulation.minute >= 343) {
+  throw new Error("终局断连没有冻结时间并等待来电");
+}
+simulation.beginFinalCall();
+simulation.promptTurn();
+if (!simulation.finalStage || simulation.ended || prompts !== 1 || simulation.minute !== 360) {
   throw new Error(`最终选择阶段异常：${JSON.stringify({ ended: simulation.ended, finalStage: simulation.finalStage, starts, prompts, minute: simulation.minute })}`);
 }
 simulation.chooseTurn(true);

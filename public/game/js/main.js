@@ -8,6 +8,7 @@
   const startMinute = qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
   const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
   const globalSignalAt = qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
+  const finalSilenceMs = qa && params.has("finalSilence") ? Math.max(500, Number(params.get("finalSilence")) || 10000) : 10000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
   const shift = window.GameContent.createShift(shiftSeed);
@@ -74,6 +75,9 @@
   let renderedEventStage = "";
   let pendingPhoneCorruption = null;
   let phoneCorruptionTimer = null;
+  let phoneCorruptionStartTimer = null;
+  let finalBlackoutPending = false;
+  let finalBlackoutStarted = false;
   const eventBeatState = new Map();
   const eventCueState = new Set();
   const sceneFirstView = new Map();
@@ -145,7 +149,7 @@
           ensureEventCue(event);
         }
       },
-      onMonitorFail: () => audio.glitch(true),
+      onMonitorFail: beginFinalBlackout,
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
@@ -253,7 +257,7 @@
   }
 
   function switchView(view) {
-    if (sim.ended || sim.turning) return;
+    if (sim.ended || sim.turning || sim.terminalStage) return;
     if (view.startsWith("phone")) {
       openPhone(view === "phone-report" ? "report" : "messages");
       return;
@@ -270,7 +274,7 @@
   }
 
   function openPhone(tab = "messages") {
-    if (transitionLocked || sim.ended || sim.turning) return;
+    if (transitionLocked || sim.ended || sim.turning || sim.terminalStage) return;
     if (!sim.view.startsWith("phone")) previousView = sim.view === "room" ? "room" : "monitor";
     transitionLocked = true;
     window.clearTimeout(phoneTransitionTimer);
@@ -282,7 +286,10 @@
     if (pendingPhoneCorruption) {
       const pending = pendingPhoneCorruption;
       pendingPhoneCorruption = null;
-      window.setTimeout(() => triggerPhoneCorruption(pending.type, pending.phrase), 480);
+      phoneCorruptionStartTimer = window.setTimeout(() => {
+        phoneCorruptionStartTimer = null;
+        triggerPhoneCorruption(pending.type, pending.phrase);
+      }, 480);
     }
     phoneTransitionTimer = window.setTimeout(() => { transitionLocked = false; }, 500);
     if (promptPending) window.setTimeout(revealTurnChoice, 720);
@@ -383,6 +390,7 @@
       els.phoneCorruption.className = "phone-corruption";
       els.phoneCorruption.setAttribute("aria-hidden", "true");
       els.phoneView.classList.remove("phone-corrupting");
+      if (finalBlackoutPending) startFinalBlackout();
     }, duration);
   }
 
@@ -411,6 +419,40 @@
     sim.pushMessage({ sender: "上一任值班员", text: handoffCandidate });
   }
 
+  function beginFinalBlackout() {
+    finalBlackoutPending = true;
+    // Let an already visible phone corruption finish instead of cutting it
+    // off with the final call. An unopened queued effect cannot block the end.
+    if (phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
+    startFinalBlackout();
+  }
+
+  function startFinalBlackout() {
+    if (!finalBlackoutPending || finalBlackoutStarted) return;
+    finalBlackoutPending = false;
+    finalBlackoutStarted = true;
+    pendingPhoneCorruption = null;
+    window.clearTimeout(phoneTransitionTimer);
+    transitionLocked = false;
+    els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
+    sim.setView("monitor");
+    setViewElement("monitor");
+    els.signalError.querySelector("b").textContent = "SIGNAL LOST";
+    els.signalError.querySelector("span").textContent = "CAM 01—06 / CONNECTION FAILED";
+    els.signalError.querySelector("small").textContent = "所有监控连接中断";
+    audio.stopReportTension();
+    audio.glitch(true);
+    window.setTimeout(() => {
+      if (sim.ended) return;
+      audio.enterSilence();
+      window.setTimeout(() => {
+        if (sim.ended) return;
+        audio.exitSilence();
+        sim.beginFinalCall();
+      }, finalSilenceMs);
+    }, 700);
+  }
+
   function render(state) {
     if (!state) return;
     const currentPhase = phase(state.minute);
@@ -436,8 +478,8 @@
     updateUnread(state);
     // The phone covers the feed. Avoid mutating hidden camera layers during its
     // lift/lower animation so mobile browsers can keep the phone on the compositor.
-    if (state.view === "monitor") renderCamera();
-    const visibleEvent = state.view === "monitor" ? state.visibleEvent : null;
+    if (state.view === "monitor" && !monitorFailed) renderCamera();
+    const visibleEvent = state.view === "monitor" && !monitorFailed ? state.visibleEvent : null;
     // The mirror figure is deliberately silent: keep the ordinary laundry-room
     // ambience running so sight and sound contradict one another.
     const eventFocused = Boolean(visibleEvent && visibleEvent.visual !== "mirror-reflection" && visibleEvent.id !== "dance-desync");
@@ -873,6 +915,7 @@
       els.callOverlay.classList.add("hidden");
       phone.addMessage({ sender: "自己", text: "未接来电。门外又响了三下。", corrupt: true });
       audio.knock();
+      window.setTimeout(() => sim.promptTurn(), 1600);
     }, 9000);
   }
 
@@ -1095,6 +1138,7 @@
     els.callOverlay.classList.add("hidden");
     phone.addMessage({ sender: "自己", text: "你拒接了自己的来电。门外响了三下。", corrupt: true });
     audio.knock();
+    window.setTimeout(() => sim.promptTurn(), 1600);
   });
   els.dontTurn.addEventListener("click", () => sim.chooseTurn(false));
   els.turnAround.addEventListener("click", () => sim.chooseTurn(true));

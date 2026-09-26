@@ -79,7 +79,7 @@
       row.className = `archive-row${foundAt ? " unlocked" : " sealed"}`;
       const number = document.createElement("span");
       number.className = "archive-index";
-      number.textContent = `${String(index + 1).padStart(2, "0")} / ${String(catalog[selected].length).padStart(2, "0")}`;
+      number.textContent = String(index + 1).padStart(2, "0");
       const content = document.createElement("div");
       const title = document.createElement("b");
       title.textContent = foundAt ? item.title : "记录待解封";
@@ -88,7 +88,7 @@
       content.append(title, detail);
       const mark = document.createElement("span");
       mark.className = "archive-mark";
-      mark.textContent = foundAt ? "已归档" : "封存";
+      mark.textContent = foundAt ? "已归档" : "未解锁";
       row.append(number, content, mark);
       fragment.append(row);
     });

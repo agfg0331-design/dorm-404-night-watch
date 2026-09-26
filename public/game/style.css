@@ -684,3 +684,14 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .archive-tabs button:nth-child(2){top:33.333%}
 .archive-tabs button:nth-child(3){top:66.666%}
 @media(orientation:portrait){.archive-tabs{position:absolute;left:3.7%;right:3.7%;top:-5px;height:98%;display:block}.archive-tabs button,.archive-tabs button.active{display:flex;min-height:0}}
+/* Ink follows the ruled paper, including its photographed tilt. */
+.archive-rail{transform:rotate(1.8deg);transform-origin:top left}
+.archive-register{transform:rotate(2.4deg);transform-origin:top left}
+.archive-tabs button,.archive-tabs button.active{color:#35291f;text-shadow:none;text-decoration:none}
+.archive-tabs button span,.archive-tabs button.active span{color:#35291f}
+.archive-tabs button.active{text-decoration:underline;text-decoration-color:#695a47;text-underline-offset:.22em}
+.archive-page-heading{height:9%;min-height:9%;flex:none}
+.archive-register footer{display:none}
+.archive-list{flex:1;min-height:0}
+.archive-row{height:12.5%;min-height:0}
+@media(orientation:landscape) and (max-height:600px){.archive-row small{display:none}}

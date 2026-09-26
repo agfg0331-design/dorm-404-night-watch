@@ -19,6 +19,7 @@
       this.bgmNodes = [];
       this.bgmLayerGains = {};
       this.ambienceSources = [];
+      this.ambienceKeys = new Set();
       this.finalNodes = [];
       this.duckTimer = null;
       this.sampleBuffers = new Map();
@@ -98,8 +99,13 @@
     }
 
     async warmAmbience() {
-      await this.loadSamples(["horrorAmbience", "wind", "roomNight", "fluorescent"]);
-      if (this.enabled) this.startRecordedAmbience();
+      // Decode the large beds in small groups so the first seconds of CCTV
+      // playback do not compete with four simultaneous audio decoders.
+      for (const keys of [["roomNight", "fluorescent"], ["wind"], ["horrorAmbience"]]) {
+        if (!this.enabled || this.silenced) return;
+        await this.loadSamples(keys);
+        this.startRecordedAmbience();
+      }
     }
 
     loadSample(key) {
@@ -227,15 +233,17 @@
     }
 
     startRecordedAmbience() {
-      if (!this.enabled || !this.ctx || this.silenced || this.ambienceSources.length) return;
+      if (!this.enabled || !this.ctx || this.silenced) return;
       [
         ["horrorAmbience", 0.07, 0.93, 0],
         ["wind", 0.045, 0.87, 9.5],
         ["roomNight", 0.2, 1, 3.2],
         ["fluorescent", 0.14, 1, 1.1]
       ].forEach(([key, volume, rate, offset], index) => {
+        if (this.ambienceKeys.has(key)) return;
         const voice = this.playSample(key, { bus: "bgm", loop: true, volume, rate, offset });
         if (voice) {
+          this.ambienceKeys.add(key);
           this.ambienceSources.push(voice.source);
           this.bgmLayerGains[`recorded${index}`] = voice.gain;
         }
@@ -271,6 +279,7 @@
       this.bgmNodes = [];
       this.ambienceSources.forEach((node) => { try { node.stop(); } catch (_) { /* already stopped */ } });
       this.ambienceSources = [];
+      this.ambienceKeys.clear();
       this.bgmLayerGains = {};
       this.stopRingtone();
       this.finalNodes.forEach((node) => { try { node.stop(); } catch (_) { /* already stopped */ } });

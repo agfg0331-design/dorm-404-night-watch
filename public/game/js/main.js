@@ -226,7 +226,9 @@
     sim.interferencePlan = [];
     sim.firedFinalClues = new Set(["final-camera", "final-phone", "final-sound", "final-misdirect"]);
     if (focusedEvent) focusedEvent.actualStart = 5;
-    if (testShow === "fake-dawn") sim.fakeDawnPlanned = true;
+    // A show test plays only its selected sequence, regardless of the seed's
+    // optional dawn roll. In particular, the final test starts after 05:20.
+    if (testMode === "show") sim.fakeDawnPlanned = testShow === "fake-dawn";
     if (!["cascade", "snow"].includes(testShow)) globalSignalFinished = true;
   }
   let focusedEventHeld = false;

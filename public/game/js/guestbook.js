@@ -123,6 +123,14 @@
     event.preventDefault();
     const nickname = ui.nickname.value.trim().slice(0, 16);
     const content = ui.content.value.trim();
+    if (content === "131500") {
+      // A local-only entry point. Never send the test command to the public API.
+      ui.content.value = "";
+      ui.counter.textContent = "0 / 180";
+      close();
+      window.dispatchEvent(new Event("dorm404:test-open"));
+      return;
+    }
     if (!nickname || !content) return setNote("请填写昵称和留言。", true);
     const submit = ui.form.querySelector("button[type=submit]");
     submit.disabled = true;

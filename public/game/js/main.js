@@ -5,13 +5,22 @@
   const params = new URLSearchParams(location.search);
   const qa = params.get("qa") === "1";
   const fast = params.get("fast") === "1";
-  const startMinute = qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
-  const minuteMs = fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
-  const globalSignalAt = qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
+  const testMode = qa && ["full", "event", "show"].includes(params.get("test")) ? params.get("test") : null;
+  const testEventId = testMode === "event" ? params.get("event") : null;
+  const testShow = testMode === "show" ? params.get("show") : null;
+  const startMinute = testShow === "fake-dawn" ? 315.95 : testShow === "final-blackout" ? 341.95 : qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
+  const minuteMs = testMode === "event" ? 700 : testMode === "show" ? 1000 : fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
+  const globalSignalAt = testShow === "cascade" || testShow === "snow" ? 2000
+    : testMode === "full" ? Math.max(1000, Math.round(240000 * minuteMs / (420000 / 360)))
+      : qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
   const finalSilenceMs = qa && params.has("finalSilence") ? Math.max(500, Number(params.get("finalSilence")) || 10000) : 10000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
-  const shift = window.GameContent.createShift(shiftSeed);
+  const selectedEvent = testEventId && [...Object.values(window.GameContent.scenePool).flatMap((scene) => scene.anomalies), ...window.GameContent.events.filter((event) => event.camera === "cam04")].find((event) => event.id === testEventId);
+  const selectedScene = selectedEvent?.sceneId || (selectedEvent?.camera === "cam04" ? "duty" : null);
+  const forcedScenes = testMode === "event" && selectedScene && selectedScene !== "duty"
+    ? [selectedScene, ...Object.keys(window.GameContent.scenePool).filter((id) => id !== selectedScene).slice(0, 4)] : null;
+  const shift = window.GameContent.createShift(shiftSeed, forcedScenes);
   const { cameras, events } = shift;
   const $ = (id) => document.getElementById(id);
 
@@ -50,7 +59,7 @@
     const option = els.reportCamera.querySelector(`option[value="${slot}"]`);
     if (option) option.textContent = `${camera.code}｜${camera.reportLocation || camera.name}`;
   });
-  const globalSignalMode = (shiftSeed & 1) === 0 ? "cascade" : "snow";
+  const globalSignalMode = ["cascade", "snow"].includes(testShow) ? testShow : (shiftSeed & 1) === 0 ? "cascade" : "snow";
   const globalSignalFeeds = Object.entries(cameras).sort(([a], [b]) => a.localeCompare(b)).map(([, camera]) => {
     const feed = document.createElement("div");
     feed.className = "global-signal-feed";
@@ -185,6 +194,17 @@
       onEnding: showEnding
     }
   });
+  const focusedEvent = testMode === "event" ? sim.eventQueue.find((event) => event.id === testEventId) : null;
+  if (testMode === "event" || testMode === "show") {
+    sim.eventQueue = focusedEvent ? [focusedEvent] : [];
+    shift.narrative = [];
+    sim.interferencePlan = [];
+    sim.firedFinalClues = new Set(["final-camera", "final-phone", "final-sound", "final-misdirect"]);
+    if (focusedEvent) focusedEvent.actualStart = 5;
+    if (testShow === "fake-dawn") sim.fakeDawnPlanned = true;
+    if (!["cascade", "snow"].includes(testShow)) globalSignalFinished = true;
+  }
+  let focusedEventHeld = false;
 
   function formatMinute(minute, seconds = false) {
     let value = Math.max(0, Math.min(360, minute));
@@ -471,6 +491,7 @@
       els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");
       els.monitorView.style.removeProperty("--fake-dawn-light");
       audio.exitFakeDawn();
+      if (testShow === "fake-dawn") sim.pauseFor(24 * 60 * 60 * 1000);
     }
   }
 
@@ -1138,7 +1159,7 @@
     const syncHint = els.enterMonitor.querySelector("small");
     const oldHint = syncHint?.textContent || "点击屏幕正式开始值班";
     if (syncHint) syncHint.textContent = "正在同步六路监控……";
-    prepareHandoff();
+    if (!testMode) prepareHandoff();
     await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
     const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
     if (missingSamples.length) await audio.loadSamples(missingSamples);
@@ -1149,6 +1170,23 @@
     els.enterMonitor.classList.remove("syncing");
     if (syncHint) syncHint.textContent = oldHint;
     shiftStarting = false;
+  }
+
+  if (testMode) {
+    els.body.classList.add("test-run");
+    window.addEventListener("dorm404:test-start", async () => {
+      if (sim.running || shiftStarting) return;
+      await audio.setEnabled(true);
+      criticalAudioReady = audio.loadSamples(criticalAudioSamples);
+      els.startOverlay.classList.add("hidden");
+      els.audioCheckOverlay.classList.add("hidden");
+      els.briefingOverlay.classList.add("hidden");
+      await beginShift(focusedEvent?.camera || null);
+      if (testShow === "phone-snow" || testShow === "phone-flood") {
+        openPhone("messages");
+        window.setTimeout(() => triggerPhoneCorruption(testShow === "phone-flood" ? "flood" : "snow-hard", testShow === "phone-flood" ? "你正在被监控" : "NO OPERATOR"), 650);
+      }
+    });
   }
 
   els.startGame.addEventListener("click", startGame);
@@ -1272,6 +1310,10 @@
     lastSimulationFrame = now;
     syncGlobalSignal(now);
     sim.step(now);
+    if (focusedEvent && !focusedEventHeld && sim.minute >= focusedEvent.actualStart + focusedEvent.duration) {
+      focusedEventHeld = true;
+      sim.pauseFor(24 * 60 * 60 * 1000, now);
+    }
     const currentMinute = Math.floor(sim.minute);
     if (currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {
       lastAmbientWarning = currentMinute;

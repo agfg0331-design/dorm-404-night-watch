@@ -115,8 +115,12 @@ for (let stage = 1; stage <= 4; stage += 1) {
 if (!main.includes('manualFrames.map((source) => preloadImage(source, true))') || !main.includes('els.briefingViewport.scrollLeft') || !main.includes('showManualFrame(3)') || !main.includes('[2, 1, 0].forEach')) throw new Error("交班手册翻页或手机阅读流程缺失");
 const coreEventCount = [...anomalies.matchAll(/\{ id: "[^"]+", start:/g)].length;
 if (coreEventCount !== 20) throw new Error(`正式异常数量应保持20，当前为${coreEventCount}`);
-for (const layer of ["stairs-darkness", "duty-gaze", "mirror-figure", "lobby-twins", "footprint-trail"]) {
+for (const layer of ["stairs-darkness", "mirror-figure", "footprint-trail"]) {
   if (!html.includes(`class="${layer}`)) throw new Error(`缺少安静恐怖表现层：${layer}`);
+}
+if (html.includes('class="duty-gaze"') || html.includes('class="lobby-twins"') || css.includes(".lobby-twin{") || css.includes(".duty-gaze .duty-head")) throw new Error("旧的纯黑人物贴片仍在画面中");
+for (const asset of ["cam-duty-overhead-v2.webp", "cam-duty-shadow-stand-v2.webp", "cam-duty-shadow-right-fold-v2.webp", "cam-lobby-double-outside-v1.webp", "cam-lobby-double-inside-v1.webp"]) {
+  if (!fs.existsSync(`${gameRoot}/assets/${asset}`)) throw new Error(`重绘人物画面缺失：${asset}`);
 }
 for (const mapping of ['id: "stairs-light"[\\s\\S]*?visual: "stairs-darkness"', 'id: "laundry-reflection"[\\s\\S]*?visual: "mirror-reflection"', 'id: "lobby-footprints"[\\s\\S]*?visual: "wet-footprints"']) {
   if (!(new RegExp(mapping)).test(anomalies)) throw new Error(`异常视觉映射缺失：${mapping}`);
@@ -147,7 +151,7 @@ for (let stage = 1; stage <= 3; stage++) {
   if (!main.includes(`setEventFrame(${stage - 1}, event.frames[${stage - 1}]`)) throw new Error(`镜中黑影第${stage}阶段未接入事件帧`);
 }
 if (!main.includes("els.eventFrames.forEach(clipLaundryMirror)") || css.includes(".monitor-view.event-mirror-reflection .mirror-figure{display:block}")) throw new Error("镜中黑影仍被旧贴片覆盖或未限制在镜面内");
-if (!css.includes("@keyframes twinEcho") || !css.includes("animation-delay:.72s")) throw new Error("大厅双人缺少延迟同步动作");
+if (!main.includes("maskLobbyVisitor(els.eventFrames[0], false)") || !main.includes("maskLobbyVisitor(els.eventFrames[1], true)")) throw new Error("大厅双人未使用两张局部遮罩的监控帧");
 if (css.includes("event-lobby-double .extra-shadow") || css.includes("event-self-turn .extra-shadow")) throw new Error("专属人物异常仍被通用 extra-shadow 规则覆盖");
 if (!/id: "lobby-double", start: 334[\s\S]*?duration: 8/.test(anomalies)) throw new Error("大厅双人必须在05:42断流前完成演出");
 for (const quietVisual of ["stairs-darkness", "self-turn", "mirror-reflection", "wet-footprints", "lobby-double"]) {

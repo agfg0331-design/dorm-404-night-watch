@@ -855,6 +855,14 @@
     if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
   }
 
+  function maskLobbyVisitor(frame, inside) {
+    const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
+    const [x, y, radiusX, radiusY] = inside ? [867, 560, 126, 242] : [1053, 390, 92, 170];
+    const mask = `radial-gradient(ellipse ${radiusX * scale}px ${radiusY * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, #000 64%, transparent 100%)`;
+    if (frame.style.maskImage !== mask) frame.style.maskImage = mask;
+    if (frame.style.webkitMaskImage !== mask) frame.style.webkitMaskImage = mask;
+  }
+
   function renderEventFrames(event) {
     const nextFrameEventKey = event?.frames?.length ? `${event.id}:${event.frames.join("|")}` : "";
     if (nextFrameEventKey !== renderedFrameEventKey) {
@@ -901,12 +909,17 @@
       setEventFrame(2, event.frames[2], clamp01((p - 0.66) / 0.18));
       els.eventFrames.forEach(clipLaundryMirror);
     } else if (event.visual === "self-turn") {
-      // The seated silhouette first raises its head, then stands with both
-      // hands visible; only after that does its torso snap to the right.
+      // The same operator stands, then folds sideways; mask each photographed
+      // pose to keep the room and camera static between frames.
       setEventFrame(0, event.frames[0], clamp01((p - 0.17) / 0.12));
       setEventFrame(1, event.frames[1], clamp01((p - 0.46) / 0.14));
       clipDutyShadow(els.eventFrames[0], false);
       clipDutyShadow(els.eventFrames[1], true);
+    } else if (event.visual === "lobby-double") {
+      setEventFrame(0, event.frames[0], clamp01((p - 0.12) / 0.16));
+      setEventFrame(1, event.frames[1], clamp01((p - 0.42) / 0.16));
+      maskLobbyVisitor(els.eventFrames[0], false);
+      maskLobbyVisitor(els.eventFrames[1], true);
     } else if (event.visual === "stairs-darkness") {
       // The three approved CCTV frames extinguish the lower flight, landing
       // lamp, then upper flight. Each new frame covers the preceding stage.

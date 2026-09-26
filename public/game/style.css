@@ -604,7 +604,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .archive-header button{position:absolute;right:6.3%;top:19%;width:clamp(32px,3vw,43px);height:clamp(32px,3vw,43px);border:1px solid #5a3e2b;background:#e6d8bbee;color:#3b2619;font-size:1.4rem;box-shadow:2px 3px 8px #201a1580;pointer-events:auto}
 .archive-header button:hover,.archive-header button:focus-visible{outline:2px solid #66392f;border-color:#66392f;background:#f6e8c9}
 .archive-body{display:block;min-height:0}
-.archive-rail,.archive-register{position:absolute;min-height:0;border:0;background:linear-gradient(#ded1b4ed,#c8b99cef),repeating-linear-gradient(0deg,#31251812 0 1px,transparent 1px 26px);box-shadow:inset 0 0 22px #65523b33;color:#332d24}
+.archive-rail,.archive-register{position:absolute;min-height:0;border:0;background:linear-gradient(#ded1b4,#c8b99c),repeating-linear-gradient(0deg,#31251812 0 1px,transparent 1px 26px);box-shadow:inset 0 0 22px #65523b33;color:#332d24}
 .archive-rail{left:20.6%;top:37.2%;width:26.7%;height:46.3%;display:flex;flex-direction:column;gap:3%;padding:2% 1.4% 1.2%;transform:rotate(.3deg)}
 .archive-progress{display:flex;align-items:baseline;gap:.5rem;padding:0 0 3%;border-bottom:1px solid #604e3b59}
 .archive-progress strong{font:600 clamp(.9rem,2.2vw,2.1rem) ui-serif,serif;letter-spacing:0;color:#6b2524}.archive-progress span{display:inline;margin:0;color:#45392b;font-size:clamp(.55rem,.85vw,.8rem);letter-spacing:.05em}.archive-meter{display:none}

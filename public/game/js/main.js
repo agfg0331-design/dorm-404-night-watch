@@ -855,6 +855,15 @@
     if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
   }
 
+  function clipDutyExtra(frame) {
+    const { scale, offsetX, offsetY } = frameGeometry(1672, 941);
+    // Only the new figure is composited; the operator and the glass stay on
+    // the unchanged camera feed.
+    const outline = [[745, 285], [835, 278], [892, 329], [925, 420], [917, 675], [916, 898], [777, 898], [739, 681], [738, 416]];
+    const clip = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+    if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
+  }
+
   function maskLobbyVisitor(frame, inside) {
     const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
     const [x, y, radiusX, radiusY] = inside ? [867, 560, 126, 242] : [1053, 390, 92, 170];
@@ -915,6 +924,9 @@
       setEventFrame(1, event.frames[1], clamp01((p - 0.46) / 0.14));
       clipDutyShadow(els.eventFrames[0], false);
       clipDutyShadow(els.eventFrames[1], true);
+    } else if (event.visual === "duty-extra") {
+      setEventFrame(0, event.frames[0], clamp01((p - 0.18) / 0.22));
+      clipDutyExtra(els.eventFrames[0]);
     } else if (event.visual === "lobby-double") {
       setEventFrame(0, event.frames[0], clamp01((p - 0.12) / 0.16));
       setEventFrame(1, event.frames[1], clamp01((p - 0.42) / 0.16));

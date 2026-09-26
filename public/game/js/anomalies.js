@@ -5,7 +5,7 @@
     cam01: { key: "1", code: "CAM 01", name: "404宿舍", location: "4F 东侧", ambient: "dorm", image: "assets/cam-dorm-normal.webp", corruptImage: "assets/cam-dorm-corrupt.webp" },
     cam02: { key: "2", code: "CAM 02", name: "四楼走廊", location: "4F 西侧", ambient: "hall", image: "assets/cam-hall-normal.webp", corruptImage: "assets/cam-hall-corrupt.webp" },
     cam03: { key: "3", code: "CAM 03", name: "公共洗衣房", location: "4F 北侧", ambient: "laundry", image: "assets/cam-laundry-normal.webp", corruptImage: "assets/cam-laundry-normal.webp" },
-    cam04: { key: "4", code: "CAM 04", name: "值班室", location: "1F 值班室上方", ambient: "duty", image: "assets/cam-duty-overhead-v3.webp", corruptImage: "assets/duty-room-corrupt.webp" },
+    cam04: { key: "4", code: "CAM 04", name: "值班室", location: "1F 值班室上方", ambient: "duty", image: "assets/cam-duty-overhead.webp", corruptImage: "assets/duty-room-corrupt.webp" },
     cam05: { key: "5", code: "CAM 05", name: "四楼楼梯间", location: "3F—4F", ambient: "stairs", image: "assets/cam-stairs-normal-v2.webp", corruptImage: "assets/cam-stairs-normal-v2.webp" },
     cam06: { key: "6", code: "CAM 06", name: "一楼大厅", location: "1F 入口", ambient: "lobby", image: "assets/cam-lobby-clean-v3.webp", corruptImage: "assets/cam-lobby-clean-v3.webp" }
   };
@@ -19,8 +19,8 @@
     "assets/cam-laundry-machine-mid-v4.webp", "assets/cam-laundry-machine-violent-v4.webp",
     "assets/cam-laundry-mirror-shadow-1-approved-v1.webp", "assets/cam-laundry-mirror-shadow-2-approved-v1.webp", "assets/cam-laundry-mirror-shadow-3-approved-v1.webp",
     "assets/cam-lobby-clock-shake-1-approved-v1.webp", "assets/cam-lobby-clock-shake-2-approved-v1.webp", "assets/cam-lobby-clock-shake-3-approved-v1.webp", "assets/cam-lobby-wet-footprints-approved-v1.webp",
-    "assets/cam-duty-shadow-stand-v2.webp", "assets/cam-duty-shadow-right-fold-v2.webp",
-    "assets/cam-lobby-double-outside-v1.webp", "assets/cam-lobby-double-inside-v1.webp",
+    "assets/cam-duty-shadow-stand-v2.webp", "assets/cam-duty-shadow-right-fold-v2.webp", "assets/cam-duty-extra-figure-v1.webp",
+    "assets/cam-lobby-double-outside-shadow-v2.webp", "assets/cam-lobby-double-inside-shadow-v2.webp",
     "assets/cam-hall-door-mid-v4.webp", "assets/cam-hall-door-open-v4.webp", "assets/cam-lobby-normal-v2.webp",
     "assets/cam-duty-empty-v1.webp",
     "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
@@ -44,9 +44,9 @@
     { id: "lobby-footprints", start: 154, jitter: 3, camera: "cam06", category: "空间异常", title: "湿脚印从门外延伸至值班室", visual: "wet-footprints", frames: ["assets/cam-lobby-wet-footprints-approved-v1.webp"], duration: 20, grace: 8, severity: 14, lead: { offset: -3, sender: "门卫老陈", text: "刚拖完大厅，怎么又有一排湿脚印？", kind: "real" } },
     { id: "stair-loop", start: 302, jitter: 3, camera: "cam05", category: "空间异常", title: "上下楼梯连接到同一层", visual: "space-repeat", duration: 19, grace: 6, severity: 16, lead: { offset: -3, sender: "403 林同学", text: "我走了两层，墙上还是写着4F。", kind: "real" } },
     { id: "hall-shadow-near", start: 316, jitter: 2, camera: "cam02", category: "人物异常", title: "人影突然加速逼近镜头", visual: "shadow-rush", frames: ["assets/cam-hall-shadow-mid-v2.webp", "assets/cam-hall-shadow-near-v2.webp"], duration: 15, grace: 4, severity: 18, lead: { offset: -2, sender: "值班系统", text: "CAM 03 检测到人员活动。", kind: "false" } },
-    { id: "duty-extra", start: 326, jitter: 2, camera: "cam04", category: "人物异常", title: "值班员身后出现第二个人", visual: "duty-extra", duration: 18, grace: 4, severity: 19, lead: { offset: -2, sender: "自己", text: "别看 CAM 04。", kind: "false" } },
+    { id: "duty-extra", start: 326, jitter: 2, camera: "cam04", category: "人物异常", title: "值班员身后出现第二个人", visual: "duty-extra", frames: ["assets/cam-duty-extra-figure-v1.webp"], duration: 18, grace: 4, severity: 19, lead: { offset: -2, sender: "自己", text: "别看 CAM 04。", kind: "false" } },
     { id: "dorm-empty", start: 335, jitter: 1, camera: "cam01", category: "空间异常", title: "宿舍内部空间突然变空", visual: "space-repeat", duration: 12, grace: 3, severity: 17, lead: { offset: -2, sender: "404 匿名", text: "你看到的宿舍不是这一间。", kind: "false" } },
-    { id: "lobby-double", start: 334, jitter: 0, camera: "cam06", category: "人物异常", title: "同一人同时站在门内与门外", visual: "lobby-double", frames: ["assets/cam-lobby-double-outside-v1.webp", "assets/cam-lobby-double-inside-v1.webp"], duration: 8, grace: 2, severity: 20, lead: { offset: -2, sender: "值班系统", text: "CAM 06：访客人数 0。", kind: "false" } }
+    { id: "lobby-double", start: 334, jitter: 0, camera: "cam06", category: "人物异常", title: "同一人同时站在门内与门外", visual: "lobby-double", frames: ["assets/cam-lobby-double-outside-shadow-v2.webp", "assets/cam-lobby-double-inside-shadow-v2.webp"], duration: 8, grace: 2, severity: 20, lead: { offset: -2, sender: "值班系统", text: "CAM 06：访客人数 0。", kind: "false" } }
   ];
 
   const narrative = [

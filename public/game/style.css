@@ -111,13 +111,12 @@ body.no-screen-shake .phone-dock.ringing,body.no-screen-shake .phone-hotspot.rin
 .phone-dock.ringing,.phone-hotspot.ringing{animation:phoneShake .12s linear 6;box-shadow:0 0 30px #a5273066}
 .event-layer{position:absolute;inset:0;z-index:4;pointer-events:none;--event-progress:0}
 .moving-chair{position:absolute;display:none;width:4.5%;height:12%;left:49%;top:63%;border:3px solid rgba(5,8,7,.72);background:rgba(2,4,4,.58);box-shadow:0 8px 10px #0008;transform:translateX(calc(var(--event-progress) * 9vw)) skew(-6deg)}
-.walking-shadow,.extra-shadow{display:none;position:absolute;width:4.5%;height:24%;left:49%;top:49%;border-radius:50% 50% 22% 22%;background:linear-gradient(#010202,#050606 65%,transparent);filter:blur(3px);opacity:.86}
+.walking-shadow{display:none;position:absolute;width:4.5%;height:24%;left:49%;top:49%;border-radius:50% 50% 22% 22%;background:linear-gradient(#010202,#050606 65%,transparent);filter:blur(3px);opacity:.86}
 .walking-shadow{transform:translate(-50%,-50%) scale(calc(.25 + var(--event-progress) * 2.5));transform-origin:center bottom}
-.extra-shadow{left:63%;top:35%;transform:scale(calc(.5 + var(--event-progress) * .6))}
 .glass-crack{display:none;position:absolute;right:10%;top:9%;width:35%;height:55%;filter:drop-shadow(0 0 2px #dcefe5);opacity:calc(.2 + var(--event-progress));}
 .glass-crack path{fill:none;stroke:#d4e1dc;stroke-width:2;stroke-dasharray:900;stroke-dashoffset:calc(900 - var(--event-progress) * 900)}
 .machine-light{display:none;position:absolute;left:52%;top:55%;width:12px;height:12px;border-radius:50%;background:#ba2027;box-shadow:0 0 18px #f6202c}
-.monitor-view.event-chair-move .moving-chair,.monitor-view.event-shadow-walk .walking-shadow,.monitor-view.event-shadow-rush .walking-shadow,.monitor-view.event-duty-extra .extra-shadow,.monitor-view.event-window-break .glass-crack{display:block}
+.monitor-view.event-chair-move .moving-chair,.monitor-view.event-shadow-walk .walking-shadow,.monitor-view.event-shadow-rush .walking-shadow,.monitor-view.event-window-break .glass-crack{display:block}
 .monitor-view.event-shadow-walk .walking-shadow,.monitor-view.event-shadow-rush .walking-shadow,.monitor-view.event-window-break .glass-crack{display:none}
 .wet-footprints,.curtain-figure,.door-gap,.reverse-clock{display:none;position:absolute}
 .wet-footprints{left:53%;top:49%;width:8%;height:43%;opacity:calc(.15 + var(--event-progress) * .75);transform:rotate(-9deg);background:radial-gradient(ellipse at 25% 6%,#080b0a 0 8%,transparent 10%),radial-gradient(ellipse at 68% 20%,#080b0a 0 8%,transparent 10%),radial-gradient(ellipse at 27% 35%,#080b0a 0 8%,transparent 10%),radial-gradient(ellipse at 70% 50%,#080b0a 0 8%,transparent 10%),radial-gradient(ellipse at 30% 66%,#080b0a 0 8%,transparent 10%),radial-gradient(ellipse at 73% 83%,#080b0a 0 8%,transparent 10%);filter:blur(1px)}
@@ -171,8 +170,6 @@ body.no-screen-shake .monitor-view.impact-soft,body.no-screen-shake .monitor-vie
 .monitor-view.event-space-repeat .space-echo{display:block;z-index:2;inset:5% 7%;border:1px solid rgba(177,205,190,.25);box-shadow:calc(var(--event-progress) * 18px) 0 0 rgba(61,105,86,.24),calc(var(--event-progress) * -22px) 0 0 rgba(119,19,28,.2),inset 0 0 60px rgba(0,0,0,.7);opacity:calc(.18 + var(--event-progress) * .74);transform:perspective(900px) translateZ(calc(var(--event-progress) * 95px)) rotateY(calc(var(--event-progress) * 2deg));animation:spacePulse .84s steps(3) infinite}
 .monitor-view.event-space-repeat[data-event-stage="4"] .feed-image{animation:spaceCollapse .28s steps(2) infinite}
 
-.monitor-view.event-duty-extra .extra-shadow{box-shadow:0 0 calc(16px + var(--event-progress) * 38px) #000;animation:figureBreathe 2.1s ease-in-out infinite}
-.monitor-view.event-duty-extra[data-event-stage="4"] .extra-shadow{filter:blur(1.2px);animation:figureNotice .72s cubic-bezier(.17,.84,.31,1) both}
 .signal-error{display:none;position:absolute;z-index:9;inset:0;background:rgba(0,0,0,.82);place-content:center;text-align:center;font-family:ui-monospace,monospace;letter-spacing:.18em}
 .signal-error b{font-size:clamp(1.7rem,5vw,4rem);color:#9b272c;text-shadow:4px 0 #235249,-4px 0 #5e1d20;animation:errorJitter .22s steps(2) infinite}
 .signal-error span,.signal-error small{display:block;margin-top:1rem}

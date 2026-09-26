@@ -5,7 +5,7 @@
     cam01: { key: "1", code: "CAM 01", name: "404宿舍", location: "4F 东侧", ambient: "dorm", image: "assets/cam-dorm-normal.webp", corruptImage: "assets/cam-dorm-corrupt.webp" },
     cam02: { key: "2", code: "CAM 02", name: "四楼走廊", location: "4F 西侧", ambient: "hall", image: "assets/cam-hall-normal.webp", corruptImage: "assets/cam-hall-corrupt.webp" },
     cam03: { key: "3", code: "CAM 03", name: "公共洗衣房", location: "4F 北侧", ambient: "laundry", image: "assets/cam-laundry-normal.webp", corruptImage: "assets/cam-laundry-normal.webp" },
-    cam04: { key: "4", code: "CAM 04", name: "值班室", location: "1F 值班室上方", ambient: "duty", image: "assets/cam-duty-overhead-v2.webp", corruptImage: "assets/duty-room-corrupt.webp" },
+    cam04: { key: "4", code: "CAM 04", name: "值班室", location: "1F 值班室上方", ambient: "duty", image: "assets/cam-duty-overhead-v3.webp", corruptImage: "assets/duty-room-corrupt.webp" },
     cam05: { key: "5", code: "CAM 05", name: "四楼楼梯间", location: "3F—4F", ambient: "stairs", image: "assets/cam-stairs-normal-v2.webp", corruptImage: "assets/cam-stairs-normal-v2.webp" },
     cam06: { key: "6", code: "CAM 06", name: "一楼大厅", location: "1F 入口", ambient: "lobby", image: "assets/cam-lobby-clean-v3.webp", corruptImage: "assets/cam-lobby-clean-v3.webp" }
   };

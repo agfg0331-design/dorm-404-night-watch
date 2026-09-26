@@ -71,7 +71,7 @@
       return [
         { id: "final-camera", at: at(244, 7, 0x43414d34), channel: "camera", role: "evidence", cue: { ...route.camera } },
         { id: "final-phone", at: at(276, 13, 0x50484f54), channel: "phone", role: "evidence", message: { ...phone } },
-        { id: "final-sound", at: this.#seededUnit(0x4441574e) < 0.3 ? 308 : at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
+        { id: "final-sound", at: this.#seededUnit(0x4441574e) < 0.5 ? 308 : at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
         { id: "final-misdirect", at: at(334, 8, 0x4d495354), channel: "phone", role: "interference", message: { ...mislead } }
       ];
     }
@@ -90,7 +90,7 @@
       this.missed = 0;
       this.unread = 0;
       this.monitorFailed = false;
-      this.fakeDawnPlanned = this.#seededUnit(0x4441574e) < 0.3;
+      this.fakeDawnPlanned = this.#seededUnit(0x4441574e) < 0.5;
       // A selected shift lasts eight minutes: 352 ordinary clock minutes at
       // this rate, plus 5 + 15 + 5 seconds of protected daylight. Other
       // shifts retain their seven-minute pace.

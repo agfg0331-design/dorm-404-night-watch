@@ -8,7 +8,7 @@
   const testMode = qa && ["full", "event", "show"].includes(params.get("test")) ? params.get("test") : null;
   const testEventId = testMode === "event" ? params.get("event") : null;
   const testShow = testMode === "show" ? params.get("show") : null;
-  const startMinute = testShow === "fake-dawn" ? 315.95 : testShow === "final-blackout" ? 341.95 : qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
+  const startMinute = testShow === "fake-dawn" ? 315.95 : testShow === "pa-override" ? 179.95 : testShow === "final-blackout" ? 341.95 : qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
   const minuteMs = testMode === "event" ? 700 : testMode === "show" ? 1000 : fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
   const globalSignalAt = testShow === "cascade" || testShow === "snow" ? 2000
     : testMode === "full" ? Math.max(1000, Math.round(240000 * minuteMs / (420000 / 360)))
@@ -16,6 +16,7 @@
   const finalSilenceMs = qa && params.has("finalSilence") ? Math.max(500, Number(params.get("finalSilence")) || 10000) : 10000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
+  const paMinute = testShow === "pa-override" ? 180 : 180 + ((Math.imul(shiftSeed ^ 0x50415359, 0x45d9f3b) >>> 0) % 90);
   const selectedEvent = testEventId && [...Object.values(window.GameContent.scenePool).flatMap((scene) => scene.anomalies), ...window.GameContent.events.filter((event) => event.camera === "cam04")].find((event) => event.id === testEventId);
   const selectedScene = selectedEvent?.sceneId || (selectedEvent?.camera === "cam04" ? "duty" : null);
   const forcedScenes = testMode === "event" && selectedScene && selectedScene !== "duty"
@@ -31,7 +32,7 @@
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
     cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
-    eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"),
+    eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"), paStatus: $("paStatus"), paCaption: $("paCaption"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
     phoneCorruption: $("phoneCorruption"), phoneRedFlood: $("phoneRedFlood"), phoneGhostWarning: $("phoneGhostWarning"),
     messagesPanel: $("messagesPanel"), reportPanel: $("reportPanel"), messageList: $("messageList"), autoInput: $("autoInput"),
@@ -103,6 +104,8 @@
   let phoneCorruptionStartTimer = null;
   let finalBlackoutPending = false;
   let finalBlackoutStarted = false;
+  let showLocked = null;
+  let paFinished = false;
   const eventBeatState = new Map();
   const eventCueState = new Set();
   const sceneFirstView = new Map();
@@ -334,7 +337,7 @@
   }
 
   function phoneUnavailable() {
-    return (globalSignalStartedAt > 0 && !globalSignalFinished) ||
+    return Boolean(showLocked && showLocked !== "phone") || (globalSignalStartedAt > 0 && !globalSignalFinished) ||
       ["pre", "bright", "post"].includes(sim.fakeDawnStage) || sim.terminalStage;
   }
 
@@ -454,11 +457,13 @@
     if (!type) return;
     const rank = { ghost: 1, snow: 2, "snow-hard": 3, flood: 4 };
     const next = { type, phrase };
-    if (sim.view.startsWith("phone")) triggerPhoneCorruption(type, phrase);
+    if (sim.view.startsWith("phone") && !showLocked) triggerPhoneCorruption(type, phrase);
     else if (!pendingPhoneCorruption || rank[type] >= rank[pendingPhoneCorruption.type]) pendingPhoneCorruption = next;
   }
 
   function triggerPhoneCorruption(type, phrase) {
+    if (showLocked && showLocked !== "phone") { pendingPhoneCorruption = { type, phrase }; return; }
+    if (type === "snow" || type === "snow-hard" || type === "flood") showLocked = "phone";
     window.clearTimeout(phoneCorruptionTimer);
     els.phoneGhostWarning.textContent = phrase;
     els.phoneRedFlood.querySelectorAll("span").forEach((line, index) => {
@@ -473,6 +478,7 @@
       els.phoneCorruption.className = "phone-corruption";
       els.phoneCorruption.setAttribute("aria-hidden", "true");
       els.phoneView.classList.remove("phone-corrupting");
+      if (showLocked === "phone") showLocked = null;
       if (finalBlackoutPending) startFinalBlackout();
     }, duration);
   }
@@ -513,6 +519,7 @@
 
   function handleFakeDawn(stage) {
     if (stage === "pre") {
+      showLocked = "fake-dawn";
       // Keep the player on the feeds; no phone effects, clues or anomalies are
       // emitted while this optional, non-reportable interlude is running.
       window.clearTimeout(phoneCorruptionStartTimer);
@@ -535,21 +542,70 @@
       els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");
       els.monitorView.style.removeProperty("--fake-dawn-light");
       audio.exitFakeDawn();
+      if (showLocked === "fake-dawn") showLocked = null;
       setPhoneAvailability();
       if (testShow === "fake-dawn") sim.pauseFor(24 * 60 * 60 * 1000);
     }
+  }
+
+  function startPaOverride(now) {
+    paFinished = true;
+    showLocked = "pa";
+    sim.pauseFor(14000, now);
+    putPhoneAwayForShow();
+    els.paStatus.classList.add("active");
+    els.paStatus.setAttribute("aria-hidden", "false");
+    audio.beginBroadcast();
+    const later = (delay, action) => window.setTimeout(action, delay);
+    const speak = (line) => {
+      els.paCaption.textContent = line;
+      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance || !audio.enabled) return;
+      const utterance = new SpeechSynthesisUtterance(line);
+      utterance.lang = "zh-CN";
+      utterance.voice = speechSynthesis.getVoices().find((voice) => /^zh(-|_)/i.test(voice.lang)) || null;
+      utterance.rate = 0.92;
+      utterance.pitch = 0.78;
+      utterance.volume = Math.min(0.72, audio.volumes.master * 0.75);
+      speechSynthesis.speak(utterance);
+    };
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    later(1100, () => speak("东区四号楼，请仍在楼内的同学立即返回寝室。"));
+    later(5200, () => { audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 }); els.paCaption.textContent = ""; });
+    later(5900, () => speak("东区四号楼，请仍在楼内的值班人员……"));
+    later(9000, () => speak("不要离开值班室。"));
+    later(11300, () => { if (window.speechSynthesis) speechSynthesis.cancel(); audio.playSample("crtSwitch", { volume: 0.25, rate: 0.6, duration: 0.2 }); els.paCaption.textContent = ""; els.paStatus.classList.remove("active"); });
+    later(13500, () => {
+      els.paStatus.classList.remove("active", "caption-only");
+      els.paStatus.setAttribute("aria-hidden", "true");
+      els.paCaption.textContent = "";
+      audio.endBroadcast();
+      if (showLocked === "pa") showLocked = null;
+      setPhoneAvailability();
+      if (testShow === "pa-override") sim.pauseFor(24 * 60 * 60 * 1000);
+    });
+  }
+
+  function syncPaOverride(now) {
+    if (!shiftStartedAt || paFinished || !sim.running || sim.terminalStage || sim.finalStage || sim.minute < paMinute) return;
+    if (showLocked || (globalSignalStartedAt && !globalSignalFinished) ||
+        ["pre", "bright", "post"].includes(sim.fakeDawnStage) ||
+        phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
+    startPaOverride(now);
   }
 
   function startFinalBlackout() {
     if (!finalBlackoutPending || finalBlackoutStarted) return;
     finalBlackoutPending = false;
     finalBlackoutStarted = true;
+    showLocked = "final";
     pendingPhoneCorruption = null;
     window.clearTimeout(phoneTransitionTimer);
     transitionLocked = false;
     els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
     sim.setView("monitor");
     setViewElement("monitor");
+    els.monitorView.classList.add("final-blackout");
+    document.querySelectorAll(".camera-dock [data-camera]").forEach((button) => { button.disabled = true; });
     setPhoneAvailability();
     els.signalError.querySelector("b").textContent = "SIGNAL LOST";
     els.signalError.querySelector("span").textContent = "CAM 01—06 / CONNECTION FAILED";
@@ -608,7 +664,7 @@
     }
     if (currentPhase >= 4) setText(els.roomCaption, "你偶尔听见身后椅脚摩擦地面，但值班室只有一把椅子。");
     if (qa) {
-      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, fakeDawnPlanned: state.fakeDawnPlanned, fakeDawnStage: state.fakeDawnStage, fakeDawnProgress: +state.fakeDawnProgress.toFixed(2), monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
+      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, fakeDawnPlanned: state.fakeDawnPlanned, fakeDawnStage: state.fakeDawnStage, fakeDawnProgress: +state.fakeDawnProgress.toFixed(2), paAt: paMinute, paFinished, showLocked, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
     }
     maybeDeliverHandoff(state);
   }
@@ -997,7 +1053,7 @@
   }
 
   function switchCamera(cameraId) {
-    if (!cameras[cameraId] || sim.turning || cameraId === sim.currentCamera) return;
+    if (!cameras[cameraId] || sim.turning || sim.terminalStage || (showLocked && showLocked !== "phone") || finalBlackoutStarted || cameraId === sim.currentCamera) return;
     // Clear overlays before changing the simulation camera so no event from the
     // previous feed survives for a frame on slower phones.
     els.eventFrames.forEach((frame) => { frame.style.opacity = "0"; });
@@ -1008,6 +1064,7 @@
 
   function report(event) {
     event.preventDefault();
+    if (showLocked || phoneUnavailable()) return;
     const form = new FormData(els.reportForm);
     const category = form.get("category");
     if (!category) { els.reportFeedback.textContent = "请选择异常类别。"; return; }
@@ -1322,6 +1379,8 @@
     if (!shiftStartedAt || globalSignalFinished || !sim.running || sim.finalStage) return;
     if (!globalSignalStartedAt) {
       if (now - shiftStartedAt < globalSignalAt) return;
+      if (showLocked) return;
+      showLocked = "global";
       globalSignalStartedAt = now;
       sim.pauseFor(8000, now);
       putPhoneAwayForShow();
@@ -1332,6 +1391,7 @@
     const elapsed = now - globalSignalStartedAt;
     if (elapsed >= 8000) {
       globalSignalFinished = true;
+      if (showLocked === "global") showLocked = null;
       setPhoneAvailability();
       els.globalSignal.classList.add("hidden");
       els.globalSignal.removeAttribute("data-stage");
@@ -1365,6 +1425,7 @@
     }
     lastSimulationFrame = now;
     syncGlobalSignal(now);
+    syncPaOverride(now);
     sim.step(now);
     if (focusedEvent && !focusedEventHeld && sim.minute >= focusedEvent.actualStart + focusedEvent.duration) {
       focusedEventHeld = true;

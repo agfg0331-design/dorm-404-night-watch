@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=board-safety-20260926">
+  <link rel="stylesheet" href="style.css?v=major-shows-20260926">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -75,6 +75,7 @@
       <div class="false-daylight" aria-hidden="true"></div>
       <div class="scanlines"></div><div class="noise"></div><div class="glitch-band"></div>
       <div class="signal-error" id="signalError"><b>UNKNOWN SIGNAL</b><span>CAMERA FEED ERROR</span><small>正在尝试重新连接……</small></div>
+      <div class="pa-status" id="paStatus" aria-live="polite" aria-hidden="true"><b>PA SYSTEM</b><small>PUBLIC ADDRESS CHANNEL</small><span id="paCaption"></span></div>
       <header class="monitor-hud top">
         <div><i class="rec"></i><b id="cameraCode">CAM 01</b><span id="cameraName">CAM 01</span></div>
         <time id="monitorTime">00:00:00</time>
@@ -261,7 +262,7 @@
         <nav class="test-tabs" aria-label="测试类型"><button type="button" data-test-tab="full" class="active">快速完整局</button><button type="button" data-test-tab="event">单独异常</button><button type="button" data-test-tab="show">单独演出</button></nav>
         <section class="test-panel" data-test-panel="full"><p>保留随机场景、上报与结局，只加快游戏时钟。结局演出仍按正常速度播放。</p><label>推进速度<select id="testSpeed"><option value="290">约 4 倍 · 值班约 100 秒</option><option value="145">约 8 倍 · 值班约 50 秒</option><option value="75">约 16 倍 · 值班约 27 秒</option></select></label></section>
         <section class="test-panel hidden" data-test-panel="event"><p>只播放选中的异常：提前消息、监控变化与对应音效照常呈现；画面结束后停留，方便检查。</p><label>异常列表<select id="testEvent"></select></label></section>
-        <section class="test-panel hidden" data-test-panel="show"><p>单独播放指定演出，不生成其他异常或误导消息。</p><label>演出列表<select id="testShow"><option value="cascade">六路监控依次断连 · 同时恢复</option><option value="snow">全屏雪花与值班室画面</option><option value="fake-dawn">假天亮 · 变亮、鸟叫、暗回去</option><option value="phone-snow">手机信号雪花</option><option value="phone-flood">手机红字刷屏</option><option value="final-blackout">终局断流、静默与来电</option></select></label></section>
+        <section class="test-panel hidden" data-test-panel="show"><p>单独播放指定演出，不生成其他异常或误导消息。</p><label>演出列表<select id="testShow"><option value="cascade">六路监控依次断连 · 同时恢复</option><option value="snow">全屏雪花与值班室画面</option><option value="fake-dawn">假天亮 · 变亮、鸟叫、暗回去</option><option value="pa-override">宿舍广播接管</option><option value="phone-snow">手机信号雪花</option><option value="phone-flood">手机红字刷屏</option><option value="final-blackout">终局断流、静默与来电</option></select></label></section>
         <div class="test-seed"><label>本次 seed<input id="testSeed" type="number" min="0" max="4294967295" inputmode="numeric"></label><button id="testRandomSeed" type="button">换一局</button><small>固定 seed 可重复同一局场景与演出。</small></div>
       </div>
       <div class="test-preflight hidden" id="testPreflight"><p id="testSummary"></p><button id="testBegin" type="button">开始测试</button></div>
@@ -316,13 +317,13 @@
     <span>横屏后可完整查看监控、手机和交班手册</span>
   </aside>
 
-  <script src="js/audio.js?v=perf-audio-20260926"></script>
+  <script src="js/audio.js?v=major-shows-20260926"></script>
   <script src="js/anomalies.js?v=hint-priority-fix-20260926"></script>
-  <script src="js/game.js?v=fake-dawn-20260926"></script>
+  <script src="js/game.js?v=major-shows-20260926"></script>
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=board-safety-20260926"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/main.js?v=manual-fast-20260926"></script>
-  <script src="js/test-module.js?v=test-module-20260926"></script>
+  <script src="js/main.js?v=major-shows-20260926"></script>
+  <script src="js/test-module.js?v=major-shows-20260926"></script>
 </body>
 </html>

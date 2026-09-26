@@ -48,7 +48,7 @@ const boardRoute = fs.readFileSync("app/api/board/route.ts", "utf8");
 if (!/\bmessages, votes, and, desc\b/.test(boardRoute)) throw new Error("留言接口缺少 and 查询条件导入");
 if (!boardRoute.includes("boardOptions") || !fs.readFileSync("app/api/board/shared.ts", "utf8").includes("Access-Control-Allow-Origin")) throw new Error("留言接口缺少 EdgeOne 跨站兼容");
 if (guestbook.includes(".edgeone.dev") || !guestbook.includes("fetch(path, options)")) throw new Error("留言板应使用同源 API");
-if (!html.includes("js/guestbook.js?v=board-safety-20260926") || !html.includes("js/test-module.js?v=test-module-20260926")) throw new Error("留言板或测试模块脚本缺少缓存版本标识");
+if (!html.includes("js/guestbook.js?v=board-safety-20260926") || !html.includes("js/test-module.js?v=major-shows-20260926")) throw new Error("留言板或测试模块脚本缺少缓存版本标识");
 for (const path of ["functions/api/board.js", "functions/api/board/[id]/vote.js", "d1/schema.sql"]) {
   if (!fs.existsSync(path)) throw new Error(`Cloudflare 留言后端缺失：${path}`);
 }

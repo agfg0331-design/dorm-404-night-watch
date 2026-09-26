@@ -207,11 +207,26 @@ body[data-phase="5"] .feed-image{filter:saturate(.24) sepia(.16) hue-rotate(290d
 body[data-phase="5"] .event-frame-stack img{filter:saturate(.24) sepia(.16) hue-rotate(290deg) contrast(1.45) brightness(.39);transform:scale(1.045,1.018)}
 body[data-phase="5"] .noise{opacity:.25}
 body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contrast(1.25)}
-.false-daylight{position:absolute;z-index:4;inset:0;pointer-events:none;opacity:var(--fake-dawn-light,0);background:linear-gradient(180deg,rgba(205,219,208,.48),rgba(151,172,154,.16) 55%,rgba(217,229,205,.12));mix-blend-mode:screen}
+.false-daylight{position:absolute;z-index:4;inset:0;pointer-events:none;opacity:var(--fake-dawn-light,0);background:linear-gradient(180deg,rgba(205,222,231,.62),rgba(155,187,202,.25) 55%,rgba(224,234,235,.16));mix-blend-mode:screen}
 .monitor-view.fake-dawn-quiet .event-layer,.monitor-view.fake-dawn-quiet .event-frame-stack,.monitor-view.fake-dawn-quiet .dance-power-cut{opacity:0!important;animation:none!important}
 .monitor-view.fake-dawn-quiet .glitch-band{opacity:0}
-.monitor-view.fake-dawn-bright .feed-image{filter:saturate(calc(.24 + var(--fake-dawn-light,0) * .5)) contrast(calc(1.45 - var(--fake-dawn-light,0) * .45)) brightness(calc(.39 + var(--fake-dawn-light,0) * 1.55));transition:none}
+.monitor-view.fake-dawn-bright .feed-image{filter:saturate(calc(.24 + var(--fake-dawn-light,0) * .34)) contrast(calc(1.45 - var(--fake-dawn-light,0) * .43)) brightness(calc(.39 + var(--fake-dawn-light,0) * 1.68));transition:none}
 .monitor-view.fake-dawn-bright .feed-grade{opacity:calc(1 - var(--fake-dawn-light,0) * .78)}
+.monitor-view.fake-dawn-bright .noise{opacity:calc(var(--noise-opacity) * (1 - var(--fake-dawn-light,0) * .72))}
+.monitor-view.fake-dawn-bright .scanlines{opacity:calc(.2 * (1 - var(--fake-dawn-light,0) * .6))}
+.pa-status{position:absolute;z-index:9;top:4.5rem;left:2rem;display:grid;gap:.12rem;max-width:min(85vw,480px);padding:.35rem .55rem;border-left:2px solid #7c978a;background:rgba(2,9,8,.76);color:#d8e4de;font:600 .75rem ui-monospace,monospace;letter-spacing:.12em;opacity:0;pointer-events:none;transition:opacity .4s}
+.pa-status small{font-size:.52rem;color:#9baea4}.pa-status span{font:500 .68rem/1.45 system-ui,sans-serif;letter-spacing:.04em}.pa-status span:empty{display:none}
+.pa-status.active{opacity:1}.pa-status.caption-only{border-color:#536b60;background:rgba(2,9,8,.64)}
+.monitor-view.final-blackout .signal-error{background:radial-gradient(ellipse at 50% 45%,#0b1112 0%,#030606 75%);animation:finalScreenDie .7s both}
+.monitor-view.final-blackout .signal-error::before{content:"";position:absolute;inset:0;opacity:.1;background:repeating-linear-gradient(180deg,transparent 0 3px,#b0c9bb18 4px),radial-gradient(circle,#84968813 0 1px,transparent 1px 4px);background-size:auto,7px 6px;pointer-events:none}
+.monitor-view.final-blackout .signal-error b,.monitor-view.final-blackout .signal-error span,.monitor-view.final-blackout .signal-error small{animation:finalSignalText .72s both}
+.monitor-view.final-blackout .camera-dock button{opacity:.5;border-color:#482d30;background:#090b0b;color:#839188;cursor:not-allowed}
+.monitor-view.final-blackout .camera-dock button.active{border-color:#49383a;background:#110d0e}
+.monitor-view.final-blackout .camera-dock button span{display:none}
+.monitor-view.final-blackout .camera-dock button::after{content:"OFFLINE";color:#8d6667;font:.55rem ui-monospace,monospace;letter-spacing:.04em}
+.monitor-view.final-blackout .rec{background:#343a38;box-shadow:none;animation:none}
+@keyframes finalScreenDie{0%,24%{background:transparent;opacity:0}28%{opacity:.38}36%{opacity:.07}57%{opacity:1}100%{opacity:1}}
+@keyframes finalSignalText{0%,78%{opacity:0}100%{opacity:1}}
 .phone-view{z-index:24;background:transparent;overflow:hidden;pointer-events:none;contain:layout paint style;isolation:isolate}
 .phone-view.active{display:block;pointer-events:auto}
 .phone-view.active.phone-unavailable{pointer-events:none}

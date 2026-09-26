@@ -114,7 +114,7 @@ paused.step(now);
 assert(paused.minute >= 0 && paused.minute < 3, "全监控演出结束后产生了异常计时跳跃");
 const dawnSeeds = Array.from({ length: 1000 }, (_, seed) => new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes }).fakeDawnPlanned);
 const dawnCount = dawnSeeds.filter(Boolean).length;
-assert(dawnCount >= 250 && dawnCount <= 350, `假天亮触发率偏离约30%：${dawnCount}/1000`);
+assert(dawnCount >= 450 && dawnCount <= 550, `假天亮触发率偏离约50%：${dawnCount}/1000`);
 for (let seed = 0; seed < 100; seed += 1) {
   const run = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360 });
   const normal = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360, quickMode: true });

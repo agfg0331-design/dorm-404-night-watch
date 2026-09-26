@@ -11,6 +11,7 @@
       this.silenced = false;
       this.fakeDawnQuiet = false;
       this.birdTimer = null;
+      this.finalAirSource = null;
       this.volumes = { master: 0.72, bgm: 0.38, sfx: 0.88 };
       this.scene = "duty";
       this.ambientTimer = null;
@@ -295,11 +296,32 @@
       const now = this.ctx.currentTime;
       this.master.gain.cancelScheduledValues(now);
       this.master.gain.setTargetAtTime(0.0001, now, 0.015);
+      // A barely audible room-air bed keeps the terminal pause from sounding
+      // like a stalled tab. It bypasses the muted master and honours volume 0.
+      const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+      const samples = buffer.getChannelData(0);
+      let brown = 0;
+      for (let i = 0; i < samples.length; i++) {
+        brown = (brown + (Math.random() * 2 - 1) * 0.02) * 0.998;
+        samples[i] = brown;
+      }
+      const source = this.ctx.createBufferSource();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      filter.type = "lowpass";
+      filter.frequency.value = 440;
+      gain.gain.value = Math.max(0, this.volumes.master) * 0.025;
+      source.connect(filter).connect(gain).connect(this.ctx.destination);
+      source.start();
+      this.finalAirSource = source;
     }
 
     exitSilence() {
       if (!this.silenced) return;
       this.silenced = false;
+      if (this.finalAirSource) { try { this.finalAirSource.stop(); } catch (_) { /* stopped */ } this.finalAirSource = null; }
       if (!this.ctx) return;
       const now = this.ctx.currentTime;
       this.master.gain.cancelScheduledValues(now);
@@ -353,6 +375,22 @@
       this.stopFakeDawnBirds();
       this.fakeDawnQuiet = false;
       this.setVolumes();
+      this.setScene(this.scene);
+    }
+
+    beginBroadcast() {
+      this.stopScene();
+      this.stopReportTension();
+      this.duck(14, 0.09);
+      this.playSample("crtSwitch", { volume: 0.32, rate: 0.7, filter: "lowpass", frequency: 1900, duration: 0.5 });
+    }
+
+    endBroadcast() {
+      window.clearTimeout(this.duckTimer);
+      this.duckTimer = null;
+      if (this.ctx && this.bgmBus && !this.silenced) {
+        this.bgmBus.gain.setTargetAtTime(Math.max(0.0001, this.volumes.bgm), this.ctx.currentTime, 0.35);
+      }
       this.setScene(this.scene);
     }
 

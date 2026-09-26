@@ -449,6 +449,7 @@
       audio.startFakeDawnBirds();
     } else if (stage === "post") {
       els.monitorView.classList.remove("fake-dawn-bright");
+      els.monitorView.style.setProperty("--fake-dawn-light", "0");
       audio.stopFakeDawnBirds();
     } else if (stage === "done") {
       els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");

@@ -135,6 +135,7 @@
 
   const sim = new window.NightShiftSimulation({
     minuteMs,
+    quickMode: qa || fast,
     startMinute,
     seed: shiftSeed,
     shift,
@@ -150,6 +151,7 @@
         }
       },
       onMonitorFail: beginFinalBlackout,
+      onFakeDawn: handleFakeDawn,
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
       onTurnPrompt: () => {
@@ -257,7 +259,7 @@
   }
 
   function switchView(view) {
-    if (sim.ended || sim.turning || sim.terminalStage) return;
+    if (sim.ended || sim.turning || sim.terminalStage || ["pre", "bright", "post"].includes(sim.fakeDawnStage)) return;
     if (view.startsWith("phone")) {
       openPhone(view === "phone-report" ? "report" : "messages");
       return;
@@ -274,7 +276,7 @@
   }
 
   function openPhone(tab = "messages") {
-    if (transitionLocked || sim.ended || sim.turning || sim.terminalStage) return;
+    if (transitionLocked || sim.ended || sim.turning || sim.terminalStage || ["pre", "bright", "post"].includes(sim.fakeDawnStage)) return;
     if (!sim.view.startsWith("phone")) previousView = sim.view === "room" ? "room" : "monitor";
     transitionLocked = true;
     window.clearTimeout(phoneTransitionTimer);
@@ -427,6 +429,34 @@
     startFinalBlackout();
   }
 
+  function handleFakeDawn(stage) {
+    if (stage === "pre") {
+      // Keep the player on the feeds; no phone effects, clues or anomalies are
+      // emitted while this optional, non-reportable interlude is running.
+      window.clearTimeout(phoneCorruptionStartTimer);
+      phoneCorruptionStartTimer = null;
+      els.phoneCorruption.className = "phone-corruption";
+      els.phoneCorruption.setAttribute("aria-hidden", "true");
+      window.clearTimeout(phoneCorruptionTimer);
+      els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
+      transitionLocked = false;
+      sim.setView("monitor");
+      setViewElement("monitor");
+      els.monitorView.classList.add("fake-dawn-quiet");
+      audio.enterFakeDawn();
+    } else if (stage === "bright") {
+      els.monitorView.classList.add("fake-dawn-bright");
+      audio.startFakeDawnBirds();
+    } else if (stage === "post") {
+      els.monitorView.classList.remove("fake-dawn-bright");
+      audio.stopFakeDawnBirds();
+    } else if (stage === "done") {
+      els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");
+      els.monitorView.style.removeProperty("--fake-dawn-light");
+      audio.exitFakeDawn();
+    }
+  }
+
   function startFinalBlackout() {
     if (!finalBlackoutPending || finalBlackoutStarted) return;
     finalBlackoutPending = false;
@@ -468,7 +498,8 @@
     setText(els.roomClock, formatMinute(state.minute));
     const phoneOffset = currentPhase >= 3 ? (currentPhase - 2) * 7 : 0;
     setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
-    setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : formatMinute(state.minute, true));
+    setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : state.fakeDawnStage === "bright" ? "05:20:00" : formatMinute(state.minute, true));
+    if (state.fakeDawnStage === "bright") els.monitorView.style.setProperty("--fake-dawn-light", state.fakeDawnProgress.toFixed(3));
     activeFinalCameraCue = state.finalCameraCue;
     const monitorFailed = state.monitorFailed;
     if (renderedMonitorFailed !== monitorFailed) {
@@ -493,7 +524,7 @@
     }
     if (currentPhase >= 4) setText(els.roomCaption, "你偶尔听见身后椅脚摩擦地面，但值班室只有一把椅子。");
     if (qa) {
-      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
+      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, fakeDawnPlanned: state.fakeDawnPlanned, fakeDawnStage: state.fakeDawnStage, fakeDawnProgress: +state.fakeDawnProgress.toFixed(2), monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
     }
     maybeDeliverHandoff(state);
   }

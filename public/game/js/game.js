@@ -37,7 +37,9 @@
 
     constructor(options = {}) {
       this.callbacks = options.callbacks || {};
-      this.minuteMs = options.minuteMs || 420000 / 360;
+      this.baseMinuteMs = options.minuteMs || 420000 / 360;
+      this.quickMode = Boolean(options.quickMode);
+      this.minuteMs = this.baseMinuteMs;
       this.startMinute = options.startMinute || 0;
       const providedSeed = Number(options.seed);
       this.seed = Number.isFinite(providedSeed) ? Math.trunc(providedSeed) : Math.floor(Math.random() * 99999);
@@ -69,7 +71,7 @@
       return [
         { id: "final-camera", at: at(244, 7, 0x43414d34), channel: "camera", role: "evidence", cue: { ...route.camera } },
         { id: "final-phone", at: at(276, 13, 0x50484f54), channel: "phone", role: "evidence", message: { ...phone } },
-        { id: "final-sound", at: at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
+        { id: "final-sound", at: this.#seededUnit(0x4441574e) < 0.3 ? 308 : at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
         { id: "final-misdirect", at: at(334, 8, 0x4d495354), channel: "phone", role: "interference", message: { ...mislead } }
       ];
     }
@@ -88,6 +90,14 @@
       this.missed = 0;
       this.unread = 0;
       this.monitorFailed = false;
+      this.fakeDawnPlanned = this.#seededUnit(0x4441574e) < 0.3;
+      // A selected shift lasts eight minutes: 352 ordinary clock minutes at
+      // this rate, plus 5 + 15 + 5 seconds of protected daylight. Other
+      // shifts retain their seven-minute pace.
+      this.minuteMs = this.fakeDawnPlanned && !this.quickMode ? 455000 / 352 : this.baseMinuteMs;
+      this.fakeDawnStage = "idle";
+      this.fakeDawnStartedAt = 0;
+      this.fakeDawnProgress = 0;
       this.terminalStage = false;
       this.turnPrompted = false;
       this.finalStage = false;
@@ -103,7 +113,13 @@
         at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 8 : 10)), index
       })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 7 ? .9 : .94));
       this.eventQueue = this.shift.events.map((event, index) => {
-        const actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
+        let actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
+        // Preserve every anomaly, but bring any late one that would cross the
+        // 05:20 quiet window forward. Nothing is spawned or missed on the false
+        // daylight, and the final phone beat remains uncrowded.
+        if (this.fakeDawnPlanned && actualStart < 325 && actualStart + event.duration + event.grace > 315) {
+          actualStart = 315 - event.duration - event.grace;
+        }
         const early = actualStart < 120;
         const priority = event.hintPriority || "standard";
         const late = actualStart >= 260;
@@ -171,7 +187,7 @@
     }
 
     get timeScale() {
-      if (this.finalStage || this.terminalStage) return 0;
+      if (this.finalStage || this.terminalStage || this.fakeDawnStage === "bright") return 0;
       if (this.view === "phone-report") return 0.3;
       if (this.view === "phone-messages") return 0.65;
       if (this.turning) return 0.12;
@@ -183,11 +199,25 @@
       if (!this.lastFrame) this.lastFrame = now;
       const elapsed = Math.min(250, now - this.lastFrame);
       this.lastFrame = now;
+      if (["pre", "bright", "post"].includes(this.fakeDawnStage)) {
+        this.advanceFakeDawn(now);
+        this.callbacks.onTick?.(this.snapshot());
+        return;
+      }
       if (now < this.pausedUntil) {
         this.callbacks.onTick?.(this.snapshot());
         return;
       }
       this.minute += (elapsed / this.minuteMs) * this.timeScale;
+      if (this.fakeDawnPlanned && this.fakeDawnStage === "idle" && this.minute >= 316 && this.minute < 342) {
+        this.minute = 316;
+        this.lastMinute = 316;
+        this.fakeDawnStage = "pre";
+        this.fakeDawnStartedAt = now;
+        this.callbacks.onFakeDawn?.("pre", this.snapshot());
+        this.callbacks.onTick?.(this.snapshot());
+        return;
+      }
       const floorMinute = Math.floor(this.minute);
       if (floorMinute !== this.lastMinute) {
         this.lastMinute = floorMinute;
@@ -203,6 +233,22 @@
       this.processEvents();
       this.callbacks.onTick?.(this.snapshot());
       if (this.minute >= 360 && !this.turning && !this.finalStage) this.finish("dawn");
+    }
+
+    advanceFakeDawn(now) {
+      const elapsed = Math.max(0, now - this.fakeDawnStartedAt);
+      const stage = elapsed < 5000 ? "pre" : elapsed < 20000 ? "bright" : elapsed < 25000 ? "post" : "done";
+      this.minute = stage === "pre" ? 316 + Math.min(1, elapsed / 5000) * 4
+        : stage === "bright" ? 320
+          : 320 + Math.min(1, (elapsed - 20000) / 5000) * 4;
+      this.lastMinute = Math.floor(this.minute);
+      const visualTime = elapsed - 5000;
+      this.fakeDawnProgress = stage === "bright"
+        ? visualTime < 3500 ? visualTime / 3500 : visualTime < 11000 ? 1 : Math.max(0, (15000 - visualTime) / 4000)
+        : 0;
+      if (stage === this.fakeDawnStage) return;
+      this.fakeDawnStage = stage;
+      this.callbacks.onFakeDawn?.(stage, this.snapshot());
     }
 
     processNarrative() {
@@ -395,6 +441,7 @@
     }
 
     getVisibleEvent() {
+      if (["pre", "bright", "post"].includes(this.fakeDawnStage)) return null;
       // Once missed, the earlier CAM 04 figure gives way to the final camera
       // clue. It stays in activeEvents and remains reportable from the phone.
       const candidates = this.activeEvents.filter((event) => event.camera === this.currentCamera && !event.reported &&
@@ -410,6 +457,7 @@
         sceneIds: [...this.sceneIds],
         danger: this.danger, trust: this.trust, correct: this.correct, wrong: this.wrong,
         missed: this.missed, unread: this.unread, monitorFailed: this.monitorFailed,
+        fakeDawnPlanned: this.fakeDawnPlanned, fakeDawnStage: this.fakeDawnStage, fakeDawnProgress: this.fakeDawnProgress,
         turnPrompted: this.turnPrompted, finalStage: this.finalStage, turning: this.turning, ended: this.ended,
         finalDecision: this.finalDecision,
         finalCameraCue: this.finalCameraCue ? { ...this.finalCameraCue } : null,

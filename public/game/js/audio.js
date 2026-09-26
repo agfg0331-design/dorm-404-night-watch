@@ -9,6 +9,8 @@
       this.bgmBus = null;
       this.enabled = false;
       this.silenced = false;
+      this.fakeDawnQuiet = false;
+      this.birdTimer = null;
       this.volumes = { master: 0.72, bgm: 0.38, sfx: 0.88 };
       this.scene = "duty";
       this.ambientTimer = null;
@@ -129,7 +131,7 @@
     }
 
     playSample(key, options = {}) {
-      if (!this.enabled || !this.ctx || this.silenced) return null;
+      if (!this.enabled || !this.ctx || this.silenced || this.fakeDawnQuiet) return null;
       if (!this.sampleBuffers.has(key)) return null;
       const source = this.ctx.createBufferSource();
       const gain = this.ctx.createGain();
@@ -174,8 +176,8 @@
       this.sfxBus.gain.cancelScheduledValues(now);
       this.bgmBus.gain.cancelScheduledValues(now);
       this.master.gain.setTargetAtTime(this.silenced ? 0.0001 : Math.max(0.0001, this.volumes.master), now, 0.03);
-      this.sfxBus.gain.setTargetAtTime(Math.max(0.0001, this.volumes.sfx), now, 0.03);
-      this.bgmBus.gain.setTargetAtTime(Math.max(0.0001, this.volumes.bgm), now, 0.08);
+      this.sfxBus.gain.setTargetAtTime(this.fakeDawnQuiet ? 0.0001 : Math.max(0.0001, this.volumes.sfx), now, 0.03);
+      this.bgmBus.gain.setTargetAtTime(this.fakeDawnQuiet ? Math.max(0.0001, this.volumes.bgm * 0.12) : Math.max(0.0001, this.volumes.bgm), now, 0.08);
     }
 
     startBgm() {
@@ -295,8 +297,56 @@
       // final-choice score starts only after the player answers or declines.
     }
 
+    enterFakeDawn() {
+      this.fakeDawnQuiet = true;
+      this.stopScene();
+      this.stopReportTension();
+      window.clearTimeout(this.duckTimer);
+      this.duckTimer = null;
+      this.setVolumes();
+    }
+
+    startFakeDawnBirds() {
+      if (!this.enabled || !this.ctx || !this.fakeDawnQuiet) return;
+      const chirp = () => {
+        if (!this.fakeDawnQuiet || this.silenced || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [0, 0.18, 0.39].forEach((delay, index) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const start = now + delay;
+          const base = [1750, 2050, 1580][index];
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(base, start);
+          osc.frequency.exponentialRampToValueAtTime(base * 1.38, start + 0.095);
+          osc.frequency.exponentialRampToValueAtTime(base * 0.86, start + 0.23);
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(0.028 * this.volumes.sfx, start + 0.035);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
+          osc.connect(gain).connect(this.master);
+          osc.start(start);
+          osc.stop(start + 0.25);
+        });
+        this.birdTimer = window.setTimeout(chirp, 1500 + Math.random() * 850);
+      };
+      window.clearTimeout(this.birdTimer);
+      chirp();
+    }
+
+    stopFakeDawnBirds() {
+      window.clearTimeout(this.birdTimer);
+      this.birdTimer = null;
+    }
+
+    exitFakeDawn() {
+      this.stopFakeDawnBirds();
+      this.fakeDawnQuiet = false;
+      this.setVolumes();
+      this.setScene(this.scene);
+    }
+
     duck(duration = 1.2, amount = 0.25) {
-      if (!this.enabled || !this.ctx || !this.bgmBus) return;
+      if (!this.enabled || !this.ctx || !this.bgmBus || this.fakeDawnQuiet) return;
       window.clearTimeout(this.duckTimer);
       const now = this.ctx.currentTime;
       const normal = Math.max(0.0001, this.volumes.bgm);
@@ -309,7 +359,7 @@
     }
 
     tone(frequency, duration, options = {}) {
-      if (!this.enabled || !this.ctx || this.silenced) return;
+      if (!this.enabled || !this.ctx || this.silenced || this.fakeDawnQuiet) return;
       const now = this.ctx.currentTime + (options.delay || 0);
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -325,7 +375,7 @@
     }
 
     noise(duration, options = {}) {
-      if (!this.enabled || !this.ctx || this.silenced) return;
+      if (!this.enabled || !this.ctx || this.silenced || this.fakeDawnQuiet) return;
       const rate = this.ctx.sampleRate;
       const buffer = this.ctx.createBuffer(1, Math.ceil(rate * duration), rate);
       const data = buffer.getChannelData(0);
@@ -373,7 +423,7 @@
     setScene(scene) {
       this.scene = scene || "duty";
       this.stopScene();
-      if (!this.enabled || !this.ctx || this.silenced) return;
+      if (!this.enabled || !this.ctx || this.silenced || this.fakeDawnQuiet) return;
       const loop = () => {
         this.playAmbientDetail();
         const nextDelay = this.scene === "laundry" ? 4000 + Math.random() * 8000 : 3600 + Math.random() * 6200;

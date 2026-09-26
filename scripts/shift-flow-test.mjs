@@ -112,6 +112,45 @@ assert(paused.minute === 0 && paused.missed === 0, "全监控演出期间异常�
 now = 9000;
 paused.step(now);
 assert(paused.minute >= 0 && paused.minute < 3, "全监控演出结束后产生了异常计时跳跃");
+const dawnSeeds = Array.from({ length: 1000 }, (_, seed) => new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes }).fakeDawnPlanned);
+const dawnCount = dawnSeeds.filter(Boolean).length;
+assert(dawnCount >= 250 && dawnCount <= 350, `假天亮触发率偏离约30%：${dawnCount}/1000`);
+for (let seed = 0; seed < 100; seed += 1) {
+  const run = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360 });
+  const normal = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360, quickMode: true });
+  assert(run.eventQueue.length === normal.eventQueue.length && run.eventQueue.every((event) => normal.eventQueue.some((other) => other.id === event.id)), "假天亮删掉或替换了原有异常");
+  if (run.fakeDawnPlanned) {
+    assert(Math.abs(run.minuteMs * 352 + 25000 - 480000) < 1, "假天亮局没有延长到八分钟");
+    assert(run.eventQueue.every((event) => event.actualStart >= 325 || event.actualStart + event.duration + event.grace <= 315), "有异常跨过假天亮前后安静窗口");
+    run.minute = 309;
+    run.processFinalClues();
+    assert(run.firedFinalClues.has("final-sound"), "假天亮前仍有终局声音线索撞进静场");
+  } else assert(Math.abs(run.minuteMs * 360 - 420000) < 1, "普通局不再是七分钟");
+}
+const selectedDawnSeed = dawnSeeds.findIndex(Boolean);
+let dawnMessages = 0;
+const dawnStages = [];
+const dawn = new sandbox.NightShiftSimulation({ seed: selectedDawnSeed, sceneIds: legacyScenes, minuteMs: 100, quickMode: true, startMinute: 315.9, callbacks: {
+  onMessage: () => { dawnMessages += 1; }, onFakeDawn: (stage) => dawnStages.push(stage)
+} });
+now = 1000;
+dawn.start(now);
+dawn.step(now);
+now = 1020;
+dawn.step(now);
+assert(dawn.fakeDawnStage === "pre" && dawn.minute === 316, "05:20前五秒没有进入静场");
+const beforeDawn = { missed: dawn.missed, danger: dawn.danger, messages: dawnMessages };
+const dawnStart = now;
+for (const [delta, stage, progress, minute] of [[4990, "pre", 0, 319.992], [5000, "bright", 0, 320], [8500, "bright", 1, 320], [16000, "bright", 1, 320], [19000, "bright", .25, 320], [20000, "post", 0, 320], [24990, "post", 0, 323.992], [25000, "done", 0, 324]]) {
+  now = dawnStart + delta;
+  dawn.step(now);
+  assert(dawn.fakeDawnStage === stage && Math.abs(dawn.fakeDawnProgress - progress) < .02, `假天亮 ${delta}ms 的阶段或亮度不正确`);
+  assert(Math.abs(dawn.minute - minute) < .02 && dawn.missed === beforeDawn.missed && dawn.danger === beforeDawn.danger && dawnMessages === beforeDawn.messages, "假天亮前后计时、异常或消息不正确");
+}
+assert(dawnStages.join(",") === "pre,bright,post,done", "假天亮阶段顺序不正确");
+now = dawnStart + 25100;
+dawn.step(now);
+assert(dawn.minute > 324, "假天亮结束后计时没有恢复");
 let prompts = 0;
 let failures = 0;
 let calls = 0;

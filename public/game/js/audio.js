@@ -381,7 +381,7 @@
     beginBroadcast() {
       this.stopScene();
       this.stopReportTension();
-      this.duck(14, 0.09);
+      this.duck(28, 0.09);
       this.playSample("crtSwitch", { volume: 0.32, rate: 0.7, filter: "lowpass", frequency: 1900, duration: 0.5 });
     }
 

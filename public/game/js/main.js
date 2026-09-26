@@ -559,33 +559,57 @@
     els.paStatus.setAttribute("aria-hidden", "false");
     audio.beginBroadcast();
     const later = (delay, action) => window.setTimeout(action, delay);
-    const speak = (line) => {
+    const speak = (line, minimumMs, maximumMs, next) => {
       els.paCaption.textContent = line;
-      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance || !audio.enabled) return;
+      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance || !audio.enabled) {
+        later(minimumMs, next);
+        return;
+      }
       const utterance = new SpeechSynthesisUtterance(line);
       utterance.lang = "zh-CN";
       utterance.voice = speechSynthesis.getVoices().find((voice) => /^zh(-|_)/i.test(voice.lang)) || null;
       utterance.rate = 0.92;
       utterance.pitch = 0.78;
       utterance.volume = Math.min(0.72, audio.volumes.master * 0.75);
-      speechSynthesis.speak(utterance);
+      const started = performance.now();
+      let completed = false;
+      let watchdog;
+      const complete = () => {
+        if (completed) return;
+        completed = true;
+        window.clearTimeout(watchdog);
+        later(Math.max(0, minimumMs - (performance.now() - started)), next);
+      };
+      utterance.onend = complete;
+      utterance.onerror = complete;
+      watchdog = later(maximumMs, () => { speechSynthesis.cancel(); complete(); });
+      try { speechSynthesis.speak(utterance); } catch { complete(); }
+    };
+    const finish = () => {
+      audio.playSample("crtSwitch", { volume: 0.25, rate: 0.6, duration: 0.2 });
+      els.paCaption.textContent = "";
+      els.paStatus.classList.remove("active");
+      later(1700, () => {
+        els.paStatus.classList.remove("active", "caption-only");
+        els.paStatus.setAttribute("aria-hidden", "true");
+        els.paCaption.textContent = "";
+        audio.endBroadcast();
+        if (showLocked === "pa") showLocked = null;
+        setPhoneAvailability();
+        if (testShow === "pa-override") sim.pauseFor(24 * 60 * 60 * 1000);
+      });
     };
     if (window.speechSynthesis) speechSynthesis.cancel();
-    later(1100, () => speak("东区四号楼，请仍在楼内的同学立即返回寝室。"));
+    later(1100, () => speak("东区四号楼，请仍在楼内的同学立即返回寝室。", 3600, 7500, () => {
+      later(1800, () => {
+        audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 });
+        els.paCaption.textContent = "";
+        later(700, () => speak("东区四号楼，请仍在楼内的值班人员……", 2600, 6500, () => {
+          later(950, () => speak("不要离开值班室。", 1800, 4500, () => later(150, finish)));
+        }));
+      });
+    }));
     later(1900, () => els.paStatus.classList.add("caption-only"));
-    later(5200, () => { audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 }); els.paCaption.textContent = ""; });
-    later(5900, () => speak("东区四号楼，请仍在楼内的值班人员……"));
-    later(9000, () => speak("不要离开值班室。"));
-    later(11300, () => { if (window.speechSynthesis) speechSynthesis.cancel(); audio.playSample("crtSwitch", { volume: 0.25, rate: 0.6, duration: 0.2 }); els.paCaption.textContent = ""; els.paStatus.classList.remove("active"); });
-    later(13500, () => {
-      els.paStatus.classList.remove("active", "caption-only");
-      els.paStatus.setAttribute("aria-hidden", "true");
-      els.paCaption.textContent = "";
-      audio.endBroadcast();
-      if (showLocked === "pa") showLocked = null;
-      setPhoneAvailability();
-      if (testShow === "pa-override") sim.pauseFor(24 * 60 * 60 * 1000);
-    });
   }
 
   function syncPaOverride(now) {
@@ -1454,6 +1478,7 @@
       return;
     }
     lastSimulationFrame = now;
+    if (showLocked === "pa") sim.pauseFor(1000, now);
     syncGlobalSignal(now);
     syncPaOverride(now);
     sim.step(now);

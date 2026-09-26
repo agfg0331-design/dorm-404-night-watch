@@ -586,6 +586,7 @@
   }
 
   function syncPaOverride(now) {
+    if ((testMode === "show" && testShow !== "pa-override") || testMode === "event") return;
     if (!shiftStartedAt || paFinished || !sim.running || sim.terminalStage || sim.finalStage || sim.minute < paMinute) return;
     if (showLocked || (globalSignalStartedAt && !globalSignalFinished) ||
         ["pre", "bright", "post"].includes(sim.fakeDawnStage) ||

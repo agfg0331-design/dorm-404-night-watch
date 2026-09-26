@@ -570,6 +570,7 @@
     };
     if (window.speechSynthesis) speechSynthesis.cancel();
     later(1100, () => speak("东区四号楼，请仍在楼内的同学立即返回寝室。"));
+    later(1900, () => els.paStatus.classList.add("caption-only"));
     later(5200, () => { audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 }); els.paCaption.textContent = ""; });
     later(5900, () => speak("东区四号楼，请仍在楼内的值班人员……"));
     later(9000, () => speak("不要离开值班室。"));

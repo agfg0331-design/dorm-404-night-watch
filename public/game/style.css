@@ -217,6 +217,7 @@ body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contra
 .pa-status{position:absolute;z-index:9;top:4.5rem;left:2rem;display:grid;gap:.12rem;max-width:min(85vw,480px);padding:.35rem .55rem;border-left:2px solid #7c978a;background:rgba(2,9,8,.76);color:#d8e4de;font:600 .75rem ui-monospace,monospace;letter-spacing:.12em;opacity:0;pointer-events:none;transition:opacity .4s}
 .pa-status small{font-size:.52rem;color:#9baea4}.pa-status span{font:500 .68rem/1.45 system-ui,sans-serif;letter-spacing:.04em}.pa-status span:empty{display:none}
 .pa-status.active{opacity:1}.pa-status.caption-only{border-color:#536b60;background:rgba(2,9,8,.64)}
+.pa-status.caption-only b,.pa-status.caption-only small{display:none}
 .monitor-view.final-blackout .signal-error{background:radial-gradient(ellipse at 50% 45%,#0b1112 0%,#030606 75%);animation:finalScreenDie .7s both}
 .monitor-view.final-blackout .signal-error::before{content:"";position:absolute;inset:0;opacity:.1;background:repeating-linear-gradient(180deg,transparent 0 3px,#b0c9bb18 4px),radial-gradient(circle,#84968813 0 1px,transparent 1px 4px);background-size:auto,7px 6px;pointer-events:none}
 .monitor-view.final-blackout .signal-error b,.monitor-view.final-blackout .signal-error span,.monitor-view.final-blackout .signal-error small{animation:finalSignalText .72s both}

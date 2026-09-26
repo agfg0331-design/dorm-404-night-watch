@@ -133,19 +133,41 @@
   // Decode the handset artwork before the first lift; CSS background images
   // otherwise begin rasterizing only when the hidden phone view is displayed.
   preloadImage("assets/phone-view-integrated-v2.webp", true);
-  const allCameraSources = [...new Set([
-    ...Object.values(cameras).flatMap((camera) => [camera.image, camera.corruptImage]),
-    ...events.flatMap((event) => event.frames || []),
-    "assets/cam-duty-empty-v1.webp", "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
+  const initialCameraSources = [...new Set([
+    ...Object.values(cameras).map((camera) => camera.image),
+    ...(selectedEvent?.frames || []),
+    ...(testMode === "full" ? events.flatMap((event) => event.frames || []) : []),
+    "assets/cam-duty-empty-v1.webp"
   ])];
-  // All six feeds and their event frames are small enough to decode while the player
-  // is still on the title/duty-room screens. This prevents the previous feed from
-  // lingering for seconds when an event image is requested for the first time.
-  const cameraPreload = Promise.all(allCameraSources.map((source) => preloadImage(source, true)));
+  const laterCameraSources = [...new Set([
+    ...Object.values(cameras).map((camera) => camera.corruptImage),
+    ...events.flatMap((event) => event.frames || []),
+    "assets/turn-mid-v2.webp", "assets/turn-good-v2.webp", "assets/turn-bad-v2.webp"
+  ])].filter((source) => !initialCameraSources.includes(source));
+  // The first six feeds must be ready to switch immediately. Later anomaly
+  // frames decode in the background instead of blocking the first monitor view.
+  const cameraPreload = Promise.all(initialCameraSources.map((source) => preloadImage(source, true)));
+  let backgroundPreloadStarted = false;
+  function warmLaterFrames() {
+    if (backgroundPreloadStarted) return;
+    backgroundPreloadStarted = true;
+    let next = 0;
+    const worker = async () => {
+      while (next < laterCameraSources.length) {
+        const source = laterCameraSources[next++];
+        await preloadImage(source);
+        await new Promise((resolve) => window.setTimeout(resolve, 0));
+      }
+    };
+    Promise.all([worker(), worker()]);
+  }
   const criticalAudioSamples = [
     "crtSwitch", "heelsFar", "heelsNear", "heelsStop", "woodScrape", "glassBreak",
     "drip1", "drip2", "drip3", "washer1", "washer2", "washer3", "doorShort",
     "doorLong", "doorTense", "ringtone", "horrorHit", "heartbeat", "breathing", "tvStatic",
+    "stairDouse", "clockTicks", "clockGears", "boneFracture", "chairFall", "knock", "crtGlitch", "crtSevere",
+    ...(testMode === "event" && selectedEvent?.visual === "window-break" ? ["wind"] : []),
+    ...(testMode === "event" && selectedEvent?.visual === "shadow-walk" ? ["roomNight"] : []),
     ...((sceneIds) => [
       ...(sceneIds.includes("music") ? ["metalFrameFall", "chairFall", "badPiano", "curtainWind"] : []),
       ...(sceneIds.includes("dance") ? ["danceScreech", "danceWhispers"] : []),
@@ -696,18 +718,34 @@
     [586, 921, 53, 58, .7], [546, 961, 55, 62, .78]
   ];
 
+  const monitorDimensions = { width: 0, height: 0 };
+  if (window.ResizeObserver) {
+    new ResizeObserver(([entry]) => {
+      monitorDimensions.width = entry.contentRect.width;
+      monitorDimensions.height = entry.contentRect.height;
+    }).observe(els.monitorView);
+  }
+
+  function frameGeometry(sourceWidth, sourceHeight) {
+    const width = monitorDimensions.width || els.monitorView.clientWidth;
+    const height = monitorDimensions.height || els.monitorView.clientHeight;
+    const scale = Math.max(width / sourceWidth, height / sourceHeight);
+    return { scale, offsetX: (width - sourceWidth * scale) / 2, offsetY: (height - sourceHeight * scale) / 2 };
+  }
+
+  function setFrameMask(frame, mask) {
+    if (frame.style.maskImage === mask) return;
+    frame.style.maskImage = mask;
+    frame.style.webkitMaskImage = mask;
+  }
+
   function revealLobbyPrints(frame, progress) {
-    const width = els.monitorView.clientWidth;
-    const height = els.monitorView.clientHeight;
-    const scale = Math.max(width / 1448, height / 1086);
-    const offsetX = (width - 1448 * scale) / 2;
-    const offsetY = (height - 1086 * scale) / 2;
+    const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
     const masks = lobbyPrints.flatMap(([x, y, rx, ry, at]) => {
       const opacity = clamp01((progress - at) * 36);
       return opacity ? [`radial-gradient(ellipse ${rx * scale}px ${ry * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, rgba(0,0,0,${opacity}) 48%, transparent 100%)`] : [];
     });
-    frame.style.maskImage = masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)";
-    frame.style.webkitMaskImage = frame.style.maskImage;
+    setFrameMask(frame, masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)");
   }
 
   // Reveal only the footprints from the elevator artwork, preserving the
@@ -719,56 +757,42 @@
   ];
 
   function revealElevatorPrints(frame, progress) {
-    const width = els.monitorView.clientWidth;
-    const height = els.monitorView.clientHeight;
-    const scale = Math.max(width / 1448, height / 1086);
-    const offsetX = (width - 1448 * scale) / 2;
-    const offsetY = (height - 1086 * scale) / 2;
+    const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
     const masks = elevatorPrints.flatMap(([x, y, at]) => {
       const opacity = clamp01((progress - at) * 35);
       return opacity ? [`radial-gradient(ellipse ${58 * scale}px ${45 * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, rgba(0,0,0,${opacity}) 62%, transparent 100%)`] : [];
     });
-    frame.style.maskImage = masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)";
-    frame.style.webkitMaskImage = frame.style.maskImage;
+    setFrameMask(frame, masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)");
   }
 
   // Mask the approved frame changes to the wall clock itself. The other CCTV
   // scenery must stay motionless as the clock rocks and its hands spin.
   function maskLobbyClock(frame) {
-    const width = els.monitorView.clientWidth;
-    const height = els.monitorView.clientHeight;
-    const scale = Math.max(width / 1448, height / 1086);
-    const x = 170 * scale + (width - 1448 * scale) / 2;
-    const y = 179 * scale + (height - 1086 * scale) / 2;
+    const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
+    const x = 170 * scale + offsetX;
+    const y = 179 * scale + offsetY;
     const mask = `radial-gradient(ellipse ${146 * scale}px ${135 * scale}px at ${x}px ${y}px, #000 82%, transparent 100%)`;
-    frame.style.maskImage = mask;
-    frame.style.webkitMaskImage = mask;
+    setFrameMask(frame, mask);
   }
 
   // The mirror appears only within its glass, while the actual laundry room
   // stays empty. Map the glass corners through the feed's object-fit: cover.
   function clipLaundryMirror(frame) {
-    const width = els.monitorView.clientWidth;
-    const height = els.monitorView.clientHeight;
-    const scale = Math.max(width / 1448, height / 1086);
-    const offsetX = (width - 1448 * scale) / 2;
-    const offsetY = (height - 1086 * scale) / 2;
+    const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
     const glass = [[786, 206], [1086, 208], [1075, 390], [783, 376]];
-    frame.style.clipPath = `polygon(${glass.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+    const clip = `polygon(${glass.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+    if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
   }
 
   // Keep the surrounding monitors and room static while the approved shadow
   // stands and snaps sideways. Both polygons include the original seated pose.
   function clipDutyShadow(frame, folded) {
-    const width = els.monitorView.clientWidth;
-    const height = els.monitorView.clientHeight;
-    const scale = Math.max(width / 1672, height / 941);
-    const offsetX = (width - 1672 * scale) / 2;
-    const offsetY = (height - 941 * scale) / 2;
+    const { scale, offsetX, offsetY } = frameGeometry(1672, 941);
     const outline = folded
       ? [[478, 242], [815, 242], [815, 445], [918, 446], [918, 563], [850, 570], [850, 798], [748, 798], [748, 920], [480, 920]]
       : [[466, 292], [742, 292], [742, 917], [466, 917]];
-    frame.style.clipPath = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+    const clip = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
+    if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
   }
 
   function renderEventFrames(event) {
@@ -1186,11 +1210,15 @@
     if (!testMode) prepareHandoff();
     await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
     const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
-    if (missingSamples.length) await audio.loadSamples(missingSamples);
     shiftStartedAt = performance.now();
     sim.start(shiftStartedAt);
     switchView("monitor");
     if (firstCamera) switchCamera(firstCamera);
+    if (testMode !== "event" && testMode !== "show") warmLaterFrames();
+    // A failed optional recording can retry after the shift has started. Keep
+    // large ambience decodes away from the initial camera transition.
+    if (missingSamples.length) window.setTimeout(() => audio.loadSamples(missingSamples), 2000);
+    window.setTimeout(() => audio.warmAmbience(), testMode === "event" || testMode === "show" ? 7000 : 2500);
     els.enterMonitor.classList.remove("syncing");
     if (syncHint) syncHint.textContent = oldHint;
     shiftStarting = false;

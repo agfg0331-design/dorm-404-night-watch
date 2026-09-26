@@ -209,8 +209,8 @@ if (!main.includes("audio.setTension(currentPhase, state.danger)")) throw new Er
 if (!audio.includes("setEventFocus(focused)") || !main.includes("audio.setEventFocus")) throw new Error("异常期间环境杂音未被抑制");
 if (css.includes(".monitor-view.event-pipe-drip .rising-water{display:block")) throw new Error("旧的发光滴水浮层仍在启用");
 if (!main.includes("0.92].map")) throw new Error("走廊脚步没有扩展为连续逼近节拍");
-if (!main.includes("allCameraSources") || !main.includes("cameraPreload") || !main.includes("record?.ready") || !main.includes("72")) {
-  throw new Error("监控切换未使用优先预载和快速换帧");
+if (!main.includes("initialCameraSources") || !main.includes("laterCameraSources") || !main.includes("cameraPreload") || !main.includes("warmLaterFrames()") || !main.includes("record?.ready")) {
+  throw new Error("监控切换未分批预载并快速换帧");
 }
 if (!main.includes("criticalAudioSamples") || !main.includes("audio.loadSamples(criticalAudioSamples)")) {
   throw new Error("关键事件音效没有在进入监控前预热");

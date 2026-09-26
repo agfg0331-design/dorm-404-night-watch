@@ -94,10 +94,12 @@
       this.setVolumes(this.volumes);
       this.startBgm();
       await this.loadSamples(["crtSwitch"]);
-      this.loadSamples().then(() => {
-        if (this.enabled) this.startRecordedAmbience();
-      });
       this.setScene(this.scene);
+    }
+
+    async warmAmbience() {
+      await this.loadSamples(["horrorAmbience", "wind", "roomNight", "fluorescent"]);
+      if (this.enabled) this.startRecordedAmbience();
     }
 
     loadSample(key) {

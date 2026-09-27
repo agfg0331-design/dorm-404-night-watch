@@ -92,7 +92,7 @@ body.no-screen-shake .phone-dock.ringing,body.no-screen-shake .phone-hotspot.rin
 .glitch-band{height:3px;top:24%;background:rgba(196,237,212,.28);box-shadow:0 0 10px #b9ffce;opacity:0}
 .monitor-hud{position:absolute;z-index:8;left:2rem;right:2rem;display:flex;justify-content:space-between;align-items:center;font:600 .78rem/1 ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 1px 6px #000}
 .monitor-hud.top{top:max(1.6rem,calc(env(safe-area-inset-top) + .75rem))}
-.monitor-hud.top::before{content:"";position:absolute;z-index:-1;top:-3rem;left:-2rem;right:-2rem;height:5.6rem;background:linear-gradient(#020504e8 15%,#020504b8 48%,transparent);pointer-events:none}
+.monitor-top-scrim{position:absolute;z-index:7;top:0;left:0;right:0;height:calc(4rem + env(safe-area-inset-top));background:linear-gradient(#020504f5 15%,#020504ea 52%,transparent);pointer-events:none}
 .monitor-hud div{display:flex;align-items:center;gap:.75rem}
 .monitor-hud span{font-family:inherit;font-size:.7rem;color:#a6b1aa}
 .rec{width:.52rem;height:.52rem;border-radius:50%;background:#b52c30;box-shadow:0 0 12px #e22936;animation:blink 1.2s steps(2) infinite}

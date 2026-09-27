@@ -52,15 +52,15 @@
 
   function render() {
     for (const type of Object.keys(catalog)) {
-      document.getElementById(`archive${type[0].toUpperCase()}${type.slice(1)}Count`).textContent = `${count(type)}/${catalog[type].length}`;
+      document.getElementById(`archive${type[0].toUpperCase()}${type.slice(1)}Count`).textContent = `${String(count(type)).padStart(2, "0")}/${catalog[type].length}`;
     }
     const total = Object.values(catalog).reduce((sum, entries) => sum + entries.length, 0);
     const found = Object.keys(catalog).reduce((sum, type) => sum + count(type), 0);
     progress.replaceChildren();
     const summary = document.createElement("strong");
-    summary.textContent = `${found} / ${total}`;
+    summary.textContent = `${String(found).padStart(2, "0")} / ${total}`;
     const label = document.createElement("span");
-    label.textContent = "已解封记录";
+    label.textContent = "总计";
     const meter = document.createElement("div");
     meter.className = "archive-meter";
     const fill = document.createElement("i");

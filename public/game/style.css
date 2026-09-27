@@ -597,6 +597,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .room-caption{left:1.4rem;bottom:1.1rem;transform:none;max-width:min(24rem,29%);width:auto;padding:.42rem .65rem;font-size:clamp(.63rem,.9vw,.8rem);font-weight:500;text-align:left;line-height:1.55;letter-spacing:.03em}
 .room-hud,.archive-entry{z-index:3}
 
+@font-face{font-family:"Dorm Ledger Ink";src:url("assets/fonts/dorm-ledger-ink.woff") format("woff");font-style:normal;font-weight:400;font-display:swap}
 /* The physical ledger is one continuous photograph. Live ink occupies its ruled cells. */
 .archive-overlay{padding:.5rem;overflow:auto;background:rgba(0,0,0,.9)}
 .archive-case{position:relative;display:block;flex:none;width:max(900px,min(96vw,calc(94dvh * 1672 / 941),1360px));height:auto;max-height:none;min-height:0;aspect-ratio:1672/941;margin:auto;overflow:hidden;border:0;outline:0;background:#171811 url("assets/archive-ledger-flat.webp") center/100% 100% no-repeat;box-shadow:0 28px 100px #000;color:#4d4841;container-type:inline-size}
@@ -605,29 +606,29 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .archive-header button{position:absolute;right:6.1%;top:19%;width:clamp(32px,3cqw,42px);height:clamp(32px,3cqw,42px);border:1px solid #6d5842;background:#dbcfb3d9;color:#514231;font:400 1.3rem/1 system-ui;box-shadow:1px 2px 6px #19130f70;pointer-events:auto;cursor:pointer}
 .archive-header button:hover,.archive-header button:focus-visible{outline:2px solid #6d5842;background:#ebdec2}
 .archive-body{display:block;min-height:0;padding:0;background:none}
-.archive-rail,.archive-register{position:absolute;display:block;min-height:0;padding:0;border:0;background:transparent;box-shadow:none;transform:none;color:#50483e}
+.archive-rail,.archive-register{position:absolute;display:block;min-height:0;padding:0;border:0;background:transparent;box-shadow:none;transform:none;color:#51483f}
 .archive-rail{left:22.3%;top:40.4%;width:25.5%;height:46.2%}
 .archive-progress{position:absolute;left:0;top:0;width:93%;height:9.3%;display:flex;align-items:center;justify-content:center;gap:1rem;padding:0;border:0;white-space:nowrap}
-.archive-progress strong{display:block;color:#9b5e57;font:500 clamp(13px,1.65cqw,24px) "KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;order:2}
-.archive-progress span{display:block;margin:0;color:#625d55;font:500 clamp(12px,1.5cqw,21px) "KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;order:1}
+.archive-progress strong{display:block;color:#8c504a;font:500 clamp(13px,1.65cqw,24px) "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;order:2}
+.archive-progress span{display:block;margin:0;color:#625d55;font:500 clamp(12px,1.5cqw,21px) "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;order:1}
 .archive-progress .archive-meter{display:none}
 .archive-tabs{position:absolute;left:0;top:14.5%;width:100%;height:86%;display:block;min-height:0;padding:0;border:0}
-.archive-tabs button,.archive-tabs button.active{position:absolute;left:0;width:100%;height:33.333%;min-height:0;display:flex;justify-content:space-between;align-items:center;gap:2%;padding:0 5% 0 29%;border:0;border-radius:0;background:transparent;box-shadow:none;color:#50483e;font:500 clamp(15px,1.85cqw,26px) "KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;text-align:left;white-space:nowrap;cursor:pointer}
+.archive-tabs button,.archive-tabs button.active{position:absolute;left:0;width:100%;height:33.333%;min-height:0;display:flex;justify-content:space-between;align-items:center;gap:2%;padding:0 5% 0 29%;border:0;border-radius:0;background:transparent;box-shadow:none;color:#51483f;font:500 clamp(15px,1.85cqw,26px) "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;text-align:left;white-space:nowrap;cursor:pointer}
 .archive-tabs button:nth-child(1){top:0}.archive-tabs button:nth-child(2){top:33.333%}.archive-tabs button:nth-child(3){top:66.666%}
-.archive-tabs button span,.archive-tabs button.active span{color:#8a5550;font:500 clamp(14px,1.7cqw,24px) "KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0}
+.archive-tabs button span,.archive-tabs button.active span{color:#8c504a;font:500 clamp(14px,1.7cqw,24px) "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0}
 .archive-tabs button.active{text-decoration:underline;text-decoration-color:#7a6456;text-underline-offset:.2em}
 .archive-tabs button:hover,.archive-tabs button:focus-visible{outline:1px solid #806955;outline-offset:-3px;background:#e9dab727;color:#3f3933}
-.archive-rail>small{position:absolute;left:0;bottom:-12%;max-width:100%;margin:0;color:#655d53;font:500 clamp(9px,.85cqw,12px)/1.2 "KaiTi","STKaiti","Kaiti SC",serif;white-space:nowrap}
+.archive-rail>small{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .archive-register{left:54.75%;top:33.5%;width:37.4%;height:55.5%;display:block}
 .archive-page-heading{position:absolute;width:1px;height:1px;min-height:0;overflow:hidden;clip-path:inset(50%);border:0}
 .archive-list{position:absolute;inset:0;display:block;min-height:0;padding:0;overflow-y:auto;overflow-x:hidden;background:transparent;scrollbar-color:#8c7a64 transparent;scrollbar-width:thin}
 .archive-row{display:grid;grid-template-columns:16.2% minmax(0,1fr) 27.5%;align-items:center;gap:0;height:12.5%;min-height:12.5%;padding:0;border:0;background:transparent}
-.archive-row .archive-index{justify-self:center;padding:0;color:#55514a;font:500 clamp(13px,1.62cqw,23px) "KaiTi","STKaiti","Kaiti SC",serif;white-space:nowrap}
+.archive-row .archive-index{justify-self:center;padding:0;color:#55514a;font:500 clamp(13px,1.62cqw,23px) "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;white-space:nowrap}
 .archive-row>div{min-width:0;padding:0 3%;border:0}
-.archive-row b{display:block;overflow:hidden;color:#565049;font:500 clamp(13px,1.66cqw,23px)/1.15 "KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;text-overflow:ellipsis;white-space:nowrap}
+.archive-row b{display:block;overflow:hidden;color:#565049;font:500 clamp(13px,1.66cqw,23px)/1.15 "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;letter-spacing:0;text-overflow:ellipsis;white-space:nowrap}
 .archive-row small{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .archive-row.sealed b{width:62%;height:clamp(9px,1.4cqw,19px);overflow:hidden;background:#37342f;color:transparent;font-size:0;transform:rotate(-1deg);clip-path:polygon(1% 5%,98% 0,100% 88%,2% 100%)}
-.archive-mark,.archive-row.sealed .archive-mark{justify-self:center;align-self:center;max-width:92%;margin:0;padding:.1em .24em;border:1px solid #9b5e57;border-radius:1px;background:transparent;color:#9b5e57;font:500 clamp(11px,1.3cqw,19px)/1.1 "KaiTi","STKaiti","Kaiti SC",serif;text-align:center;white-space:nowrap;transform:rotate(-2deg)}
+.archive-mark,.archive-row.sealed .archive-mark{justify-self:center;align-self:center;max-width:92%;margin:0;padding:.1em .24em;border:1px solid #8c504a;border-radius:1px;background:transparent;color:#8c504a;font:500 clamp(11px,1.3cqw,19px)/1.1 "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;text-align:center;white-space:nowrap;transform:rotate(-2deg)}
 .archive-register footer{position:absolute;width:1px;height:1px;min-height:0;overflow:hidden;clip-path:inset(50%);border:0}
 @media(max-width:760px){.archive-entry{left:18%;bottom:1%;width:40%;height:25%}.room-caption{left:.35rem;bottom:.3rem;max-width:25%;padding:.3rem;font-size:.56rem}.archive-overlay{display:block;padding:.5rem}.archive-case{width:900px}.archive-rail>small{bottom:-12%}}
 @media(orientation:portrait){.archive-overlay{display:block;overflow:auto}.archive-case{width:900px;margin:auto}.archive-body{display:block;padding:0;background:none}}

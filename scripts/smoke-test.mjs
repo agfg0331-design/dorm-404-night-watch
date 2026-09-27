@@ -142,7 +142,7 @@ for (let stage = 1; stage <= 3; stage++) {
   const asset = `assets/cam-lobby-clock-shake-${stage}-approved-v1.webp`;
   if (!clockDefinition.includes(asset) || !fs.existsSync(`${gameRoot}/${asset}`)) throw new Error(`挂钟缺少已确认的第${stage}阶段画面`);
 }
-if (!main.includes("maskLobbyClock(els.eventFrames[index])") || !main.includes("Math.floor(performance.now() / 95)")) throw new Error("挂钟未限制在钟面内快速轮播");
+if (!main.includes("maskLobbyClock(els.eventFrames[index])") || !main.includes("const frameIndex = p <")) throw new Error("挂钟未限制在钟面内分阶段轮播");
 if (css.includes("event-clock-reverse .event-frame-stack img{transform:scale(1.16)")) throw new Error("旧挂钟局部放大仍会破坏新画面定位");
 const mirrorDefinition = anomalies.match(/\{ id: "laundry-reflection"[^\n]+/)?.[0] || "";
 const mirrorStart = Number(mirrorDefinition.match(/start: (\d+)/)?.[1]);

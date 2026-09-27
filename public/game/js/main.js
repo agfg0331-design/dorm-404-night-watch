@@ -855,13 +855,16 @@
     setFrameMask(frame, masks.length ? masks.join(",") : "linear-gradient(transparent,transparent)");
   }
 
-  // Mask the approved frame changes to the wall clock itself. The other CCTV
-  // scenery must stay motionless as the clock rocks and its hands spin.
+  // The source poses were photographed with a larger clock. Fit only that
+  // clock back onto the unchanged wall before feathering the surrounding ink.
   function maskLobbyClock(frame) {
     const { scale, offsetX, offsetY } = frameGeometry(1448, 1086);
-    const x = 170 * scale + offsetX;
-    const y = 179 * scale + offsetY;
-    const mask = `radial-gradient(ellipse ${146 * scale}px ${135 * scale}px at ${x}px ${y}px, #000 82%, transparent 100%)`;
+    const fit = 0.62;
+    const x = 198 * scale + offsetX;
+    const y = 181 * scale + offsetY;
+    frame.style.transformOrigin = "top left";
+    frame.style.transform = `translate(${(157 * scale + offsetX) - x * fit}px, ${(168 * scale + offsetY) - y * fit}px) scale(${fit})`;
+    const mask = `radial-gradient(ellipse ${108 * scale}px ${112 * scale}px at ${x}px ${y}px, #000 57%, rgba(0,0,0,.9) 72%, transparent 100%)`;
     setFrameMask(frame, mask);
   }
 
@@ -874,15 +877,13 @@
     if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
   }
 
-  // Keep the surrounding monitors and room static while the approved shadow
-  // stands and snaps sideways. Both polygons include the original seated pose.
+  // Blend the changed pose into the original room without a visible vertical
+  // polygon edge beside the operator or a hard cut at the chair.
   function clipDutyShadow(frame, folded) {
     const { scale, offsetX, offsetY } = frameGeometry(1672, 941);
-    const outline = folded
-      ? [[478, 242], [815, 242], [815, 445], [918, 446], [918, 563], [850, 570], [850, 798], [748, 798], [748, 920], [480, 920]]
-      : [[466, 292], [742, 292], [742, 917], [466, 917]];
-    const clip = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
-    if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
+    const [x, y, rx, ry] = folded ? [690, 570, 390, 475] : [610, 605, 310, 440];
+    const mask = `radial-gradient(ellipse ${rx * scale}px ${ry * scale}px at ${x * scale + offsetX}px ${y * scale + offsetY}px, #000 62%, rgba(0,0,0,.94) 74%, transparent 100%)`;
+    setFrameMask(frame, mask);
   }
 
   function clipDutyExtra(frame) {
@@ -924,11 +925,11 @@
     if (event.visual === "clock-reverse") {
       // First the whole clock jerks sideways. Then the two opposing poses and
       // the blurred spinning-hands pose loop inside the static lobby feed.
-      const frameIndex = p < 0.16 ? 0 : p < 0.4
-        ? Math.floor(performance.now() / 240) % 2
-        : [2, 0, 2, 1][Math.floor(performance.now() / 95) % 4];
+      const frameIndex = p < 0.32 ? 0 : p < 0.52
+        ? Math.floor(performance.now() / 310) % 2
+        : [2, 0, 2, 1][Math.floor(performance.now() / 155) % 4];
       event.frames.forEach((source, index) => {
-        setEventFrame(index, source, p >= 0.06 && frameIndex === index ? 1 : 0);
+        setEventFrame(index, source, frameIndex === index ? clamp01((p - 0.08) / 0.16) : 0);
         maskLobbyClock(els.eventFrames[index]);
       });
     } else if (event.visual === "scene-still") {

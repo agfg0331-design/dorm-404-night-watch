@@ -122,6 +122,7 @@
   tabs.forEach((tab) => tab.addEventListener("click", () => { selected = tab.dataset.archiveTab; render(); }));
 
   window.GameArchive = {
+    unlockedIds: () => Object.entries(saved).flatMap(([type, entries]) => Object.keys(entries).map((id) => `${type}:${id}`)),
     recordAnomaly: (id) => record("anomaly", id),
     recordShow: (id) => record("show", id),
     recordEnding: (kind, choice) => record("ending", kind === "watched" ? `watched-${choice === "TURN" ? "turn" : "stay"}` : kind)

@@ -362,9 +362,15 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .briefing-viewport{width:100%;height:calc(100% - 76px);display:grid;place-items:center}
 .briefing-stage{position:relative;width:min(100vw,calc((100dvh - 76px) * 1672 / 941));aspect-ratio:1672/941;flex:none;overflow:hidden}
 .briefing-frame{display:block;width:100%;height:100%;object-fit:contain}
-.briefing-stage button{position:absolute;left:50%;bottom:4.4%;transform:translateX(-50%);width:25.2%;height:7.4%;border:0;background:transparent;color:transparent;font:600 clamp(.75rem,1.1vw,1rem) ui-serif,serif;letter-spacing:.12em;cursor:pointer;opacity:0;pointer-events:none}
-.briefing-overlay.ready .briefing-stage button{opacity:1;pointer-events:auto}
-.briefing-stage button:hover,.briefing-stage button:focus-visible{outline:2px solid #d9c4a5;outline-offset:2px;background:rgba(217,196,165,.09)}
+.briefing-stage #confirmBriefing{position:absolute;left:50%;bottom:4.4%;transform:translateX(-50%);width:25.2%;height:7.4%;border:0;background:transparent;color:transparent;font:600 clamp(.75rem,1.1vw,1rem) ui-serif,serif;letter-spacing:.12em;cursor:pointer;opacity:0;pointer-events:none}
+.briefing-overlay.ready .briefing-stage #confirmBriefing{opacity:1;pointer-events:auto}
+.briefing-stage #confirmBriefing:hover,.briefing-stage #confirmBriefing:focus-visible{outline:2px solid #d9c4a5;outline-offset:2px;background:rgba(217,196,165,.09)}
+.briefing-overlay.leaving{opacity:0;transition:opacity .55s ease;pointer-events:none}
+.briefing-replay-choice{position:absolute;left:55%;top:48%;z-index:2;width:37%;display:grid;gap:6px;padding:clamp(8px,1.2vw,14px);border:1px solid #b5a28885;background:#131711df;box-shadow:0 8px 26px #000a;text-align:center}
+.briefing-replay-choice small{color:#b7bba9;font:.6rem ui-monospace,monospace;letter-spacing:.1em}
+.briefing-replay-choice button{min-height:44px;padding:.4rem .3rem;border:1px solid #8d9d87;background:#263327;color:#e1e6d7;cursor:pointer;font-size:clamp(.62rem,1.15vw,.78rem);letter-spacing:.06em}
+.briefing-replay-choice button:last-child{border-color:#75806f;background:#171e18;color:#becabe}
+.briefing-replay-choice button:hover,.briefing-replay-choice button:focus-visible{outline:1px solid #d0d3b8;outline-offset:1px;background:#334233}
 .briefing-swipe-hint{display:none}
 .guestbook-overlay{z-index:88;background:rgba(0,3,2,.58);backdrop-filter:blur(3px);perspective:1200px}
 .archive-overlay{--archive-line:#657e6c54;--archive-muted:#829589;z-index:92;padding:clamp(.55rem,2vw,2rem);background:rgba(1,5,4,.83);backdrop-filter:blur(8px)}
@@ -435,6 +441,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .ending-stats strong{text-align:left;letter-spacing:.1em}.ending-stats small{text-align:right;font-size:.64rem}
 .ending-stats span{padding:.7rem .3rem;border:1px solid #27342d;font-size:.6rem;color:#7f9186}
 .ending-stats b{display:block;margin-top:.4rem;color:#d3ddd6;font-size:1.15rem}
+.ending-card .ending-archive-new{margin:-.75rem 0 1rem;color:#93a99a;font:.64rem/1.5 ui-monospace,monospace;letter-spacing:.09em;text-align:left}
 .handoff-form{margin:0 0 .9rem;padding:1rem;border:1px solid #27342d;background:rgba(4,10,7,.72);text-align:left}
 .handoff-form>label{display:block;margin-bottom:.55rem;color:#b9c7be;font-size:.7rem;font-weight:700;letter-spacing:.08em}
 .handoff-form textarea{width:100%;min-height:58px;padding:.7rem;border:1px solid #43544a;background:#0d1712;color:#dce6df;resize:vertical;outline:none;font:inherit;font-size:.72rem;line-height:1.55}
@@ -553,7 +560,8 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .ending-stats{grid-template-columns:1fr 1fr}
 }
 @media(prefers-reduced-motion:reduce){.phone-composite,.phone-view::before,.phone-screen,.audio-check-overlay,.audio-check-card,.audio-spectrum i{animation-duration:.01ms!important}.noise,.phone-snow,.phone-signal-tear,.phone-red-flood,.phone-red-flood span{animation:none!important}}
-@media(max-width:760px) and (orientation:portrait){.briefing-viewport{display:flex;align-items:center;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none}.briefing-viewport::-webkit-scrollbar{display:none}.briefing-stage{width:max(100vw,760px)}.briefing-overlay.ready .briefing-stage button{display:block;position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));width:min(90vw,390px);height:48px;border:1px solid #765f51;background:#29211e;color:#f6e9df;font-size:.82rem;z-index:2}.briefing-overlay.ready .briefing-swipe-hint{display:block;position:absolute;top:calc(50% - min(45vw,214px) - 2rem);left:50%;transform:translateX(-50%);margin:0;color:#dfd2be;font-size:.8rem;letter-spacing:.12em;white-space:nowrap}}
+@media(max-width:760px) and (orientation:portrait){.briefing-viewport{display:flex;align-items:center;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none}.briefing-viewport::-webkit-scrollbar{display:none}.briefing-stage{width:max(100vw,760px)}.briefing-overlay.ready .briefing-stage #confirmBriefing{display:block;position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));width:min(90vw,390px);height:48px;border:1px solid #765f51;background:#29211e;color:#f6e9df;font-size:.82rem;z-index:2}.briefing-overlay.ready .briefing-swipe-hint{display:block;position:absolute;top:calc(50% - min(45vw,214px) - 2rem);left:50%;transform:translateX(-50%);margin:0;color:#dfd2be;font-size:.8rem;letter-spacing:.12em;white-space:nowrap}.briefing-replay-choice{position:fixed;left:50%;top:auto;bottom:max(1rem,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(90vw,390px)}}
+@media(orientation:landscape) and (max-height:440px){.briefing-replay-choice{top:43%;padding:5px;gap:3px}.briefing-replay-choice small{display:none}.briefing-replay-choice button{min-height:44px}}
 @media(pointer:coarse) and (orientation:portrait) and (max-width:760px){
   .rotate-device-notice{position:fixed;z-index:200;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center;background:radial-gradient(circle at center,#162019,#030706 76%);color:#e2e8df}
   .rotate-device-notice svg{width:90px;height:90px;fill:none;stroke:#a7bbac;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;animation:rotatePhoneHint 2.6s ease-in-out infinite}

@@ -22,7 +22,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp?v=room-ledger-20260927">
-  <link rel="stylesheet" href="style.css?v=mobile-monitor-fit2-20260927">
+  <link rel="stylesheet" href="style.css?v=archive-replay-20260927">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -237,6 +237,11 @@
           <li>变化会消失，看见后别拖延。</li>
         </ol>
         <button id="confirmBriefing" type="button" disabled>合上手册 · 进入值班室</button>
+        <div class="briefing-replay-choice hidden" id="briefingReplayChoice" aria-label="再次值班">
+          <small>你已熟悉这本手册</small>
+          <button id="enterRoomDirectly" type="button">直接进入值班室</button>
+          <button id="reviewBriefing" type="button">重新翻看交班手册</button>
+        </div>
       </div>
     </div>
     <p class="briefing-swipe-hint" aria-hidden="true">左右滑动查看手册</p>
@@ -333,6 +338,7 @@
     <div class="ending-card">
       <small id="endingKicker">SHIFT COMPLETE</small><h2 id="endingTitle">天亮了</h2><p id="endingText"></p>
       <div class="ending-stats"><strong>本次夜班记录</strong><span>正确上报 <b id="endCorrect">0</b></span><span>错误上报 <b id="endWrong">0</b></span><span>漏报异常 <b id="endMissed">0</b></span><small>部分记录无法核实。</small></div>
+      <p class="ending-archive-new hidden" id="endingArchiveNew" role="status"></p>
       <form class="handoff-form" id="handoffForm">
         <label for="handoffContent">给下一任值班员留一句话</label>
         <textarea id="handoffContent" maxlength="100" rows="2" placeholder="你希望下一任记住什么？" required></textarea>
@@ -361,8 +367,8 @@
   <script src="js/phone.js?v=neutral-status-20260918"></script>
   <script src="js/guestbook.js?v=board-safety-20260926"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
-  <script src="js/archive.js?v=archive-ink-20260927"></script>
-  <script src="js/main.js?v=mobile-monitor-fit-20260927"></script>
+  <script src="js/archive.js?v=archive-replay-20260927"></script>
+  <script src="js/main.js?v=archive-replay-20260927"></script>
   <script src="js/test-module.js?v=major-shows-20260926"></script>
 </body>
 </html>

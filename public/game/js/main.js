@@ -42,13 +42,14 @@
     turnStart: $("turnStart"), turnMid: $("turnMid"), turnImage: $("turnImage"), turnCaption: $("turnCaption"), turnWarning: $("turnWarning"), startOverlay: $("startOverlay"), startGame: $("startGame"),
     audioCheckOverlay: $("audioCheckOverlay"), confirmHeadphones: $("confirmHeadphones"), skipHeadphones: $("skipHeadphones"),
     briefingOverlay: $("briefingOverlay"), briefingViewport: $("briefingViewport"), briefingFrame: $("briefingFrame"), confirmBriefing: $("confirmBriefing"),
+    briefingReplayChoice: $("briefingReplayChoice"), enterRoomDirectly: $("enterRoomDirectly"), reviewBriefing: $("reviewBriefing"),
     settingsOverlay: $("settingsOverlay"), settingsForm: $("settingsForm"), openSettings: $("openSettings"), closeSettings: $("closeSettings"),
     masterVolume: $("masterVolume"), bgmVolume: $("bgmVolume"), sfxVolume: $("sfxVolume"), brightness: $("brightness"),
     masterVolumeValue: $("masterVolumeValue"), bgmVolumeValue: $("bgmVolumeValue"), sfxVolumeValue: $("sfxVolumeValue"), brightnessValue: $("brightnessValue"),
     screenShake: $("screenShake"), visualNoise: $("visualNoise"), cameraSwitchMask: $("cameraSwitchMask"),
     callOverlay: $("callOverlay"), callText: $("callText"), answerCall: $("answerCall"), declineCall: $("declineCall"),
     endingOverlay: $("endingOverlay"), endingKicker: $("endingKicker"), endingTitle: $("endingTitle"), endingText: $("endingText"),
-    endCorrect: $("endCorrect"), endWrong: $("endWrong"), endMissed: $("endMissed"),
+    endCorrect: $("endCorrect"), endWrong: $("endWrong"), endMissed: $("endMissed"), endingArchiveNew: $("endingArchiveNew"),
     handoffForm: $("handoffForm"), handoffContent: $("handoffContent"), handoffCounter: $("handoffCounter"), handoffNote: $("handoffNote"),
     restart: $("restartGame"), toast: $("toast"), guestbookOverlay: $("guestbookOverlay")
   };
@@ -121,6 +122,10 @@
   let shiftStarting = false;
   let audioPromptResolving = false;
   let manualPreload = null;
+  const completedShiftKey = "dorm404.shift.completed.v1";
+  let completedShift = false;
+  try { completedShift = localStorage.getItem(completedShiftKey) === "1"; } catch { /* Private browsing can block storage. */ }
+  let archiveBeforeShift = null;
   const manualFrames = [1, 2, 3, 4].map((frame) => `assets/handover-manual-${frame}.webp`);
   const renderedText = new WeakMap();
   let renderedUnread = -1;
@@ -1262,7 +1267,16 @@
   }
 
   function showEnding(kind, state) {
-    if (!qa) window.GameArchive.recordEnding(kind, state.finalDecision);
+    if (!qa) {
+      window.GameArchive.recordEnding(kind, state.finalDecision);
+      const newCount = window.GameArchive.unlockedIds().filter((id) => !archiveBeforeShift?.has(id)).length;
+      els.endingArchiveNew.textContent = newCount ? `本次值班新增记录：${newCount} 条` : "";
+      els.endingArchiveNew.classList.toggle("hidden", !newCount);
+      try { localStorage.setItem(completedShiftKey, "1"); } catch { /* Keep the ending available without storage. */ }
+    } else {
+      els.endingArchiveNew.textContent = "";
+      els.endingArchiveNew.classList.add("hidden");
+    }
     audio.stopRingtone();
     audio.stopReportTension();
     audio.resolveEnding(kind);
@@ -1339,6 +1353,34 @@
     }
   }
 
+  function openManualPages() {
+    els.briefingReplayChoice.classList.add("hidden");
+    els.briefingOverlay.classList.remove("ready");
+    els.confirmBriefing.disabled = true;
+    const finishOpening = () => {
+      showManualFrame(3);
+      els.briefingOverlay.classList.add("ready");
+      els.confirmBriefing.disabled = false;
+      els.confirmBriefing.focus({ preventScroll: true });
+    };
+    showManualFrame(0);
+    if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) finishOpening();
+    else {
+      window.setTimeout(() => showManualFrame(1), 420);
+      window.setTimeout(() => showManualFrame(2), 860);
+      window.setTimeout(finishOpening, 1300);
+    }
+  }
+
+  function enterRoomFromBriefing() {
+    els.briefingOverlay.classList.add("hidden");
+    els.briefingOverlay.classList.remove("leaving");
+    els.briefingReplayChoice.classList.add("hidden");
+    els.startOverlay.classList.add("hidden");
+    setViewElement("room");
+    els.enterMonitor.focus({ preventScroll: true });
+  }
+
   function finishAudioCheck() {
     if (audioPromptResolving) return;
     audioPromptResolving = true;
@@ -1352,20 +1394,12 @@
       els.audioCheckOverlay.classList.add("hidden");
       els.audioCheckOverlay.classList.remove("closing");
       els.briefingOverlay.classList.remove("hidden");
-      els.briefingOverlay.classList.remove("ready");
-      els.confirmBriefing.disabled = true;
-      const finishOpening = () => {
-        showManualFrame(3);
-        els.briefingOverlay.classList.add("ready");
-        els.confirmBriefing.disabled = false;
-        els.confirmBriefing.focus({ preventScroll: true });
-      };
-      showManualFrame(0);
-      if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) finishOpening();
-      else {
-        window.setTimeout(() => showManualFrame(1), 420);
-        window.setTimeout(() => showManualFrame(2), 860);
-        window.setTimeout(finishOpening, 1300);
+      if (!qa && completedShift) {
+        showManualFrame(0);
+        els.briefingReplayChoice.classList.remove("hidden");
+        els.enterRoomDirectly.focus({ preventScroll: true });
+      } else {
+        openManualPages();
       }
     }, 220);
   }
@@ -1409,6 +1443,7 @@
     await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
     const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
     if (!testMode || testShow === "camera-check") await runCameraCheck();
+    if (!qa) archiveBeforeShift = new Set(window.GameArchive.unlockedIds());
     shiftStartedAt = performance.now();
     sim.start(shiftStartedAt);
     if (testShow !== "camera-check") switchView("monitor");
@@ -1471,18 +1506,20 @@
   els.confirmBriefing.addEventListener("click", () => {
     els.confirmBriefing.disabled = true;
     els.briefingOverlay.classList.remove("ready");
-    const enterRoom = () => {
-      els.briefingOverlay.classList.add("hidden");
-      els.startOverlay.classList.add("hidden");
-      setViewElement("room");
-      els.enterMonitor.focus({ preventScroll: true });
-    };
-    if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) enterRoom();
+    if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) enterRoomFromBriefing();
     else {
       // Turn the same three pages back before returning to the desk.
       [2, 1, 0].forEach((frame, index) => window.setTimeout(() => showManualFrame(frame), 180 + index * 220));
-      window.setTimeout(enterRoom, 810);
+      window.setTimeout(enterRoomFromBriefing, 810);
     }
+  });
+  els.reviewBriefing.addEventListener("click", openManualPages);
+  els.enterRoomDirectly.addEventListener("click", () => {
+    els.enterRoomDirectly.disabled = true;
+    els.reviewBriefing.disabled = true;
+    els.briefingOverlay.classList.add("leaving");
+    if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) enterRoomFromBriefing();
+    else window.setTimeout(enterRoomFromBriefing, 550);
   });
   els.enterMonitor.addEventListener("click", () => beginShift());
   els.monitorPhone.addEventListener("click", () => switchView("phone-messages"));

@@ -120,8 +120,10 @@ for (const layer of ["stairs-darkness", "mirror-figure", "footprint-trail"]) {
 }
 if (html.includes('class="duty-gaze"') || html.includes('class="lobby-twins"') || html.includes('class="extra-shadow"') || css.includes(".lobby-twin{") || css.includes(".extra-shadow{")) throw new Error("旧的黑块贴片仍在画面中");
 if (!anomalies.includes('image: "assets/cam-duty-overhead.webp"') || !html.includes('src="assets/cam-duty-overhead.webp"')) throw new Error("值班室原始黑影画面未恢复");
+const dutySelfDefinition = anomalies.match(/\{ id: "duty-self"[^\n]+/)?.[0] || "";
+if (!dutySelfDefinition.includes('frames: ["assets/cam-duty-shadow-stand-approved-v1.webp", "assets/cam-duty-shadow-right-fold-approved-v1.webp"]')) throw new Error("值班员弯折异常不能回退到写实人物帧");
 if (!main.includes('clipDutyExtra(els.eventFrames[0])')) throw new Error("第二人影未限制在局部画面");
-for (const asset of ["cam-duty-overhead.webp", "cam-duty-shadow-stand-v2.webp", "cam-duty-shadow-right-fold-v2.webp", "cam-duty-extra-figure-v1.webp", "cam-lobby-double-outside-shadow-v2.webp", "cam-lobby-double-inside-shadow-v2.webp"]) {
+for (const asset of ["cam-duty-overhead.webp", "cam-duty-shadow-stand-approved-v1.webp", "cam-duty-shadow-right-fold-approved-v1.webp", "cam-duty-extra-figure-v1.webp", "cam-lobby-double-outside-shadow-v2.webp", "cam-lobby-double-inside-shadow-v2.webp"]) {
   if (!fs.existsSync(`${gameRoot}/assets/${asset}`)) throw new Error(`重绘人物画面缺失：${asset}`);
 }
 for (const mapping of ['id: "stairs-light"[\\s\\S]*?visual: "stairs-darkness"', 'id: "laundry-reflection"[\\s\\S]*?visual: "mirror-reflection"', 'id: "lobby-footprints"[\\s\\S]*?visual: "wet-footprints"']) {

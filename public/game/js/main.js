@@ -109,6 +109,7 @@
   // The internal accelerated shift keeps roughly the same in-game spacing.
   const majorShowCooldownMs = qa || fast ? Math.max(1500, Math.round(ordinaryCooldownMs * minuteMs / (470000 / 360))) : ordinaryCooldownMs;
   let majorShowCooldownUntil = 0;
+  let ordinaryMessagesResumeAt = 0;
   let cameraCheckFinished = false;
   let paFinished = false;
   let paAudioReady = null;
@@ -208,7 +209,7 @@
       },
       onMonitorFail: beginFinalBlackout,
       canStartFakeDawn: (now) => !showLocked && now >= majorShowCooldownUntil,
-      canSendOrdinaryMessage: () => !showLocked && !finalBlackoutPending && !sim.terminalStage,
+      canSendOrdinaryMessage: () => !showLocked && performance.now() >= ordinaryMessagesResumeAt && !finalBlackoutPending && !sim.terminalStage,
       canSendAnomalyLead: () => !showLocked && !finalBlackoutPending && !sim.terminalStage,
       onFakeDawn: handleFakeDawn,
       onFinalClue: handleFinalClue,
@@ -354,6 +355,7 @@
 
   function finishMajorShow() {
     majorShowCooldownUntil = Math.max(majorShowCooldownUntil, performance.now() + majorShowCooldownMs);
+    ordinaryMessagesResumeAt = Math.max(ordinaryMessagesResumeAt, performance.now() + (qa || fast ? Math.max(250, Math.round(3000 * minuteMs / (470000 / 360))) : 3000));
   }
 
   function setPhoneAvailability() {

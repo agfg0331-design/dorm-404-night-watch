@@ -52,7 +52,7 @@
   const narrative = [
     { id: "welcome", at: 10, sender: "周老师", text: "今晚六路监控都在线。听到异响先看监控，再上报。" },
     { id: "cam03-off", at: 251, sender: "值班系统", text: "CAM 03 已离线，请勿查看。", corrupt: true },
-    { id: "looked", at: 276, sender: "未知号码", text: "你为什么看了？", corrupt: true },
+    { id: "looked", at: 270, sender: "未知号码", text: "你为什么看了？", corrupt: true },
     { id: "contradiction", at: 308, sender: "周老师", text: "我今晚没有给你发过消息。", suspicious: true }
   ];
 

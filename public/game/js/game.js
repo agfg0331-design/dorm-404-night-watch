@@ -39,8 +39,9 @@
       this.callbacks = options.callbacks || {};
       this.baseMinuteMs = options.minuteMs || 470000 / 360;
       this.quickMode = Boolean(options.quickMode);
-      this.phoneSpacingMs = this.quickMode ? Math.max(500, Math.round(8000 * this.baseMinuteMs / (470000 / 360))) : 8000;
-      this.criticalMessageHorizonMs = this.quickMode ? Math.max(250, Math.round(3000 * this.baseMinuteMs / (470000 / 360))) : 3000;
+      this.phoneSpacingMs = this.scaleMessageDelay(8000);
+      this.leadSpacingMs = this.scaleMessageDelay(3000);
+      this.criticalMessageHorizonMs = this.scaleMessageDelay(4500);
       this.minuteMs = this.baseMinuteMs;
       this.startMinute = options.startMinute || 0;
       const providedSeed = Number(options.seed);
@@ -72,10 +73,20 @@
       const at = (base, span, salt) => base + Math.floor(this.#seededUnit(salt) * span);
       return [
         { id: "final-camera", at: at(244, 7, 0x43414d34), channel: "camera", role: "evidence", cue: { ...route.camera } },
-        { id: "final-phone", at: at(276, 13, 0x50484f54), channel: "phone", role: "evidence", message: { ...phone } },
+        { id: "final-phone", at: at(286, 11, 0x50484f54), channel: "phone", role: "evidence", message: { ...phone } },
         { id: "final-sound", at: this.#seededUnit(0x4441574e) < 0.5 ? 308 : at(315, 15, 0x534e4441), channel: "sound", role: "evidence", cue: sound },
         { id: "final-misdirect", at: at(334, 8, 0x4d495354), channel: "phone", role: "interference", message: { ...mislead } }
       ];
+    }
+
+    scaleMessageDelay(ms) {
+      return this.quickMode ? Math.max(150, Math.round(ms * this.baseMinuteMs / (470000 / 360))) : ms;
+    }
+
+    ordinaryMessageSpacing() {
+      if (this.minute < 100) return this.phoneSpacingMs;
+      if (this.minute < 250) return this.scaleMessageDelay(5000 + Math.floor(this.#seededUnit(0x4d494450) * 1000));
+      return this.scaleMessageDelay(this.minute < 300 ? 7500 : 9500);
     }
 
     reset() {
@@ -113,7 +124,7 @@
       this.lastPhoneMessageAt = -Infinity;
       this.messageNow = 0;
       // Four seeded windows, ending before the final third of the shift.
-      this.interferencePlan = [[50, 26], [115, 31], [175, 26], [215, 26]].map(([base, span], index) => ({
+      this.interferencePlan = [[75, 21], [120, 26], [165, 26], [205, 26]].map(([base, span], index) => ({
         at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * span), index
       }));
       this.eventQueue = this.shift.events.map((event, index) => {
@@ -148,6 +159,7 @@
           lead: { ...lead, offset: early ? -4.5 : priority === "essential" ? -5 : priority === "featured" ? -4 : -2.8 },
           actualStart,
           leadSent: silent,
+          leadQueued: false,
           silent,
           state: "waiting",
           progress: 0,
@@ -156,6 +168,16 @@
           resolvingUntil: 0
         };
       }).sort((a, b) => a.actualStart - b.actualStart);
+      // Reserve space around the final phone clue for important scheduled
+      // notices. The clue still stays inside 04:46–04:56.
+      const finalPhone = this.#finalPlan.find((clue) => clue.id === "final-phone");
+      const clearOfImportantLeads = (minute) => this.eventQueue.every((event) => !["essential", "featured"].includes(event.hintPriority) ||
+        Math.abs(event.actualStart + event.lead.offset - minute) >= 4);
+      if (!clearOfImportantLeads(finalPhone.at)) {
+        const alternatives = Array.from({ length: 11 }, (_, index) => 286 + index)
+          .filter(clearOfImportantLeads).sort((a, b) => Math.abs(a - finalPhone.at) - Math.abs(b - finalPhone.at) || a - b);
+        if (alternatives.length) finalPhone.at = alternatives[0];
+      }
       this.activeEvents = [];
       this.lastFrame = 0;
       this.pausedUntil = 0;
@@ -231,9 +253,9 @@
         this.lastMinute = floorMinute;
         this.processNarrative();
         this.processInterference();
-        this.processFinalClues();
         this.processMilestones();
       }
+      this.processFinalClues();
       if (this.finalStage || this.terminalStage) {
         this.callbacks.onTick?.(this.snapshot());
         return;
@@ -273,7 +295,7 @@
       this.interferencePlan.forEach(({ at, index }) => {
         if (this.minute < at || this.firedInterference.has(index)) return;
         this.firedInterference.add(index);
-        this.pendingOrdinaryMessages.push({ index, expiresAt: Math.min(at + 18, [76, 146, 201, 240][index]), priority: 3 });
+        this.pendingOrdinaryMessages.push({ index, expiresAt: Math.min(at + 18, [100, 150, 195, 240][index]), priority: 3 });
       });
     }
 
@@ -304,7 +326,7 @@
     flushOrdinaryMessages() {
       if (this.callbacks.canSendOrdinaryMessage?.() === false) return;
       this.pendingOrdinaryMessages = this.pendingOrdinaryMessages.filter((entry) => this.minute <= entry.expiresAt);
-      if (this.messageNow - this.lastPhoneMessageAt < this.phoneSpacingMs || !this.pendingOrdinaryMessages.length) return;
+      if (this.messageNow - this.lastPhoneMessageAt < this.ordinaryMessageSpacing() || !this.pendingOrdinaryMessages.length) return;
       // If a lead or final clue is seconds away, let it speak first. Neither
       // the clue nor the anomaly itself waits for an ordinary phone message.
       const horizon = this.minute + this.criticalMessageHorizonMs / this.minuteMs;
@@ -326,6 +348,7 @@
     processFinalClues() {
       this.#finalPlan.forEach((clue) => {
         if (this.minute < clue.at || this.firedFinalClues.has(clue.id)) return;
+        if (clue.channel === "phone" && this.callbacks.canSendAnomalyLead?.() === false) return;
         this.firedFinalClues.add(clue.id);
         if (clue.channel === "camera") this.finalCameraCue = { ...clue.cue };
         if (clue.channel === "phone") this.pushMessage({ ...clue.message });
@@ -367,20 +390,15 @@
 
     processEvents() {
       this.eventQueue.forEach((event) => {
-        const messageLead = event.lead.offset;
-        if (!event.leadSent && this.minute >= event.actualStart + messageLead &&
-            this.callbacks.canSendAnomalyLead?.() !== false) {
-          event.leadSent = true;
-          if (this.minute <= event.actualStart + event.duration + event.grace) {
-            this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });
-          }
-        }
+        if (!event.leadSent && this.minute >= event.actualStart + event.lead.offset) event.leadQueued = true;
         if (event.state === "waiting" && this.minute >= event.actualStart) {
           event.state = "changing";
           this.activeEvents.push(event);
           this.callbacks.onEventStart?.(event, this.snapshot());
         }
       });
+
+      this.flushAnomalyLeads();
 
       this.activeEvents.slice().forEach((event) => {
         if (event.reported) return;
@@ -395,6 +413,43 @@
         if (this.minute >= event.actualStart + event.duration + event.grace) this.missEvent(event);
       });
       this.activeEvents = this.activeEvents.filter((event) => !event.reported);
+    }
+
+    flushAnomalyLeads() {
+      if (this.callbacks.canSendAnomalyLead?.() === false) return;
+      const order = { essential: 0, featured: 1, standard: 2, subtle: 3 };
+      const pending = this.eventQueue.filter((event) => event.leadQueued && !event.leadSent)
+        .sort((a, b) => order[a.hintPriority] - order[b.hintPriority] || a.actualStart - b.actualStart);
+      for (const event of pending) {
+        const priority = event.hintPriority || "standard";
+        const sinceLast = this.messageNow - this.lastPhoneMessageAt;
+        const leadAt = event.actualStart + event.lead.offset;
+        const waitedMs = (this.minute - leadAt) * this.minuteMs;
+        const deadline = priority === "essential" ? event.actualStart - 0.1
+          : priority === "featured" ? event.actualStart + 0.5 : event.actualStart;
+        if (this.minute > event.actualStart + event.duration + event.grace ||
+            ((priority === "standard" || priority === "subtle") && this.minute > deadline)) {
+          event.leadSent = true;
+          continue;
+        }
+        // A subtle hint is expendable when the phone is busy. Keep the
+        // anomaly itself untouched; essential hints always retain their slot.
+        if (priority === "subtle" && sinceLast < this.leadSpacingMs) {
+          event.leadSent = true;
+          continue;
+        }
+        const imminentFinal = this.#finalPlan.some((clue) => clue.channel === "phone" && !this.firedFinalClues.has(clue.id) &&
+          clue.at >= this.minute && clue.at - this.minute <= this.criticalMessageHorizonMs / this.minuteMs);
+        if ((priority === "standard" || priority === "subtle") && imminentFinal) continue;
+        if (sinceLast < this.leadSpacingMs && this.minute < deadline &&
+            (priority !== "featured" || waitedMs < this.scaleMessageDelay(2800))) continue;
+        // Even when two early essential notices share a deadline, never buzz
+        // twice in the same second. Their offsets give them room to queue.
+        if (sinceLast < this.scaleMessageDelay(1000)) continue;
+        event.leadSent = true;
+        this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });
+        break;
+      }
     }
 
     markVisibleEvents() {

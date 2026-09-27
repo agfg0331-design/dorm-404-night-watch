@@ -68,7 +68,7 @@ pacingSim.start(now);
 while (!pacingSim.terminalStage) { now += 50; pacingSim.step(now); }
 const misleading = interferenceMessages.filter((message) => message.interference);
 assert(pacingSim.interferencePlan.length === 4, "随机误导计划应只有四个窗口");
-assert(pacingSim.interferencePlan.every(({ at, index }) => at >= [50, 115, 175, 215][index] && at < [76, 146, 201, 241][index]), "随机误导超出预定窗口");
+assert(pacingSim.interferencePlan.every(({ at, index }) => at >= [75, 120, 165, 205][index] && at < [96, 146, 191, 231][index]), "随机误导超出预定窗口");
 assert(misleading.every((message) => !message.corrupt), "误导信息被直接标成故障");
 assert(misleading.length <= 4 && misleading.every((message) => message.minute < 240), "误导信息超过四条或拖到04:00后");
 assert(interferenceMessages.filter((message) => message.id).map((message) => message.id).join(",") === "welcome,cam03-off,looked,contradiction", "固定剧情消息没有收敛为四条");
@@ -85,9 +85,7 @@ for (const id of ["duty-self", "hall-shadow", "laundry-reflection", "lobby-clock
 const dutyNotice = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message) => messages.push(message) } });
 const dutyMoment = dutyNotice.eventQueue.find((event) => event.id === "duty-self");
 assert(dutyMoment.lead.text.includes("CAM 04") && !/CAM 0[1-356]/.test(dutyMoment.lead.text), "固定值班室提示的监控编号被随机映射到别处");
-dutyNotice.minute = dutyMoment.actualStart + dutyMoment.lead.offset;
-dutyNotice.processEvents();
-assert(messages.some((message) => message.linkedEvent === "duty-self" && message.text.includes("CAM 04")), "监控室起身人影出现前没有实际送出提示");
+assert(interferenceMessages.some((message) => message.linkedEvent === "duty-self" && message.text.includes("CAM 04") && message.minute < dutyMoment.actualStart), "监控室起身人影出现前没有实际送出提示");
 const variableHints = new Set();
 for (let seed = 0; seed < 120; seed += 1) {
   const run = new sandbox.NightShiftSimulation({ seed, sceneIds: ["music", "dance", "elevator", "lab", "dorm"] });

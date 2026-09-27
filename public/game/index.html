@@ -20,7 +20,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
   <link rel="preload" as="image" href="assets/duty-room-normal.webp?v=room-ledger-20260927">
-  <link rel="stylesheet" href="style.css?v=shift-pacing-20260927">
+  <link rel="stylesheet" href="style.css?v=mobile-monitor-fit-20260927">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
@@ -45,11 +45,17 @@
           <p><span aria-hidden="true">02</span>记录本 <i aria-hidden="true">·</i> 查看档案</p>
           <p><span aria-hidden="true">03</span>手机 <i aria-hidden="true">·</i> 访客留言</p>
         </div>
+        <aside class="mobile-fullscreen-tip" id="mobileFullscreenTip" aria-label="手机全屏游玩提示">
+          <b>显示校准 / FULL SCREEN</b>
+          <p id="mobileFullscreenTipText">建议横屏并使用全屏，避免浏览器工具栏挡住监控。</p>
+          <div><button id="enterFullscreen" type="button">进入全屏</button><button id="dismissFullscreenTip" type="button">知道了</button></div>
+        </aside>
         <p class="room-caption" id="roomCaption"></p>
       </div>
     </section>
 
     <section class="view monitor-view" id="monitorView" aria-label="放大的监控画面">
+      <div class="monitor-stage" id="monitorStage">
       <img class="feed-image" id="cameraImage" src="assets/cam-dorm-normal.webp" alt="监控画面">
       <div class="event-frame-stack" id="eventFrameStack" aria-hidden="true">
         <img id="eventFrame1" alt=""><img id="eventFrame2" alt=""><img id="eventFrame3" alt="">
@@ -77,6 +83,7 @@
       </div>
       <div class="false-daylight" aria-hidden="true"></div>
       <div class="scanlines"></div><div class="noise"></div><div class="glitch-band"></div>
+      </div>
       <div class="monitor-top-scrim" aria-hidden="true"></div>
       <div class="signal-error" id="signalError"><b>UNKNOWN SIGNAL</b><span>CAMERA FEED ERROR</span><small>正在尝试重新连接……</small></div>
       <div class="camera-check-status" id="cameraCheckStatus" aria-hidden="true"><b>SYSTEM CHECK</b><span id="cameraCheckLine">CAM 01 / ONLINE</span></div>
@@ -353,7 +360,7 @@
   <script src="js/guestbook.js?v=board-safety-20260926"></script>
   <script src="js/handoff.js?v=handoff-20260919"></script>
   <script src="js/archive.js?v=archive-ink-20260927"></script>
-  <script src="js/main.js?v=midshift-spacing-20260927"></script>
+  <script src="js/main.js?v=mobile-monitor-fit-20260927"></script>
   <script src="js/test-module.js?v=major-shows-20260926"></script>
 </body>
 </html>

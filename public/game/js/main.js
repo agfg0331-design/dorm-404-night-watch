@@ -26,8 +26,9 @@
   const $ = (id) => document.getElementById(id);
 
   const els = {
-    body: document.body, roomView: $("roomView"), monitorView: $("monitorView"), phoneView: $("phoneView"),
+    body: document.body, roomView: $("roomView"), monitorView: $("monitorView"), monitorStage: $("monitorStage"), phoneView: $("phoneView"),
     roomBackground: $("roomBackground"), roomClock: $("roomClock"), roomCaption: $("roomCaption"),
+    mobileFullscreenTip: $("mobileFullscreenTip"), mobileFullscreenTipText: $("mobileFullscreenTipText"), enterFullscreen: $("enterFullscreen"), dismissFullscreenTip: $("dismissFullscreenTip"),
     enterMonitor: $("enterMonitor"), monitorPhone: $("monitorPhone"),
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
     cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
@@ -860,12 +861,12 @@
     new ResizeObserver(([entry]) => {
       monitorDimensions.width = entry.contentRect.width;
       monitorDimensions.height = entry.contentRect.height;
-    }).observe(els.monitorView);
+    }).observe(els.monitorStage);
   }
 
   function frameGeometry(sourceWidth, sourceHeight) {
-    const width = monitorDimensions.width || els.monitorView.clientWidth;
-    const height = monitorDimensions.height || els.monitorView.clientHeight;
+    const width = monitorDimensions.width || els.monitorStage.clientWidth;
+    const height = monitorDimensions.height || els.monitorStage.clientHeight;
     const scale = Math.max(width / sourceWidth, height / sourceHeight);
     return { scale, offsetX: (width - sourceWidth * scale) / 2, offsetY: (height - sourceHeight * scale) / 2 };
   }
@@ -1440,6 +1441,29 @@
       }
     });
   }
+
+  const fullscreenTipKey = "dorm-404-fullscreen-tip-dismissed";
+  try {
+    if (!sessionStorage.getItem(fullscreenTipKey) && !document.fullscreenElement) els.mobileFullscreenTip.classList.add("shown");
+  } catch {
+    els.mobileFullscreenTip.classList.add("shown");
+  }
+  const dismissFullscreenTip = () => {
+    els.mobileFullscreenTip.classList.remove("shown");
+    try { sessionStorage.setItem(fullscreenTipKey, "1"); } catch { /* Private browsing may block storage. */ }
+  };
+  els.dismissFullscreenTip.addEventListener("click", dismissFullscreenTip);
+  els.enterFullscreen.addEventListener("click", async () => {
+    try {
+      if (!document.documentElement.requestFullscreen) throw new Error("unsupported");
+      await document.documentElement.requestFullscreen();
+      dismissFullscreenTip();
+    } catch {
+      els.mobileFullscreenTipText.textContent = "当前浏览器不支持网页全屏。iPhone 可在 Safari 分享菜单选择“添加到主屏幕”，再横屏打开。";
+      els.enterFullscreen.hidden = true;
+    }
+  });
+  document.addEventListener("fullscreenchange", () => { if (document.fullscreenElement) dismissFullscreenTip(); });
 
   els.startGame.addEventListener("click", startGame);
   els.confirmHeadphones.addEventListener("click", finishAudioCheck);

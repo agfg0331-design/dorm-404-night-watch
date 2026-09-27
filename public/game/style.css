@@ -70,6 +70,7 @@ body.test-run #handoffForm,body.test-run #endingGuestbook{display:none}
 .phone-hotspot .unread-badge{right:24%;bottom:34%}
 .room-caption{position:absolute;bottom:1.4rem;left:50%;transform:translateX(-50%);width:max-content;max-width:92%;padding:.5rem .9rem;border:1px solid rgba(183,208,190,.27);background:rgba(4,13,10,.78);color:#e3ece4;font-size:clamp(.83rem,1.25vw,1rem);font-weight:650;line-height:1.5;letter-spacing:.055em;text-align:center;text-shadow:0 2px 8px #000;box-shadow:0 5px 22px #0008}
 .monitor-view{background:#000}
+.monitor-stage{position:absolute;inset:0}
 .feed-image{filter:saturate(.55) sepia(.12) hue-rotate(80deg) contrast(1.05) brightness(.72);transition:filter .5s,transform .3s,opacity .07s linear;will-change:opacity}
 .event-frame-stack{position:absolute;z-index:3;inset:0;pointer-events:none;overflow:hidden;transition:opacity .07s linear;will-change:opacity}
 .event-frame-stack img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:saturate(.55) sepia(.12) hue-rotate(80deg) contrast(1.05) brightness(.72);transition:opacity .42s ease;will-change:opacity,transform}
@@ -670,4 +671,42 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
   .archive-overlay{padding-top:max(2.75rem,calc(env(safe-area-inset-top) + .5rem))}
   .archive-case{width:min(900px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem))}
   .guestbook-phone{width:min(860px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem))}
+}
+
+/* Every CCTV photograph and its anomaly frames are 4:3. Keep their shared
+   coordinate space intact on a short landscape phone instead of cropping
+   the upper and lower parts to fill the wide viewport. */
+.mobile-fullscreen-tip{display:none}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:600px){
+  .monitor-view{background:repeating-linear-gradient(180deg,#050909 0 3px,#020505 4px),#020505}
+  .monitor-stage{inset:auto;left:50%;top:50%;width:min(100vw,133.333dvh);height:min(100dvh,75vw);aspect-ratio:4/3;transform:translate(-50%,-50%);overflow:hidden;box-shadow:0 0 0 1px #34453d,0 0 55px #000}
+  .monitor-hud.top{top:max(3.1rem,calc(env(safe-area-inset-top) + 1rem))}
+  .monitor-top-scrim{height:calc(4.8rem + env(safe-area-inset-top))}
+  .mobile-fullscreen-tip.shown{position:absolute;z-index:12;display:grid;gap:.45rem;right:max(.6rem,env(safe-area-inset-right));top:max(3.6rem,calc(env(safe-area-inset-top) + 1rem));width:min(17rem,42vw);padding:.65rem .75rem;border:1px solid #768a79;background:#06100de9;box-shadow:0 8px 25px #000c;color:#d5e2d8}
+  .mobile-fullscreen-tip b{font:600 .58rem ui-monospace,monospace;letter-spacing:.12em;color:#9eb6a4}
+  .mobile-fullscreen-tip p{margin:0;font-size:.68rem;line-height:1.45}
+  .mobile-fullscreen-tip div{display:flex;gap:.4rem}
+  .mobile-fullscreen-tip button{min-height:32px;padding:.25rem .5rem;border:1px solid #64806d;background:#142b20;color:#e4eee5;font-size:.65rem;cursor:pointer}
+  .mobile-fullscreen-tip button:last-child{background:#0b1711;color:#b7c8bc}
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:600px) and (min-aspect-ratio:2/1){
+  .monitor-hud span{display:none}
+  .monitor-top-scrim{background:linear-gradient(90deg,#020504e8,transparent 23% 77%,#020504e8)}
+  .camera-dock{inset:0;transform:none;display:block;overflow:visible;contain:none;padding:0;border:0;background:none;pointer-events:none}
+  .camera-dock button{position:absolute;min-width:0;width:min(10rem,calc((100vw - 133.333dvh)/2 - 1.5rem));min-height:44px;padding:.4rem .45rem;border:1px solid #566c5d9c;background:#06100de8;pointer-events:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.63rem}
+  .camera-dock button:nth-child(-n+3){left:max(.55rem,env(safe-area-inset-left))}
+  .camera-dock button:nth-child(n+4){right:max(.55rem,env(safe-area-inset-right))}
+  .camera-dock button:nth-child(1),.camera-dock button:nth-child(4){top:24%}
+  .camera-dock button:nth-child(2),.camera-dock button:nth-child(5){top:39%}
+  .camera-dock button:nth-child(3),.camera-dock button:nth-child(6){top:54%}
+  .camera-dock kbd{width:1rem;height:1rem;margin-right:.25rem}
+  .phone-dock{right:max(.55rem,env(safe-area-inset-right));bottom:max(.5rem,env(safe-area-inset-bottom))}
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:600px) and (max-aspect-ratio:199/100){
+  .monitor-stage{top:0;width:calc((100dvh - 58px)*4/3);height:calc(100dvh - 58px);transform:translateX(-50%)}
+  .camera-dock{left:max(.4rem,env(safe-area-inset-left));right:max(5rem,env(safe-area-inset-right));bottom:max(.35rem,env(safe-area-inset-bottom));gap:.1rem;padding:.2rem;overflow:hidden}
+  .camera-dock button{flex:1;min-width:0;padding:.3rem .15rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:.52rem}
+  .camera-dock kbd{width:.9rem;height:.9rem;margin-right:.12rem;font-size:.5rem}
+  .phone-dock{right:max(.3rem,env(safe-area-inset-right));bottom:max(.3rem,env(safe-area-inset-bottom));height:3.25rem;width:4rem}
+  .phone-dock>.mini-phone{height:1.4rem;width:.9rem;margin-bottom:.05rem}
 }

@@ -12,10 +12,10 @@
   const visitorKey = "dorm404.guestbook.visitor.v1";
   const nameKey = "dorm404.guestbook.nickname.v1";
   const votesKey = "dorm404.guestbook.votes.v1";
-  const visitorId = localStorage.getItem(visitorKey) || (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`);
-  localStorage.setItem(visitorKey, visitorId);
+  const visitorId = window.GamePlatform.storage.getItem(visitorKey) || (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+  window.GamePlatform.storage.setItem(visitorKey, visitorId);
   const fallbackName = `夜班访客${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`;
-  ui.nickname.value = localStorage.getItem(nameKey) || fallbackName;
+  ui.nickname.value = window.GamePlatform.storage.getItem(nameKey) || fallbackName;
   let sort = "latest";
   let loading = false;
   let messages = [];
@@ -30,7 +30,7 @@
   }
 
   function readVotes() {
-    try { return JSON.parse(localStorage.getItem(votesKey) || "{}"); } catch { return {}; }
+    try { return JSON.parse(window.GamePlatform.storage.getItem(votesKey) || "{}"); } catch { return {}; }
   }
   function setNote(text, error = false) {
     ui.note.textContent = text;
@@ -88,7 +88,7 @@
       messages = Array.isArray(data.messages) ? data.messages : [];
       if (data.votes) {
         localVotes = { ...localVotes, ...data.votes };
-        localStorage.setItem(votesKey, JSON.stringify(localVotes));
+        window.GamePlatform.storage.setItem(votesKey, JSON.stringify(localVotes));
       }
       render();
       setNote("每台设备对每条留言只能投一票。");
@@ -114,7 +114,7 @@
   ui.home.addEventListener("click", close);
   ui.overlay.addEventListener("click", (event) => { if (event.target === ui.overlay) close(); });
   ui.content.addEventListener("input", () => { ui.counter.textContent = `${ui.content.value.length} / 180`; });
-  ui.nickname.addEventListener("change", () => localStorage.setItem(nameKey, ui.nickname.value.trim().slice(0, 16) || fallbackName));
+  ui.nickname.addEventListener("change", () => window.GamePlatform.storage.setItem(nameKey, ui.nickname.value.trim().slice(0, 16) || fallbackName));
   ui.sorts.forEach((button) => button.addEventListener("click", () => {
     sort = button.dataset.sort === "hot" ? "hot" : "latest";
     ui.sorts.forEach((item) => item.classList.toggle("active", item === button));
@@ -139,7 +139,7 @@
     setNote("正在写入留言……");
     try {
       await requestJson("/api/board", { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ nickname, content, visitorId }) });
-      localStorage.setItem(nameKey, nickname);
+      window.GamePlatform.storage.setItem(nameKey, nickname);
       ui.content.value = ""; ui.counter.textContent = "0 / 180";
       setNote("留言已写入 404 终端。");
       await load();
@@ -168,7 +168,7 @@
       const id = Number(button.dataset.id); const value = Number(button.dataset.vote);
       const data = await requestJson(`/api/board/${id}/vote`, { method: "POST", headers: { "Content-Type": "application/json", "X-Board-Visitor": visitorId }, body: JSON.stringify({ value, visitorId }) });
       localVotes[id] = data.vote;
-      localStorage.setItem(votesKey, JSON.stringify(localVotes));
+      window.GamePlatform.storage.setItem(votesKey, JSON.stringify(localVotes));
       await load();
     } catch (error) { setNote(error.message || "投票失败。", true); }
     finally { button.disabled = false; }

@@ -39,6 +39,8 @@ assert(dev.classes.has("taptap-wide"));
 assert.equal(dev.result.viewport.width, 844);
 assert.equal(dev.result.safeArea.top, 0);
 assert(!web.classes.has("taptap-wide"));
+dev.result.storage.setItem("dorm404.archive.v1", '{"anomaly":{}}');
+assert.equal(dev.result.storage.getItem("dorm404.archive.v1"), '{"anomaly":{}}', "blocked localStorage should keep the shift playable in memory");
 for (const options of [boardOptions, handoffOptions, voteOptions, reportOptions]) {
   const response = options();
   assert.equal(response.status, 204);

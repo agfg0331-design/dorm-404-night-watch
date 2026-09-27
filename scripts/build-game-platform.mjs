@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const target = process.argv[2];
@@ -12,4 +12,15 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(resolve("public/game"), output, { recursive: true, filter: (path) => !path.endsWith("/_headers") && !path.includes("/scene-preview") });
 await writeFile(resolve(output, "js/platform-config.js"), `window.GAME_PLATFORM_CONFIG = Object.freeze(${JSON.stringify(configurations[target])});\n`);
+if (target === "taptap-release") {
+  const htmlPath = resolve(output, "index.html");
+  let html = await readFile(htmlPath, "utf8");
+  const qaStart = html.indexOf('  <section class="overlay test-module hidden"');
+  const qaEnd = html.indexOf('  <section class="overlay settings-overlay hidden"', qaStart);
+  if (qaStart < 0 || qaEnd < 0 || !html.includes('src="js/test-module.js?')) throw new Error("QA markup changed; cannot produce release package safely");
+  html = html.slice(0, qaStart) + html.slice(qaEnd);
+  html = html.replace(/^\s*<script src="js\/test-module\.js\?[^\"]+"><\/script>\s*$/m, "");
+  await writeFile(htmlPath, html);
+  await rm(resolve(output, "js/test-module.js"));
+}
 console.log(`${target}: ${output}`);

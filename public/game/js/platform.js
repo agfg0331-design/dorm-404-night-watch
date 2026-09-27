@@ -9,9 +9,24 @@
   const cloudflare = "https://dorm-404-night-watch.pages.dev";
   // Preserve the existing EdgeOne mirror's cross-origin handoff access in one place.
   const apiBase = config.apiBase || (mode === "taptap" || location.hostname.endsWith(".edgeone.dev") ? cloudflare : "");
+  const memory = new Map();
+  const storage = {
+    getItem(key) {
+      try {
+        const value = window.localStorage.getItem(key);
+        if (value !== null) return value;
+      } catch { /* A container can deny access to storage. */ }
+      return memory.get(key) ?? null;
+    },
+    setItem(key, value) {
+      const text = String(value);
+      memory.set(key, text);
+      try { window.localStorage.setItem(key, text); } catch { /* Keep this shift playable in memory. */ }
+    }
+  };
   const platform = {
     mode, isWeb: mode === "web", isTapTap: mode === "taptap", apiBase,
-    allowInternalQA: config.allowInternalQA === true,
+    allowInternalQA: config.allowInternalQA === true, storage,
     supportsBrowserFullscreen: mode === "web",
     viewport: { width: 0, height: 0 }, safeArea: { top: 0, right: 0, bottom: 0, left: 0 },
     apiUrl(path) { return `${this.apiBase}${path}`; }

@@ -124,7 +124,7 @@
   let manualPreload = null;
   const completedShiftKey = "dorm404.shift.completed.v1";
   let completedShift = false;
-  try { completedShift = localStorage.getItem(completedShiftKey) === "1"; } catch { /* Private browsing can block storage. */ }
+  try { completedShift = window.GamePlatform.storage.getItem(completedShiftKey) === "1"; } catch { /* Private browsing can block storage. */ }
   let archiveBeforeShift = null;
   const manualFrames = [1, 2, 3, 4].map((frame) => `assets/handover-manual-${frame}.webp`);
   const renderedText = new WeakMap();
@@ -194,7 +194,7 @@
   let criticalAudioReady = null;
 
   applySettings(false);
-  els.startOverlay.classList.toggle("contaminated", localStorage.getItem(HOME_STATE_KEY) === "1");
+  els.startOverlay.classList.toggle("contaminated", window.GamePlatform.storage.getItem(HOME_STATE_KEY) === "1");
 
   const sim = new window.NightShiftSimulation({
     minuteMs,
@@ -275,7 +275,7 @@
   }
 
   function loadSettings() {
-    try { return { ...defaultSettings, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") }; }
+    try { return { ...defaultSettings, ...JSON.parse(window.GamePlatform.storage.getItem(SETTINGS_KEY) || "{}") }; }
     catch (_) { return { ...defaultSettings }; }
   }
 
@@ -319,7 +319,7 @@
     document.body.classList.toggle("no-screen-shake", !settings.shake);
     document.body.classList.toggle("no-visual-noise", !settings.noise);
     audio.setVolumes({ master: settings.master / 100, bgm: settings.bgm / 100, sfx: settings.sfx / 100 });
-    if (save) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    if (save) window.GamePlatform.storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }
 
   function readSettingsControls() {
@@ -1272,7 +1272,7 @@
       const newCount = window.GameArchive.unlockedIds().filter((id) => !archiveBeforeShift?.has(id)).length;
       els.endingArchiveNew.textContent = newCount ? `本次值班新增记录：${newCount} 条` : "";
       els.endingArchiveNew.classList.toggle("hidden", !newCount);
-      try { localStorage.setItem(completedShiftKey, "1"); } catch { /* Keep the ending available without storage. */ }
+      try { window.GamePlatform.storage.setItem(completedShiftKey, "1"); } catch { /* Keep the ending available without storage. */ }
     } else {
       els.endingArchiveNew.textContent = "";
       els.endingArchiveNew.classList.add("hidden");
@@ -1297,7 +1297,7 @@
     els.handoffCounter.textContent = "0 / 100";
     els.handoffNote.textContent = "";
     els.handoffNote.classList.remove("error");
-    if (kind === "watched") localStorage.setItem(HOME_STATE_KEY, "1");
+    if (kind === "watched") window.GamePlatform.storage.setItem(HOME_STATE_KEY, "1");
     els.endingKicker.textContent = kicker; els.endingTitle.textContent = title; els.endingText.textContent = text;
     els.endCorrect.textContent = state.correct; els.endWrong.textContent = state.wrong; els.endMissed.textContent = state.missed;
     els.turnSequence.classList.add("hidden"); els.endingOverlay.classList.remove("hidden");

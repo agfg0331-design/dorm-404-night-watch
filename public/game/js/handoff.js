@@ -2,8 +2,8 @@
   "use strict";
 
   const visitorKey = "dorm404.handoff.visitor.v1";
-  const visitorId = localStorage.getItem(visitorKey) || (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`);
-  localStorage.setItem(visitorKey, visitorId);
+  const visitorId = window.GamePlatform.storage.getItem(visitorKey) || (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+  window.GamePlatform.storage.setItem(visitorKey, visitorId);
   async function request(path, options = {}) {
     const response = await fetch(window.GamePlatform.apiUrl(path), options);
     const type = response.headers.get("content-type") || "";

@@ -20,7 +20,7 @@ const sandbox = {
   localStorage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
   crypto: { randomUUID: () => "test-visitor" },
   location: { hostname: "dorm-404-night-watch.pages.dev" },
-  window: { GamePlatform: { allowInternalQA: true }, dispatchEvent: (event) => { if (event.type === "dorm404:test-open") opened += 1; } },
+  window: { GamePlatform: { allowInternalQA: true, storage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) } }, dispatchEvent: (event) => { if (event.type === "dorm404:test-open") opened += 1; } },
   Event: class { constructor(type) { this.type = type; } },
   fetch: () => { posts += 1; throw new Error("测试指令不应联网"); },
   setTimeout() {}, Math, Date, JSON, Intl

@@ -31,7 +31,7 @@
   const allowed = Object.fromEntries(Object.entries(catalog).map(([type, entries]) => [type, new Set(entries.map((entry) => entry.id))]));
   const saved = { anomaly: {}, show: {}, ending: {} };
   try {
-    const stored = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const stored = JSON.parse(window.GamePlatform.storage.getItem(KEY) || "{}");
     for (const type of Object.keys(saved)) {
       for (const [id, time] of Object.entries(stored[type] || {})) {
         if (allowed[type].has(id) && Number.isFinite(time)) saved[type][id] = time;
@@ -100,7 +100,7 @@
   function record(type, id) {
     if (!allowed[type]?.has(id) || saved[type][id]) return;
     saved[type][id] = Date.now();
-    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { /* Gameplay continues without storage. */ }
+    try { window.GamePlatform.storage.setItem(KEY, JSON.stringify(saved)); } catch { /* Gameplay continues without storage. */ }
     if (!overlay.classList.contains("hidden")) render();
   }
 

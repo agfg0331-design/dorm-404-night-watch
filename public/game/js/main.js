@@ -9,9 +9,9 @@
   const testEventId = testMode === "event" ? params.get("event") : null;
   const testShow = testMode === "show" ? params.get("show") : null;
   const startMinute = testShow === "fake-dawn" ? 315.95 : testShow === "pa-override" ? 179.95 : testShow === "final-blackout" ? 341.95 : qa ? Math.max(0, Math.min(350, Number(params.get("start") || 0))) : 0;
-  const minuteMs = testMode === "event" ? 700 : testMode === "show" ? 1000 : fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 420000 / 360;
+  const minuteMs = testMode === "event" ? 700 : testMode === "show" ? 1000 : fast ? 75 : qa ? Math.max(90, Number(params.get("rate") || 260)) : 470000 / 360;
   const globalSignalAt = testShow === "cascade" || testShow === "snow" ? 2000
-    : testMode === "full" ? Math.max(1000, Math.round(240000 * minuteMs / (420000 / 360)))
+    : testMode === "full" ? Math.max(1000, Math.round(240000 * minuteMs / (470000 / 360)))
       : qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
   const finalSilenceMs = qa && params.has("finalSilence") ? Math.max(500, Number(params.get("finalSilence")) || 10000) : 10000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
@@ -107,7 +107,7 @@
   let showLocked = null;
   const ordinaryCooldownMs = 28000 + ((Math.imul(shiftSeed ^ 0x53484f57, 0x45d9f3b) >>> 0) % 5001);
   // The internal accelerated shift keeps roughly the same in-game spacing.
-  const majorShowCooldownMs = qa || fast ? Math.max(1500, Math.round(ordinaryCooldownMs * minuteMs / (420000 / 360))) : ordinaryCooldownMs;
+  const majorShowCooldownMs = qa || fast ? Math.max(1500, Math.round(ordinaryCooldownMs * minuteMs / (470000 / 360))) : ordinaryCooldownMs;
   let majorShowCooldownUntil = 0;
   let cameraCheckFinished = false;
   let paFinished = false;
@@ -208,6 +208,8 @@
       },
       onMonitorFail: beginFinalBlackout,
       canStartFakeDawn: (now) => !showLocked && now >= majorShowCooldownUntil,
+      canSendOrdinaryMessage: () => !showLocked && !finalBlackoutPending && !sim.terminalStage,
+      canSendAnomalyLead: () => !showLocked && !finalBlackoutPending && !sim.terminalStage,
       onFakeDawn: handleFakeDawn,
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
@@ -533,7 +535,7 @@
   function maybeDeliverHandoff(state) {
     if (handoffDelivered || !handoffCandidate || !sim.running || state.minute < handoffDeliveryMinute || state.minute > 15) return;
     handoffDelivered = true;
-    sim.pushMessage({ sender: "上一任值班员", text: handoffCandidate });
+    sim.queueOrdinaryMessage({ sender: "上一任值班员", text: handoffCandidate }, 25, 0);
   }
 
   function beginFinalBlackout() {

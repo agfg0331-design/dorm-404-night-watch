@@ -243,7 +243,7 @@ for (const phoneEffect of ["phone-corruption-ghost", "phone-corruption-snow-hard
   if (!css.includes(phoneEffect)) throw new Error(`缺少手机污染效果：${phoneEffect}`);
 }
 if (!main.includes("queuePhoneCorruption") || !main.includes("triggerPhoneCorruption")) throw new Error("手机污染触发逻辑缺失");
-if (!main.includes("420000 / 360")) throw new Error("正常流程未设置为约7分钟");
+if (!main.includes("470000 / 360")) throw new Error("正常流程未设置为约7分50秒目标节奏");
 if (!main.includes("eventVisualProgress")) throw new Error("异常画面加速逻辑缺失");
 for (const integratedFrame of [
   "cam-stairs-footprints-v3.webp",

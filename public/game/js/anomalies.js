@@ -51,14 +51,9 @@
 
   const narrative = [
     { id: "welcome", at: 10, sender: "周老师", text: "今晚六路监控都在线。听到异响先看监控，再上报。" },
-    { id: "quiet", at: 24, sender: "门卫老陈", text: "雨大，门口可能有小动物。别把所有声音都当异常。" },
-    { id: "safe", at: 112, sender: "值班系统", text: "全楼信号正常。404 房间无人居住。" },
-    { id: "wrong-floor", at: 190, sender: "405 张同学", text: "刚才群里的楼梯照片，好像不是我们这栋楼。", suspicious: true },
     { id: "cam03-off", at: 251, sender: "值班系统", text: "CAM 03 已离线，请勿查看。", corrupt: true },
     { id: "looked", at: 276, sender: "未知号码", text: "你为什么看了？", corrupt: true },
-    { id: "contradiction", at: 308, sender: "周老师", text: "我今晚没有给你发过消息。", suspicious: true },
-    { id: "no-operator", at: 329, sender: "值班系统", text: "CAM 04：FRAME 331-04 RECOVERED", corrupt: true },
-    { id: "watching", at: 338, sender: "自己", text: "刚才那条消息不是我发的。", corrupt: true }
+    { id: "contradiction", at: 308, sender: "周老师", text: "我今晚没有给你发过消息。", suspicious: true }
   ];
 
   // Camera slots stay put; a scene owns its own normal frame and anomaly pool.
@@ -158,12 +153,7 @@
       if (event.id === "duty-self") { event.duration = 14; event.grace = 16; }
       if (event.start >= 280) event.grace = Math.max(event.grace, 10);
     });
-    const shiftNarrative = narrative.map((item) => {
-      if (item.id === "safe" && !slotByScene.dorm) return { ...item, text: "全楼信号正常。值班室门禁没有访客记录。" };
-      if (item.id === "wrong-floor" && !slotByScene.stairs) return { ...item, text: "刚才群里的照片，好像不是我们这栋楼。" };
-      return item;
-    });
-    return { seed: Number(seed) || 0, sceneIds: selected, cameras: shiftCameras, events: shiftEvents, narrative: shiftNarrative };
+    return { seed: Number(seed) || 0, sceneIds: selected, cameras: shiftCameras, events: shiftEvents, narrative: narrative.map((item) => ({ ...item })) };
   }
 
   window.GameContent = { cameras, events, narrative, frameAssets, scenePool, createShift };

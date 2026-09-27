@@ -63,16 +63,15 @@ assert(sim.activeEvents.includes(oldDuty), "终局线索不应删除旧漏报的
 
 const interferenceMessages = [];
 const pacingSim = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, callbacks: { onMessage: (message, state) => interferenceMessages.push({ ...message, minute: state.minute }) } });
-for (let minute = 0; minute <= 335; minute++) {
-  pacingSim.minute = minute;
-  pacingSim.processEvents();
-  pacingSim.processInterference();
-}
-const misleading = interferenceMessages.filter((message) => message.suspicious && !message.linkedEvent);
-assert(misleading.filter((message) => message.minute < 120).length === 2, "前期误导信息应保持稀疏");
-assert(misleading.filter((message) => message.minute >= 120).length > 2, "中后期误导信息没有逐渐增多");
+now = 1000;
+pacingSim.start(now);
+while (!pacingSim.terminalStage) { now += 50; pacingSim.step(now); }
+const misleading = interferenceMessages.filter((message) => message.interference);
+assert(pacingSim.interferencePlan.length === 4, "随机误导计划应只有四个窗口");
+assert(pacingSim.interferencePlan.every(({ at, index }) => at >= [50, 115, 175, 215][index] && at < [76, 146, 201, 241][index]), "随机误导超出预定窗口");
 assert(misleading.every((message) => !message.corrupt), "误导信息被直接标成故障");
-assert(misleading.length <= 10, "干扰信息过密");
+assert(misleading.length <= 4 && misleading.every((message) => message.minute < 240), "误导信息超过四条或拖到04:00后");
+assert(interferenceMessages.filter((message) => message.id).map((message) => message.id).join(",") === "welcome,cam03-off,looked,contradiction", "固定剧情消息没有收敛为四条");
 const earlyEvents = pacingSim.eventQueue.filter((event) => event.actualStart < 120);
 assert(earlyEvents.length >= 4 && earlyEvents.every((event) => !event.silent && event.lead.kind === "real" && event.lead.offset <= -4), "前期异常缺少真实提前提示");
 const midLateEvents = pacingSim.eventQueue.filter((event) => event.actualStart >= 120);
@@ -98,9 +97,6 @@ for (let seed = 0; seed < 120; seed += 1) {
   assert(run.eventQueue.filter((event) => event.actualStart < 120).every((event) => !event.silent), "某局前期出现无提示异常");
 }
 assert(variableHints.size === 2, "同一个普通异常在不同局没有提示变化");
-const earlier = misleading.filter((message) => message.minute < 120).length;
-const later = misleading.filter((message) => message.minute >= 120).length;
-assert(later > earlier, "中后期错误消息没有增多");
 const paused = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacyScenes, minuteMs: 100 });
 paused.start(1000);
 now = 1000;
@@ -116,16 +112,16 @@ const dawnSeeds = Array.from({ length: 1000 }, (_, seed) => new sandbox.NightShi
 const dawnCount = dawnSeeds.filter(Boolean).length;
 assert(dawnCount >= 450 && dawnCount <= 550, `假天亮触发率偏离约50%：${dawnCount}/1000`);
 for (let seed = 0; seed < 100; seed += 1) {
-  const run = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360 });
-  const normal = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 420000 / 360, quickMode: true });
+  const run = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 470000 / 360 });
+  const normal = new sandbox.NightShiftSimulation({ seed, sceneIds: legacyScenes, minuteMs: 470000 / 360, quickMode: true });
   assert(run.eventQueue.length === normal.eventQueue.length && run.eventQueue.every((event) => normal.eventQueue.some((other) => other.id === event.id)), "假天亮删掉或替换了原有异常");
   if (run.fakeDawnPlanned) {
-    assert(Math.abs(run.minuteMs * 352 + 25000 - 480000) < 1, "假天亮局没有延长到八分钟");
+    assert(Math.abs(run.minuteMs * 334 + 25000 + 22000 - 485000) < 5000, "假天亮局时长偏离约8分05秒");
     assert(run.eventQueue.every((event) => event.actualStart >= 325 || event.actualStart + event.duration + event.grace <= 315), "有异常跨过假天亮前后安静窗口");
     run.minute = 309;
     run.processFinalClues();
     assert(run.firedFinalClues.has("final-sound"), "假天亮前仍有终局声音线索撞进静场");
-  } else assert(Math.abs(run.minuteMs * 360 - 420000) < 1, "普通局不再是七分钟");
+  } else assert(Math.abs(run.minuteMs * 342 + 22000 - 470000) < 5000, "普通局时长偏离约7分50秒");
 }
 const selectedDawnSeed = dawnSeeds.findIndex(Boolean);
 let dawnMessages = 0;

@@ -37,8 +37,10 @@
 
     constructor(options = {}) {
       this.callbacks = options.callbacks || {};
-      this.baseMinuteMs = options.minuteMs || 420000 / 360;
+      this.baseMinuteMs = options.minuteMs || 470000 / 360;
       this.quickMode = Boolean(options.quickMode);
+      this.phoneSpacingMs = this.quickMode ? Math.max(500, Math.round(8000 * this.baseMinuteMs / (470000 / 360))) : 8000;
+      this.criticalMessageHorizonMs = this.quickMode ? Math.max(250, Math.round(3000 * this.baseMinuteMs / (470000 / 360))) : 3000;
       this.minuteMs = this.baseMinuteMs;
       this.startMinute = options.startMinute || 0;
       const providedSeed = Number(options.seed);
@@ -91,10 +93,9 @@
       this.unread = 0;
       this.monitorFailed = false;
       this.fakeDawnPlanned = this.#seededUnit(0x4441574e) < 0.5;
-      // A selected shift lasts eight minutes: 352 ordinary clock minutes at
-      // this rate, plus 5 + 15 + 5 seconds of protected daylight. Other
-      // shifts retain their seven-minute pace.
-      this.minuteMs = this.fakeDawnPlanned && !this.quickMode ? 455000 / 352 : this.baseMinuteMs;
+      // The protected 25-second dawn advances eight game minutes. Keep its
+      // full shift only about 15 seconds longer than an ordinary shift.
+      this.minuteMs = this.fakeDawnPlanned && !this.quickMode ? 462000 / 352 : this.baseMinuteMs;
       this.fakeDawnStage = "idle";
       this.fakeDawnStartedAt = 0;
       this.fakeDawnAnchor = 316;
@@ -108,11 +109,13 @@
       this.firedNarrative = new Set();
       this.firedFinalClues = new Set();
       this.firedInterference = new Set();
-      // Two early false leads, then progressively more interference. These
-      // messages only name feeds actually present in this shift.
-      this.interferencePlan = [38, 96, 131, 157, 184, 219, 247, 273, 299, 324].map((base, index) => ({
-        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * (index < 2 ? 8 : 10)), index
-      })).filter(({ index }) => index < 2 || this.#seededUnit(0x46414c00 + index) < (index < 7 ? .9 : .94));
+      this.pendingOrdinaryMessages = [];
+      this.lastPhoneMessageAt = -Infinity;
+      this.messageNow = 0;
+      // Four seeded windows, ending before the final third of the shift.
+      this.interferencePlan = [[50, 26], [115, 31], [175, 26], [215, 26]].map(([base, span], index) => ({
+        at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * span), index
+      }));
       this.eventQueue = this.shift.events.map((event, index) => {
         let actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
         // Preserve every anomaly, but bring any late one that would cross the
@@ -168,6 +171,7 @@
     start(now = performance.now()) {
       this.running = true;
       this.lastFrame = now;
+      this.messageNow = now;
       this.callbacks.onStart?.(this.snapshot());
     }
 
@@ -197,6 +201,7 @@
 
     step(now) {
       if (!this.running || this.ended) return;
+      this.messageNow = now;
       if (!this.lastFrame) this.lastFrame = now;
       const elapsed = Math.min(250, now - this.lastFrame);
       this.lastFrame = now;
@@ -234,6 +239,7 @@
         return;
       }
       this.processEvents();
+      this.flushOrdinaryMessages();
       this.callbacks.onTick?.(this.snapshot());
       if (this.minute >= 360 && !this.turning && !this.finalStage) this.finish("dawn");
     }
@@ -258,7 +264,7 @@
       this.shift.narrative.forEach((item) => {
         if (this.minute >= item.at && !this.firedNarrative.has(item.id)) {
           this.firedNarrative.add(item.id);
-          this.pushMessage(item);
+          this.queueOrdinaryMessage({ ...item }, 25, 1);
         }
       });
     }
@@ -267,25 +273,54 @@
       this.interferencePlan.forEach(({ at, index }) => {
         if (this.minute < at || this.firedInterference.has(index)) return;
         this.firedInterference.add(index);
-        const cameras = Object.keys(this.cameras);
-        const active = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil);
-        const empty = cameras.filter((camera) => !this.activeEvents.some((event) => event.camera === camera && !event.reported));
-        const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
-        const emptyFeed = this.cameras[emptyCamera];
-        const code = emptyFeed?.code;
-        let message;
-        if ((index < 2 || index % 2 === 0) && code) {
-          message = index === 0
-            ? { sender: "值班系统", text: `${code}（${emptyFeed.name}）检测到短时人员活动，请核对画面。`, suspicious: true }
-            : { sender: "405 张同学", text: `我刚才看到 ${emptyFeed.name} 那边有人经过，你看到了吗？`, suspicious: true };
-        } else if (active) {
-          const activeFeed = this.cameras[active.camera];
-          message = index === 3
-            ? { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）现场复核无异常。`, suspicious: true }
-            : { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）画面状态正常。`, suspicious: true };
-        }
-        if (message) this.pushMessage(message);
+        this.pendingOrdinaryMessages.push({ index, expiresAt: Math.min(at + 18, [76, 146, 201, 240][index]), priority: 3 });
       });
+    }
+
+    createInterference(index) {
+      const cameras = Object.keys(this.cameras);
+      const active = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil && event.state !== "missed");
+      const empty = cameras.filter((camera) => !this.activeEvents.some((event) => event.camera === camera && !event.reported));
+      const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
+      const emptyFeed = this.cameras[emptyCamera];
+      if (index % 2 === 0 && emptyFeed) {
+        return index === 0
+          ? { sender: "值班系统", text: `${emptyFeed.code}（${emptyFeed.name}）检测到短时人员活动，请核对画面。`, suspicious: true, interference: true }
+          : { sender: "405 张同学", text: `我刚才看到 ${emptyFeed.name} 那边有人经过，你看到了吗？`, suspicious: true, interference: true };
+      }
+      if (index % 2 === 1 && active) {
+        const activeFeed = this.cameras[active.camera];
+        return index === 3
+          ? { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）现场复核无异常。`, suspicious: true, interference: true }
+          : { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）画面状态正常。`, suspicious: true, interference: true };
+      }
+      return null;
+    }
+
+    queueOrdinaryMessage(message, lifetimeMinutes = 20, priority = 2) {
+      this.pendingOrdinaryMessages.push({ message, expiresAt: this.minute + lifetimeMinutes, priority });
+    }
+
+    flushOrdinaryMessages() {
+      if (this.callbacks.canSendOrdinaryMessage?.() === false) return;
+      this.pendingOrdinaryMessages = this.pendingOrdinaryMessages.filter((entry) => this.minute <= entry.expiresAt);
+      if (this.messageNow - this.lastPhoneMessageAt < this.phoneSpacingMs || !this.pendingOrdinaryMessages.length) return;
+      // If a lead or final clue is seconds away, let it speak first. Neither
+      // the clue nor the anomaly itself waits for an ordinary phone message.
+      const horizon = this.minute + this.criticalMessageHorizonMs / this.minuteMs;
+      if (this.eventQueue.some((event) => !event.leadSent && event.actualStart + event.lead.offset > this.minute &&
+          event.actualStart + event.lead.offset <= horizon) ||
+          this.#finalPlan.some((clue) => clue.channel === "phone" && !this.firedFinalClues.has(clue.id) &&
+            clue.at > this.minute && clue.at <= horizon)) return;
+      this.pendingOrdinaryMessages.sort((a, b) => a.priority - b.priority);
+      for (let index = 0; index < this.pendingOrdinaryMessages.length; index++) {
+        const entry = this.pendingOrdinaryMessages[index];
+        const message = entry.message || this.createInterference(entry.index);
+        if (!message) continue;
+        this.pendingOrdinaryMessages.splice(index, 1);
+        this.pushMessage(message);
+        return;
+      }
     }
 
     processFinalClues() {
@@ -333,9 +368,12 @@
     processEvents() {
       this.eventQueue.forEach((event) => {
         const messageLead = event.lead.offset;
-        if (!event.leadSent && this.minute >= event.actualStart + messageLead) {
+        if (!event.leadSent && this.minute >= event.actualStart + messageLead &&
+            this.callbacks.canSendAnomalyLead?.() !== false) {
           event.leadSent = true;
-          this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });
+          if (this.minute <= event.actualStart + event.duration + event.grace) {
+            this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });
+          }
         }
         if (event.state === "waiting" && this.minute >= event.actualStart) {
           event.state = "changing";
@@ -394,6 +432,7 @@
 
     pushMessage(message) {
       this.unread += 1;
+      this.lastPhoneMessageAt = this.messageNow || performance.now();
       this.callbacks.onMessage?.(message, this.snapshot());
     }
 

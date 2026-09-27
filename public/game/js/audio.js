@@ -71,7 +71,10 @@
         danceScreech: "assets/audio/scene-dance-screech.mp3",
         danceWhispers: "assets/audio/scene-dance-whispers.mp3",
         tvStatic: "assets/audio/scene-tv-static.mp3",
-        robotVoices: "assets/audio/scene-robot-voices.mp3"
+        robotVoices: "assets/audio/scene-robot-voices.mp3",
+        paLine1: "assets/audio/pa-line-1.mp3",
+        paLine2: "assets/audio/pa-line-2.mp3",
+        paLine3: "assets/audio/pa-line-3.mp3"
       };
     }
 
@@ -383,6 +386,11 @@
       this.stopReportTension();
       this.duck(28, 0.09);
       this.playSample("crtSwitch", { volume: 0.32, rate: 0.7, filter: "lowpass", frequency: 1900, duration: 0.5 });
+    }
+
+    playBroadcastLine(key) {
+      const playback = this.playSample(key, { volume: 0.72, rate: 1.05, filter: "lowpass", frequency: 2900, attack: 0.03 });
+      return playback ? playback.source.buffer.duration * 1000 / 1.05 : 0;
     }
 
     endBroadcast() {

@@ -215,6 +215,12 @@ body[data-phase="5"] .room-background{filter:saturate(.35) brightness(.4) contra
 .monitor-view.final-blackout .camera-dock button span{display:none}
 .monitor-view.final-blackout .camera-dock button::after{content:"OFFLINE";color:#8d6667;font:.55rem ui-monospace,monospace;letter-spacing:.04em}
 .monitor-view.final-blackout .rec{background:#343a38;box-shadow:none;animation:none}
+.camera-check-status{position:absolute;z-index:9;top:max(5.4rem,calc(env(safe-area-inset-top) + 4.5rem));left:50%;transform:translateX(-50%);display:grid;gap:.3rem;min-width:12rem;padding:.45rem .75rem;border:1px solid #7d99869c;background:#07100de3;color:#d9e8db;font:600 .68rem/1.3 ui-monospace,monospace;letter-spacing:.12em;text-align:center;text-shadow:0 2px 5px #000;opacity:0;pointer-events:none;transition:opacity .2s}
+.camera-check-status.active{opacity:1}
+.camera-check-status span{color:#a8c4af;font-size:.6rem}
+.monitor-view.final-ui-off .signal-error b,.monitor-view.final-ui-off .signal-error span,.monitor-view.final-ui-off .signal-error small{animation:finalUiFade 1.1s ease-out forwards}
+.monitor-view.final-ui-off .monitor-hud,.monitor-view.final-ui-off .monitor-stats,.monitor-view.final-ui-off .event-status,.monitor-view.final-ui-off .camera-dock,.monitor-view.final-ui-off .phone-dock,.monitor-view.final-ui-off .pa-status{animation:finalUiFade 1.1s ease-out forwards;pointer-events:none}
+@keyframes finalUiFade{from{opacity:1}to{opacity:0}}
 @keyframes finalScreenDie{0%,24%{background:transparent;opacity:0}28%{opacity:.38}36%{opacity:.07}57%{opacity:1}100%{opacity:1}}
 @keyframes finalSignalText{0%,78%{opacity:0}100%{opacity:1}}
 .phone-view{z-index:24;background:transparent;overflow:hidden;pointer-events:none;contain:layout paint style;isolation:isolate}

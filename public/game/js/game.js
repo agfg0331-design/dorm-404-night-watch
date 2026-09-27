@@ -97,6 +97,7 @@
       this.minuteMs = this.fakeDawnPlanned && !this.quickMode ? 455000 / 352 : this.baseMinuteMs;
       this.fakeDawnStage = "idle";
       this.fakeDawnStartedAt = 0;
+      this.fakeDawnAnchor = 316;
       this.fakeDawnProgress = 0;
       this.terminalStage = false;
       this.turnPrompted = false;
@@ -209,9 +210,11 @@
         return;
       }
       this.minute += (elapsed / this.minuteMs) * this.timeScale;
-      if (this.fakeDawnPlanned && this.fakeDawnStage === "idle" && this.minute >= 316 && this.minute < 342) {
-        this.minute = 316;
-        this.lastMinute = 316;
+      if (this.fakeDawnPlanned && this.fakeDawnStage === "idle" && this.minute >= 316 && this.minute < 334 &&
+          (!this.callbacks.canStartFakeDawn || this.callbacks.canStartFakeDawn(now))) {
+        this.fakeDawnAnchor = this.minute < 316.5 ? 316 : this.minute;
+        this.minute = this.fakeDawnAnchor;
+        this.lastMinute = Math.floor(this.minute);
         this.fakeDawnStage = "pre";
         this.fakeDawnStartedAt = now;
         this.callbacks.onFakeDawn?.("pre", this.snapshot());
@@ -238,9 +241,9 @@
     advanceFakeDawn(now) {
       const elapsed = Math.max(0, now - this.fakeDawnStartedAt);
       const stage = elapsed < 5000 ? "pre" : elapsed < 20000 ? "bright" : elapsed < 25000 ? "post" : "done";
-      this.minute = stage === "pre" ? 316 + Math.min(1, elapsed / 5000) * 4
-        : stage === "bright" ? 320
-          : 320 + Math.min(1, (elapsed - 20000) / 5000) * 4;
+      this.minute = stage === "pre" ? this.fakeDawnAnchor + Math.min(1, elapsed / 5000) * 4
+        : stage === "bright" ? this.fakeDawnAnchor + 4
+          : this.fakeDawnAnchor + 4 + Math.min(1, (elapsed - 20000) / 5000) * 4;
       this.lastMinute = Math.floor(this.minute);
       const visualTime = elapsed - 5000;
       this.fakeDawnProgress = stage === "bright"

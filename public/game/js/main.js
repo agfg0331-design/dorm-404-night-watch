@@ -32,7 +32,7 @@
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
     cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
-    eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"), paStatus: $("paStatus"), paCaption: $("paCaption"),
+    eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"), cameraCheckStatus: $("cameraCheckStatus"), cameraCheckLine: $("cameraCheckLine"), paStatus: $("paStatus"), paCaption: $("paCaption"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
     phoneCorruption: $("phoneCorruption"), phoneRedFlood: $("phoneRedFlood"), phoneGhostWarning: $("phoneGhostWarning"),
     messagesPanel: $("messagesPanel"), reportPanel: $("reportPanel"), messageList: $("messageList"), autoInput: $("autoInput"),
@@ -105,7 +105,13 @@
   let finalBlackoutPending = false;
   let finalBlackoutStarted = false;
   let showLocked = null;
+  const ordinaryCooldownMs = 28000 + ((Math.imul(shiftSeed ^ 0x53484f57, 0x45d9f3b) >>> 0) % 5001);
+  // The internal accelerated shift keeps roughly the same in-game spacing.
+  const majorShowCooldownMs = qa || fast ? Math.max(1500, Math.round(ordinaryCooldownMs * minuteMs / (420000 / 360))) : ordinaryCooldownMs;
+  let majorShowCooldownUntil = 0;
+  let cameraCheckFinished = false;
   let paFinished = false;
+  let paAudioReady = null;
   const eventBeatState = new Map();
   const eventCueState = new Set();
   const sceneFirstView = new Map();
@@ -201,6 +207,7 @@
         }
       },
       onMonitorFail: beginFinalBlackout,
+      canStartFakeDawn: (now) => !showLocked && now >= majorShowCooldownUntil,
       onFakeDawn: handleFakeDawn,
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
@@ -343,6 +350,10 @@
       ["pre", "bright", "post"].includes(sim.fakeDawnStage) || sim.terminalStage;
   }
 
+  function finishMajorShow() {
+    majorShowCooldownUntil = Math.max(majorShowCooldownUntil, performance.now() + majorShowCooldownMs);
+  }
+
   function setPhoneAvailability() {
     const unavailable = phoneUnavailable();
     els.monitorPhone.disabled = unavailable;
@@ -464,8 +475,22 @@
   }
 
   function triggerPhoneCorruption(type, phrase) {
+    const major = type === "snow" || type === "snow-hard" || type === "flood";
+    if (sim.terminalStage || sim.finalStage || finalBlackoutPending || finalBlackoutStarted) return;
     if (showLocked && showLocked !== "phone") { pendingPhoneCorruption = { type, phrase }; return; }
-    if (type === "snow" || type === "snow-hard" || type === "flood") showLocked = "phone";
+    if (major && performance.now() < majorShowCooldownUntil) {
+      pendingPhoneCorruption = { type, phrase };
+      window.clearTimeout(phoneCorruptionStartTimer);
+      phoneCorruptionStartTimer = window.setTimeout(() => {
+        phoneCorruptionStartTimer = null;
+        if (!sim.view.startsWith("phone")) return;
+        const pending = pendingPhoneCorruption;
+        pendingPhoneCorruption = null;
+        if (pending) triggerPhoneCorruption(pending.type, pending.phrase);
+      }, majorShowCooldownUntil - performance.now());
+      return;
+    }
+    if (major) showLocked = "phone";
     window.clearTimeout(phoneCorruptionTimer);
     els.phoneGhostWarning.textContent = phrase;
     els.phoneRedFlood.querySelectorAll("span").forEach((line, index) => {
@@ -481,7 +506,7 @@
       els.phoneCorruption.className = "phone-corruption";
       els.phoneCorruption.setAttribute("aria-hidden", "true");
       els.phoneView.classList.remove("phone-corrupting");
-      if (showLocked === "phone") showLocked = null;
+      if (showLocked === "phone") { showLocked = null; finishMajorShow(); }
       if (finalBlackoutPending) startFinalBlackout();
     }, duration);
   }
@@ -516,7 +541,9 @@
     setPhoneAvailability();
     // Let an already visible phone corruption finish instead of cutting it
     // off with the final call. An unopened queued effect cannot block the end.
-    if (phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
+    window.clearTimeout(phoneCorruptionStartTimer);
+    phoneCorruptionStartTimer = null;
+    if (els.phoneCorruption.classList.contains("active")) return;
     startFinalBlackout();
   }
 
@@ -546,7 +573,7 @@
       els.monitorView.classList.remove("fake-dawn-quiet", "fake-dawn-bright");
       els.monitorView.style.removeProperty("--fake-dawn-light");
       audio.exitFakeDawn();
-      if (showLocked === "fake-dawn") showLocked = null;
+      if (showLocked === "fake-dawn") { showLocked = null; finishMajorShow(); }
       setPhoneAvailability();
       if (testShow === "fake-dawn") sim.pauseFor(24 * 60 * 60 * 1000);
     }
@@ -588,30 +615,40 @@
       watchdog = later(maximumMs, () => { speechSynthesis.cancel(); complete(); });
       try { speechSynthesis.speak(utterance); } catch { complete(); }
     };
+    const playLine = (key, line, minimumMs, maximumMs, next) => {
+      els.paCaption.textContent = line;
+      const duration = audio.playBroadcastLine(key);
+      if (duration) later(duration + 90, next);
+      else speak(line, minimumMs, maximumMs, next);
+    };
     const finish = () => {
       audio.playSample("crtSwitch", { volume: 0.25, rate: 0.6, duration: 0.2 });
       els.paCaption.textContent = "";
       els.paStatus.classList.remove("active");
-      later(1700, () => {
+      later(1200, () => {
         els.paStatus.classList.remove("active", "caption-only");
         els.paStatus.setAttribute("aria-hidden", "true");
         els.paCaption.textContent = "";
         audio.endBroadcast();
-        if (showLocked === "pa") showLocked = null;
+        if (showLocked === "pa") { showLocked = null; finishMajorShow(); }
         setPhoneAvailability();
         if (testShow === "pa-override") sim.pauseFor(24 * 60 * 60 * 1000);
       });
     };
     if (window.speechSynthesis) speechSynthesis.cancel();
-    later(1100, () => speak("东区四号楼，请仍在楼内的同学立即返回寝室。", 3600, 7500, () => {
-      later(1800, () => {
-        audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 });
-        els.paCaption.textContent = "";
-        later(700, () => speak("东区四号楼，请仍在楼内的值班人员……", 2600, 6500, () => {
-          later(950, () => speak("不要离开值班室。", 1800, 4500, () => later(150, finish)));
-        }));
+    paAudioReady ||= audio.loadSamples(["paLine1", "paLine2", "paLine3"]);
+    later(1000, async () => {
+      await Promise.race([paAudioReady, new Promise((resolve) => later(2000, resolve))]);
+      playLine("paLine1", "东区四号楼，请仍在楼内的同学立即返回寝室。", 3600, 7500, () => {
+        later(850, () => {
+          audio.playSample("crtSwitch", { volume: 0.2, rate: 0.85, filter: "lowpass", frequency: 1400, duration: 0.28 });
+          els.paCaption.textContent = "";
+          later(250, () => playLine("paLine2", "东区四号楼，请仍在楼内的值班人员……", 2600, 6500, () => {
+            later(550, () => playLine("paLine3", "不要离开值班室。", 1800, 4500, () => later(150, finish)));
+          }));
+        });
       });
-    }));
+    });
     later(1900, () => els.paStatus.classList.add("caption-only"));
   }
 
@@ -619,6 +656,7 @@
     if ((testMode === "show" && testShow !== "pa-override") || testMode === "event") return;
     if (!shiftStartedAt || paFinished || !sim.running || sim.terminalStage || sim.finalStage || sim.minute < paMinute) return;
     if (showLocked || (globalSignalStartedAt && !globalSignalFinished) ||
+        now < majorShowCooldownUntil ||
         ["pre", "bright", "post"].includes(sim.fakeDawnStage) ||
         phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
     startPaOverride(now);
@@ -636,6 +674,7 @@
     els.phoneView.classList.remove("active", "lowering", "phone-corrupting");
     sim.setView("monitor");
     setViewElement("monitor");
+    els.monitorView.classList.remove("final-ui-off");
     els.monitorView.classList.add("final-blackout");
     document.querySelectorAll(".camera-dock [data-camera]").forEach((button) => { button.disabled = true; });
     setPhoneAvailability();
@@ -646,13 +685,17 @@
     audio.glitch(true);
     window.setTimeout(() => {
       if (sim.ended) return;
+      els.monitorView.classList.add("final-ui-off");
+    }, 2700);
+    window.setTimeout(() => {
+      if (sim.ended) return;
       audio.enterSilence();
       window.setTimeout(() => {
         if (sim.ended) return;
         audio.exitSilence();
         sim.beginFinalCall();
       }, finalSilenceMs);
-    }, 700);
+    }, 3900);
   }
 
   function render(state) {
@@ -670,7 +713,7 @@
     setText(els.roomClock, formatMinute(state.minute));
     const phoneOffset = currentPhase >= 3 ? (currentPhase - 2) * 7 : 0;
     setText(els.phoneTime, formatMinute(state.minute + phoneOffset));
-    setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : state.fakeDawnStage === "bright" ? "05:20:00" : formatMinute(state.minute, true));
+    setText(els.monitorTime, state.finalStage ? "06:00:00" : state.monitorFailed ? `${formatMinute(state.minute - 17)}:--` : state.fakeDawnStage === "bright" ? `${formatMinute(state.minute)}:00` : formatMinute(state.minute, true));
     if (state.fakeDawnStage === "bright") els.monitorView.style.setProperty("--fake-dawn-light", state.fakeDawnProgress.toFixed(3));
     activeFinalCameraCue = state.finalCameraCue;
     const monitorFailed = state.monitorFailed;
@@ -697,7 +740,7 @@
     }
     if (currentPhase >= 4) setText(els.roomCaption, "你偶尔听见身后椅脚摩擦地面，但值班室只有一把椅子。");
     if (qa) {
-      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, fakeDawnPlanned: state.fakeDawnPlanned, fakeDawnStage: state.fakeDawnStage, fakeDawnProgress: +state.fakeDawnProgress.toFixed(2), paAt: paMinute, paFinished, showLocked, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
+      els.body.dataset.qa = JSON.stringify({ minute: +state.minute.toFixed(1), view: state.view, camera: state.currentCamera, event: state.visibleEvent?.id || null, eventState: state.visibleEvent?.state || null, danger: state.danger, trust: state.trust, correct: state.correct, missed: state.missed, fakeDawnPlanned: state.fakeDawnPlanned, fakeDawnStage: state.fakeDawnStage, fakeDawnProgress: +state.fakeDawnProgress.toFixed(2), paAt: paMinute, paFinished, showLocked, majorShowCooldownUntil, cameraCheckFinished, monitorFailed: state.monitorFailed, finalStage: state.finalStage, ended: state.ended });
     }
     maybeDeliverHandoff(state);
   }
@@ -1322,6 +1365,33 @@
     }, 220);
   }
 
+  async function runCameraCheck() {
+    showLocked = "camera-check";
+    switchView("monitor");
+    setPhoneAvailability();
+    els.cameraCheckStatus.classList.add("active");
+    els.cameraCheckStatus.setAttribute("aria-hidden", "false");
+    const label = els.cameraCheckStatus.querySelector("b");
+    label.textContent = "SYSTEM CHECK";
+    for (let index = 1; index <= 6; index++) {
+      const slot = `cam0${index}`;
+      sim.setCamera(slot);
+      audio.switchCamera();
+      audio.setScene(cameras[slot].ambient);
+      setText(els.monitorTime, "00:00:00");
+      els.cameraCheckLine.textContent = `CAM 0${index} / ONLINE`;
+      await new Promise((resolve) => window.setTimeout(resolve, 850));
+    }
+    label.textContent = "CAMERA CHECK COMPLETE";
+    els.cameraCheckLine.textContent = "";
+    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    els.cameraCheckStatus.classList.remove("active");
+    els.cameraCheckStatus.setAttribute("aria-hidden", "true");
+    showLocked = null;
+    cameraCheckFinished = true;
+    setPhoneAvailability();
+  }
+
   async function beginShift(firstCamera = null) {
     if (sim.running || shiftStarting) return;
     shiftStarting = true;
@@ -1333,10 +1403,13 @@
     if (!testMode) prepareHandoff();
     await Promise.all([cameraPreload, criticalAudioReady || audio.loadSamples(criticalAudioSamples)]);
     const missingSamples = criticalAudioSamples.filter((key) => !audio.sampleBuffers.has(key));
+    if (!testMode || testShow === "camera-check") await runCameraCheck();
     shiftStartedAt = performance.now();
     sim.start(shiftStartedAt);
-    switchView("monitor");
+    if (testShow !== "camera-check") switchView("monitor");
     if (firstCamera) switchCamera(firstCamera);
+    if (testShow === "camera-check") sim.pauseFor(24 * 60 * 60 * 1000, shiftStartedAt);
+    if (!paAudioReady && testShow !== "camera-check") paAudioReady = audio.loadSamples(["paLine1", "paLine2", "paLine3"]);
     if (testMode !== "event" && testMode !== "show") warmLaterFrames();
     // A failed optional recording can retry after the shift has started. Keep
     // large ambience decodes away from the initial camera transition.
@@ -1443,7 +1516,7 @@
     if (!shiftStartedAt || globalSignalFinished || !sim.running || sim.finalStage) return;
     if (!globalSignalStartedAt) {
       if (now - shiftStartedAt < globalSignalAt) return;
-      if (showLocked) return;
+      if (showLocked || now < majorShowCooldownUntil) return;
       showLocked = "global";
       globalSignalStartedAt = now;
       if (!qa) window.GameArchive.recordShow(globalSignalMode);
@@ -1456,7 +1529,7 @@
     const elapsed = now - globalSignalStartedAt;
     if (elapsed >= 8000) {
       globalSignalFinished = true;
-      if (showLocked === "global") showLocked = null;
+      if (showLocked === "global") { showLocked = null; finishMajorShow(); }
       setPhoneAvailability();
       els.globalSignal.classList.add("hidden");
       els.globalSignal.removeAttribute("data-stage");

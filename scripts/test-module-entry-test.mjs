@@ -20,7 +20,7 @@ const sandbox = {
   localStorage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
   crypto: { randomUUID: () => "test-visitor" },
   location: { hostname: "dorm-404-night-watch.pages.dev" },
-  window: { dispatchEvent: (event) => { if (event.type === "dorm404:test-open") opened += 1; } },
+  window: { GamePlatform: { allowInternalQA: true }, dispatchEvent: (event) => { if (event.type === "dorm404:test-open") opened += 1; } },
   Event: class { constructor(type) { this.type = type; } },
   fetch: () => { posts += 1; throw new Error("测试指令不应联网"); },
   setTimeout() {}, Math, Date, JSON, Intl
@@ -32,4 +32,10 @@ await element("guestbookForm").listeners.get("submit")({ preventDefault() {} });
 assert.equal(opened, 1, "隐藏指令没有打开测试模块");
 assert.equal(posts, 0, "隐藏指令被发送至公共留言板");
 assert.equal(element("guestbookContent").value, "", "隐藏指令仍留在留言输入框");
+element("guestbookContent").value = "131500";
+sandbox.window.GamePlatform.allowInternalQA = false;
+await element("guestbookForm").listeners.get("submit")({ preventDefault() {} });
+assert.equal(opened, 1, "TapTap 正式模式仍可打开内部测试终端");
+assert.equal(posts, 0, "TapTap 正式模式把内部测试口令发送到了公共留言板");
+assert.equal(element("guestbookContent").value, "131500");
 console.log("内部测试入口自检通过：131500 只在本机打开模块，未请求公共留言 API。");

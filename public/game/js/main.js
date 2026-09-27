@@ -3,8 +3,8 @@
 
   const audio = window.NightAudio;
   const params = new URLSearchParams(location.search);
-  const qa = params.get("qa") === "1";
-  const fast = params.get("fast") === "1";
+  const qa = window.GamePlatform.allowInternalQA && params.get("qa") === "1";
+  const fast = window.GamePlatform.allowInternalQA && params.get("fast") === "1";
   const testMode = qa && ["full", "event", "show"].includes(params.get("test")) ? params.get("test") : null;
   const testEventId = testMode === "event" ? params.get("event") : null;
   const testShow = testMode === "show" ? params.get("show") : null;
@@ -1478,10 +1478,12 @@
   }
 
   const fullscreenTipKey = "dorm-404-fullscreen-tip-dismissed";
-  try {
-    if (!sessionStorage.getItem(fullscreenTipKey) && !document.fullscreenElement) els.mobileFullscreenTip.classList.add("shown");
-  } catch {
-    els.mobileFullscreenTip.classList.add("shown");
+  if (window.GamePlatform.supportsBrowserFullscreen) {
+    try {
+      if (!sessionStorage.getItem(fullscreenTipKey) && !document.fullscreenElement) els.mobileFullscreenTip.classList.add("shown");
+    } catch {
+      els.mobileFullscreenTip.classList.add("shown");
+    }
   }
   const dismissFullscreenTip = () => {
     els.mobileFullscreenTip.classList.remove("shown");

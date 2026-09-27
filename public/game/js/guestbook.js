@@ -21,7 +21,7 @@
   let messages = [];
   let localVotes = readVotes();
   async function requestJson(path, options = {}) {
-    const response = await fetch(path, options);
+    const response = await fetch(window.GamePlatform.apiUrl(path), options);
     const type = response.headers.get("content-type") || "";
     if (!type.includes("application/json")) throw new Error("留言接口尚未完成部署。");
     const data = await response.json();
@@ -124,6 +124,7 @@
     event.preventDefault();
     const nickname = ui.nickname.value.trim().slice(0, 16);
     const content = ui.content.value.trim();
+    if (content === "131500" && !window.GamePlatform.allowInternalQA) return setNote("这条留言无法发布，请修改后再试。", true);
     if (content === "131500") {
       // A local-only entry point. Never send the test command to the public API.
       ui.content.value = "";

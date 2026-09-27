@@ -4,6 +4,10 @@
   class ProceduralNightAudio {
     constructor() {
       this.ctx = null;
+      // A resumed H5 container may suspend audio; the next player gesture unlocks it.
+      if (typeof document !== "undefined") document.addEventListener("pointerdown", () => {
+        if (this.enabled && this.ctx?.state === "suspended") this.ctx.resume().catch(() => {});
+      }, { capture: true });
       this.master = null;
       this.sfxBus = null;
       this.bgmBus = null;

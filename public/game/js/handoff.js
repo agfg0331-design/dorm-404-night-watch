@@ -4,12 +4,8 @@
   const visitorKey = "dorm404.handoff.visitor.v1";
   const visitorId = localStorage.getItem(visitorKey) || (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`);
   localStorage.setItem(visitorKey, visitorId);
-  const apiBase = location.hostname.endsWith(".edgeone.dev")
-    ? "https://dorm-404-night-watch.pages.dev"
-    : "";
-
   async function request(path, options = {}) {
-    const response = await fetch(`${apiBase}${path}`, options);
+    const response = await fetch(window.GamePlatform.apiUrl(path), options);
     const type = response.headers.get("content-type") || "";
     if (!type.includes("application/json")) throw new Error("交班终端暂时离线。");
     const data = await response.json();

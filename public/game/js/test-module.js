@@ -8,7 +8,11 @@
     speed: $("testSpeed"), event: $("testEvent"), show: $("testShow"), seed: $("testSeed"), random: $("testRandomSeed"),
     dock: $("testDock"), dockLabel: $("testDockLabel"), replay: $("testReplay"), back: $("testBack")
   };
-  if (!ui.overlay) return;
+  if (!ui.overlay || !window.GamePlatform.allowInternalQA) {
+    ui.overlay?.remove();
+    ui.dock?.remove();
+    return;
+  }
   const params = new URLSearchParams(location.search);
   const runMode = ["full", "event", "show"].includes(params.get("test")) && params.get("qa") === "1" ? params.get("test") : null;
   let tab = "full";

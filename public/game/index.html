@@ -19,15 +19,15 @@
   <link rel="canonical" href="https://dorm-404-night-watch.pages.dev/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/title-screen-normal.webp">
-  <link rel="preload" as="image" href="assets/duty-room-normal.webp">
-  <link rel="stylesheet" href="style.css?v=ledger-ink3-20260927">
+  <link rel="preload" as="image" href="assets/duty-room-normal.webp?v=room-ledger-20260927">
+  <link rel="stylesheet" href="style.css?v=room-ledger-20260927">
   <link rel="stylesheet" href="chair-fix.css">
 </head>
 <body data-phase="0" data-view="room">
   <main class="game" id="game">
     <section class="view room-view active" id="roomView" aria-label="值班室第一视角">
       <div class="room-scene">
-        <img class="room-background" id="roomBackground" src="assets/duty-room-normal.webp" alt="昏暗的宿舍楼值班室">
+        <img class="room-background" id="roomBackground" src="assets/duty-room-normal.webp?v=room-ledger-20260927" alt="昏暗的宿舍楼值班室">
         <div class="room-depth"></div>
         <header class="room-hud">
           <div><b>东区 4 号楼</b><span>夜间值班</span></div>
@@ -40,7 +40,12 @@
           <strong>查看 404 留言板</strong>
         </button>
         <button class="archive-entry" id="openArchive" type="button" aria-label="翻开桌上的值班记录本，查看档案"><span>翻开值班记录本</span></button>
-        <p class="room-caption" id="roomCaption">监控开始值班 · 桌上记录本查看档案 · 手机查看留言</p>
+        <div class="room-guidance" aria-label="大厅操作提示">
+          <p><span aria-hidden="true">01</span>监控 <i aria-hidden="true">·</i> 开始值班</p>
+          <p><span aria-hidden="true">02</span>记录本 <i aria-hidden="true">·</i> 查看档案</p>
+          <p><span aria-hidden="true">03</span>手机 <i aria-hidden="true">·</i> 访客留言</p>
+        </div>
+        <p class="room-caption" id="roomCaption"></p>
       </div>
     </section>
 
@@ -157,7 +162,7 @@
 
     <section class="turn-sequence hidden" id="turnSequence">
       <div class="turn-pan">
-        <img class="turn-frame turn-start" id="turnStart" src="assets/duty-room-normal.webp" alt="从监控前缓慢转身">
+        <img class="turn-frame turn-start" id="turnStart" src="assets/duty-room-normal.webp?v=room-ledger-20260927" alt="从监控前缓慢转身">
         <img class="turn-frame turn-mid" id="turnMid" src="assets/turn-mid-v2.webp" alt="转向值班室门口">
         <img class="turn-frame turn-final" id="turnImage" src="assets/turn-bad-v2.webp" alt="回头后的值班室">
       </div>

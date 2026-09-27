@@ -635,6 +635,9 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 @media(orientation:landscape) and (max-height:600px){.archive-overlay{display:block;overflow:auto}.archive-case{width:900px}.archive-entry{left:20%;top:auto;right:auto;bottom:2%;width:33%;height:22%;padding:0}.room-caption{left:.4rem;bottom:.3rem;max-width:21%;font-size:.53rem}}
 
 /* The desk book remains a physical hotspot; instructions sit separately on the door's empty lower panel. */
+.room-view::before{content:"";position:absolute;inset:-2%;background:url("assets/duty-room-normal.webp?v=room-ledger-20260927") center/cover no-repeat;filter:blur(16px) brightness(.22);pointer-events:none}
+.room-scene{inset:0 auto 0 50%;width:min(100vw,133.333dvh);transform:translateX(-50%)}
+.room-background{object-fit:contain;transform:none}
 .room-guidance{position:absolute;z-index:3;right:2.7%;top:55%;width:20%;color:#d1c8ad;font:500 clamp(.7rem,1vw,.9rem)/1.5 ui-serif,"Noto Serif SC",serif;letter-spacing:.1em;text-shadow:0 2px 5px #000,0 0 12px #000;pointer-events:none}
 .room-guidance p{display:flex;align-items:center;gap:.75em;min-height:2.8em;margin:0;border-top:1px solid #a89d785c;white-space:nowrap}
 .room-guidance p:last-child{border-bottom:1px solid #a89d785c}
@@ -644,4 +647,4 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:none}
 .room-hud{top:max(1.5rem,env(safe-area-inset-top))}
 @media(max-width:760px){.room-guidance{right:2.3%;top:55%;width:22%;font-size:clamp(.58rem,1.2vw,.74rem)}.room-guidance p{gap:.35em}}
-@media(orientation:landscape) and (max-height:600px){.room-guidance{right:2%;top:54%;width:22%;font-size:clamp(.55rem,1.25vw,.68rem)}.room-hud{top:max(.7rem,env(safe-area-inset-top))}}
+@media(orientation:landscape) and (max-height:600px){.room-scene::after{height:12%;background:linear-gradient(#0205059c,transparent)}.room-guidance{right:2%;top:54%;width:22%;font-size:clamp(.55rem,1.25vw,.68rem)}.room-hud{top:max(.7rem,env(safe-area-inset-top))}}

@@ -91,7 +91,8 @@ body.no-screen-shake .phone-dock.ringing,body.no-screen-shake .phone-hotspot.rin
 .monitor-view.camera-switching .feed-image,.monitor-view.camera-switching .event-frame-stack{opacity:0}
 .glitch-band{height:3px;top:24%;background:rgba(196,237,212,.28);box-shadow:0 0 10px #b9ffce;opacity:0}
 .monitor-hud{position:absolute;z-index:8;left:2rem;right:2rem;display:flex;justify-content:space-between;align-items:center;font:600 .78rem/1 ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 1px 6px #000}
-.monitor-hud.top{top:1.6rem}
+.monitor-hud.top{top:max(1.6rem,calc(env(safe-area-inset-top) + .75rem))}
+.monitor-hud.top::before{content:"";position:absolute;z-index:-1;top:-3rem;left:-2rem;right:-2rem;height:5.6rem;background:linear-gradient(#020504e8 15%,#020504b8 48%,transparent);pointer-events:none}
 .monitor-hud div{display:flex;align-items:center;gap:.75rem}
 .monitor-hud span{font-family:inherit;font-size:.7rem;color:#a6b1aa}
 .rec{width:.52rem;height:.52rem;border-radius:50%;background:#b52c30;box-shadow:0 0 12px #e22936;animation:blink 1.2s steps(2) infinite}
@@ -601,7 +602,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 
 @font-face{font-family:"Dorm Ledger Ink";src:url("assets/fonts/dorm-ledger-ink.woff") format("woff");font-style:normal;font-weight:400;font-display:swap}
 /* The physical ledger is one continuous photograph. Live ink occupies its ruled cells. */
-.archive-overlay{padding:.5rem;overflow:auto;background:rgba(0,0,0,.9)}
+.archive-overlay{padding:max(.5rem,calc(env(safe-area-inset-top) + .5rem)) max(.5rem,env(safe-area-inset-right)) max(.5rem,env(safe-area-inset-bottom)) max(.5rem,env(safe-area-inset-left));overflow:auto;background:rgba(0,0,0,.9)}
 .archive-case{position:relative;display:block;flex:none;width:max(900px,min(96vw,calc(94dvh * 1672 / 941),1360px));height:auto;max-height:none;min-height:0;aspect-ratio:1672/941;margin:auto;overflow:hidden;border:0;outline:0;background:#171811 url("assets/archive-ledger-flat.webp") center/100% 100% no-repeat;box-shadow:0 28px 100px #000;color:#4d4841;container-type:inline-size}
 .archive-header{position:absolute;inset:0;z-index:4;display:block;min-height:0;padding:0;border:0;background:none;pointer-events:none}
 .archive-header>div{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -632,7 +633,7 @@ body[data-phase="5"] .phone-title b,body[data-phase="5"] .phone-status{animation
 .archive-row.sealed b{width:62%;height:clamp(9px,1.4cqw,19px);overflow:hidden;background:#37342f;color:transparent;font-size:0;transform:rotate(-1deg);clip-path:polygon(1% 5%,98% 0,100% 88%,2% 100%)}
 .archive-mark,.archive-row.sealed .archive-mark{justify-self:center;align-self:center;max-width:92%;margin:0;padding:.1em .24em;border:1px solid #8c504a;border-radius:1px;background:transparent;color:#8c504a;font:500 clamp(16px,1.95cqw,27px)/1.1 "Dorm Ledger Ink","KaiTi","STKaiti","Kaiti SC",serif;text-align:center;white-space:nowrap;transform:rotate(-2deg)}
 .archive-register footer{position:absolute;width:1px;height:1px;min-height:0;overflow:hidden;clip-path:inset(50%);border:0}
-@media(max-width:760px){.archive-entry{left:18%;bottom:1%;width:40%;height:25%}.room-caption{left:.35rem;bottom:.3rem;max-width:25%;padding:.3rem;font-size:.56rem}.archive-overlay{display:block;padding:.5rem}.archive-case{width:900px}.archive-rail>small{bottom:-12%}}
+@media(max-width:760px){.archive-entry{left:18%;bottom:1%;width:40%;height:25%}.room-caption{left:.35rem;bottom:.3rem;max-width:25%;padding:.3rem;font-size:.56rem}.archive-overlay{display:block}.archive-case{width:900px}.archive-rail>small{bottom:-12%}}
 @media(orientation:portrait){.archive-overlay{display:block;overflow:auto}.archive-case{width:900px;margin:auto}.archive-body{display:block;padding:0;background:none}}
 @media(orientation:landscape) and (max-height:600px){.archive-overlay{display:block;overflow:auto}.archive-case{width:900px}.archive-entry{left:20%;top:auto;right:auto;bottom:2%;width:33%;height:22%;padding:0}.room-caption{left:.4rem;bottom:.3rem;max-width:21%;font-size:.53rem}}
 

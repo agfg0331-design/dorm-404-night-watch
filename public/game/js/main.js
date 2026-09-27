@@ -889,10 +889,13 @@
   function clipDutyExtra(frame) {
     const { scale, offsetX, offsetY } = frameGeometry(1672, 941);
     // Only the new figure is composited; the operator and the glass stay on
-    // the unchanged camera feed.
+    // the unchanged camera feed. Feather the sides of the cutout so the
+    // differently exposed corridor cannot form a pale polygon beside her.
     const outline = [[745, 285], [835, 278], [892, 329], [925, 420], [917, 675], [916, 898], [777, 898], [739, 681], [738, 416]];
     const clip = `polygon(${outline.map(([x, y]) => `${x * scale + offsetX}px ${y * scale + offsetY}px`).join(",")})`;
     if (frame.style.clipPath !== clip) frame.style.clipPath = clip;
+    const edge = (x) => `${x * scale + offsetX}px`;
+    setFrameMask(frame, `linear-gradient(90deg, transparent ${edge(710)}, #000 ${edge(785)}, #000 ${edge(855)}, transparent ${edge(935)})`);
   }
 
   function maskLobbyVisitor(frame, inside) {

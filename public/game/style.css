@@ -719,3 +719,21 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
   .phone-dock{right:max(.3rem,env(safe-area-inset-right));bottom:max(.3rem,env(safe-area-inset-bottom));height:3.25rem;width:4rem}
   .phone-dock>.mini-phone{height:1.4rem;width:.9rem;margin-bottom:.05rem}
 }
+
+/* The older CCTV photographs contain fixed camera stamps in their corners.
+   Random scene mapping can assign them a different CAM slot. Conceal only the
+   photographed stamps, then use the live HUD for every scene and every shift. */
+@media(max-width:760px), (pointer:coarse) and (orientation:landscape) and (max-height:600px){
+  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::before,
+  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::after{
+    content:"";position:absolute;z-index:6;pointer-events:none
+  }
+  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::before{
+    left:0;top:0;width:48%;height:11%;background:linear-gradient(90deg,#020504f8 65%,#020504dd 82%,transparent)
+  }
+  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::after{
+    right:0;bottom:0;width:20%;height:7%;background:linear-gradient(270deg,#020504f5 42%,#020504a8 75%,transparent)
+  }
+  .monitor-hud.top div{min-width:0;gap:.45rem}
+  .monitor-hud.top span{display:inline-block;max-width:min(34vw,10rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(.59rem,1.55vw,.7rem)}
+}

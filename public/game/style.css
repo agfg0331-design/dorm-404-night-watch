@@ -678,6 +678,7 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
    the upper and lower parts to fill the wide viewport. */
 .mobile-fullscreen-tip{display:none}
 @media(pointer:coarse) and (orientation:landscape) and (max-height:600px){
+  .game,.view{height:100dvh;bottom:auto}
   .monitor-view{background:repeating-linear-gradient(180deg,#050909 0 3px,#020505 4px),#020505}
   .monitor-stage{inset:auto;left:50%;top:50%;width:min(100vw,133.333dvh);height:min(100dvh,75vw);aspect-ratio:4/3;transform:translate(-50%,-50%);overflow:hidden;box-shadow:0 0 0 1px #34453d,0 0 55px #000}
   .monitor-hud.top{top:max(3.1rem,calc(env(safe-area-inset-top) + 1rem))}

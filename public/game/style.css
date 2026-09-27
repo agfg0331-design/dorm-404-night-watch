@@ -651,3 +651,17 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
 .room-hud{top:max(1.5rem,env(safe-area-inset-top))}
 @media(max-width:760px){.room-guidance{right:2.3%;top:55%;width:22%;font-size:clamp(.58rem,1.2vw,.74rem)}.room-guidance p{gap:.35em}}
 @media(orientation:landscape) and (max-height:600px){.room-scene::after{height:12%;background:linear-gradient(#0205059c,transparent)}.room-guidance{right:2%;top:54%;width:22%;font-size:clamp(.55rem,1.25vw,.68rem)}.room-hud{top:max(.7rem,env(safe-area-inset-top))}}
+/* On a short landscape phone, use the available width while keeping the
+   physical desk controls aligned with the cropped photograph. */
+@media(orientation:landscape) and (max-height:600px){
+  .room-scene{width:100vw}
+  .room-background{object-fit:cover;object-position:center 68%}
+  .room-hotspot.monitor-hotspot{left:2%;top:6%;width:39%;height:60%}
+  .archive-entry{left:17%;top:74%;bottom:auto;width:34%;height:25%}
+  .room-hotspot.phone-hotspot{left:68%;top:77%;width:21%;height:22%}
+  .room-hud,.monitor-hud.top,.test-dock{top:max(2.75rem,calc(env(safe-area-inset-top) + .75rem))}
+  .monitor-top-scrim{height:calc(4.6rem + env(safe-area-inset-top))}
+  .archive-overlay{padding-top:max(2.75rem,calc(env(safe-area-inset-top) + .5rem))}
+  .archive-case{width:min(900px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem))}
+  .guestbook-phone{width:min(860px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem))}
+}

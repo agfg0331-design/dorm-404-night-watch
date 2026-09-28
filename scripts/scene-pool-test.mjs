@@ -11,7 +11,7 @@ for (const name of ["anomalies", "game"]) {
 const { scenePool, createShift } = sandbox.GameContent;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const names = Object.values(scenePool).map((scene) => scene.name);
-const earlyCategories = new Set(["人物异常", "物品变化", "门窗 / 通道", "灯光 / 设备", "环境 / 空间", "监控 / 信号", "其他 / 无法判断"]);
+const earlyCategories = new Set(["人物异常", "物品变化", "门窗 / 通道", "灯光 / 设备", "环境 / 空间", "监控 / 信号"]);
 const combinations = new Set();
 const seenScenes = new Set();
 
@@ -72,6 +72,7 @@ const laundryShift = createShift(405, ["laundry", "music", "elevator", "lab", "d
 assert(laundryShift.events.find((event) => event.id === "laundry-reflection").start < 210, "浴室镜中黑影仍在过暗的后期");
 const sim = new sandbox.NightShiftSimulation({ seed: 404, shift });
 const event = sim.eventQueue.find((item) => item.id === "dance-figure");
+sim.eventQueue.filter((item) => item.actualStart < event.actualStart).forEach((item) => { item.state = "missed"; item.leadSent = true; });
 sim.minute = event.actualStart + 1;
 sim.processEvents();
 assert(sim.activeEvents.includes(event), "新场景异常没有出现");

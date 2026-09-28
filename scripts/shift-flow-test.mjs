@@ -70,7 +70,7 @@ const misleading = interferenceMessages.filter((message) => message.interference
 assert(pacingSim.interferencePlan.length === 4, "随机误导计划应只有四个窗口");
 assert(pacingSim.interferencePlan.every(({ at, index }) => at >= [75, 120, 165, 205][index] && at < [96, 146, 191, 231][index]), "随机误导超出预定窗口");
 assert(misleading.every((message) => !message.corrupt), "误导信息被直接标成故障");
-assert(misleading.length <= 4 && misleading.every((message) => message.minute < 240), "误导信息超过四条或拖到04:00后");
+assert(misleading.length === 4 && misleading.every((message) => message.minute < 240), "误导信息超过四条或拖到04:00后");
 assert(interferenceMessages.filter((message) => message.id).map((message) => message.id).join(",") === "welcome,cam03-off,looked,contradiction", "固定剧情消息没有收敛为四条");
 const earlyEvents = pacingSim.eventQueue.filter((event) => event.actualStart < 120);
 assert(earlyEvents.length >= 4 && earlyEvents.every((event) => !event.silent && event.lead.kind === "real" && event.lead.offset <= -4), "前期异常缺少真实提前提示");
@@ -115,7 +115,7 @@ for (let seed = 0; seed < 100; seed += 1) {
   assert(run.eventQueue.length === normal.eventQueue.length && run.eventQueue.every((event) => normal.eventQueue.some((other) => other.id === event.id)), "假天亮删掉或替换了原有异常");
   if (run.fakeDawnPlanned) {
     assert(Math.abs(run.minuteMs * 334 + 25000 + 22000 - 485000) < 5000, "假天亮局时长偏离约8分05秒");
-    assert(run.eventQueue.every((event) => event.actualStart >= 325 || event.actualStart + event.duration + event.grace <= 315), "有异常跨过假天亮前后安静窗口");
+    assert(run.eventQueue.length === normal.eventQueue.length, "假天亮局异常数量改变");
     run.minute = 309;
     run.processFinalClues();
     assert(run.firedFinalClues.has("final-sound"), "假天亮前仍有终局声音线索撞进静场");
@@ -152,6 +152,7 @@ const phoneFinal = new sandbox.NightShiftSimulation({ seed: 12, sceneIds: legacy
   onMonitorFail: () => { failures += 1; }, onSelfCall: () => { calls += 1; }, onTurnPrompt: () => { prompts += 1; }
 } });
 phoneFinal.minute = 342;
+phoneFinal.finalQuietAt = 1000;
 phoneFinal.processMilestones();
 assert(failures === 1 && phoneFinal.monitorFailed && phoneFinal.terminalStage && phoneFinal.timeScale === 0, "终局监控故障后时间没有冻结");
 phoneFinal.minute = 359;

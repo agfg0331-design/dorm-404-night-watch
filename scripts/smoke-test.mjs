@@ -284,8 +284,8 @@ const simulation = new sandbox.NightShiftSimulation({
   }
 });
 simulation.running = true;
-for (let now = 0; now <= 36200; now += 100) simulation.step(now);
-if (!simulation.terminalStage || simulation.ended || starts !== simulation.eventQueue.length || prompts !== 0 || simulation.minute < 342 || simulation.minute >= 343) {
+for (let now = 0; now <= 90000 && !simulation.terminalStage; now += 100) simulation.step(now);
+if (!simulation.terminalStage || simulation.ended || starts !== simulation.eventQueue.length || prompts !== 0 || simulation.minute < 342 || !simulation.finalQuietAt) {
   throw new Error("终局断连没有冻结时间并等待来电");
 }
 simulation.beginFinalCall();

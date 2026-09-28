@@ -2,13 +2,14 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
-const categories = ["人物异常", "物品变化", "门窗 / 通道", "灯光 / 设备", "环境 / 空间", "监控 / 信号", "其他 / 无法判断"];
+const categories = ["人物异常", "物品变化", "门窗 / 通道", "灯光 / 设备", "环境 / 空间", "监控 / 信号"];
 const known = new Set(categories);
 const html = fs.readFileSync("public/game/index.html", "utf8");
 const css = fs.readFileSync("public/game/style.css", "utf8");
 const options = [...html.matchAll(/<input[^>]*name="category"[^>]*value="([^"]+)"/g)].map((match) => match[1]);
-assert(JSON.stringify(options) === JSON.stringify(categories), "上报界面的七项分类或顺序有误");
+assert(JSON.stringify(options) === JSON.stringify(categories), "上报界面的六项分类或顺序有误");
 assert(html.includes("按你看到的现象选择，不必判断异常原因。"), "缺少按可见现象分类的提示");
+assert(!html.includes("其他 / 无法判断") && !css.includes("category-other"), "旧兜底分类仍在界面中");
 assert(!html.includes("late-category") && !css.includes("late-category"), "监控 / 信号仍有阶段限制");
 
 const sandbox = { window: {}, performance: { now: () => 1000 }, console };
@@ -48,7 +49,7 @@ assert(!report("hall-door", "门窗 / 通道", "cam02").result.ok, "上报错误
 for (const category of ["环境 / 空间", "人物异常"]) assert(report("dance-desync", category).result.ok, `镜像异常未接受 ${category}`);
 for (const category of ["监控 / 信号", "灯光 / 设备"]) assert(report("lab-feed", category).result.ok, `画面串台未接受 ${category}`);
 assert(report("lab-static", "监控 / 信号").result.ok, "监控分类无法上报");
-assert(!report("dorm-chair", "其他 / 无法判断").result.ok, "兜底分类错误地接受了已知异常");
+assert(!report("dorm-chair").result.ok, "兜底分类错误地接受了已知异常");
 for (const category of categories) report("dorm-chair", category);
 
 // Reversed active-event search remains in place when the same camera/category has two anomalies.
@@ -59,4 +60,4 @@ sim.activeEvents = [first, second];
 assert(sim.report("cam03", "人物异常").event === second, "同摄像头同分类未优先命中最新异常");
 assert(sim.report("cam03", "人物异常").event === first, "处理中的异常被重复上报");
 
-console.log(`上报分类自检通过：${allEvents.length} 个异常，七个 UI 选项，单/多答案与随机 CAM 判定正常。`);
+console.log(`上报分类自检通过：${allEvents.length} 个异常，六个 UI 选项，单/多答案与随机 CAM 判定正常。`);

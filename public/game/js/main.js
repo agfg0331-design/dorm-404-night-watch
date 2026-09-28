@@ -13,7 +13,7 @@
   const globalSignalAt = testShow === "cascade" || testShow === "snow" ? 2000
     : testMode === "full" ? Math.max(1000, Math.round(240000 * minuteMs / (470000 / 360)))
       : qa && params.has("globalAt") ? Math.max(100, Number(params.get("globalAt")) || 240000) : 240000;
-  const finalSilenceMs = qa && params.has("finalSilence") ? Math.max(500, Number(params.get("finalSilence")) || 10000) : 10000;
+  const finalSilenceMs = 10000;
   const requestedSeed = qa && params.has("seed") ? Number(params.get("seed")) : null;
   const shiftSeed = Number.isFinite(requestedSeed) ? Math.trunc(requestedSeed) : Math.floor(Math.random() * 4294967296);
   const paMinute = testShow === "pa-override" ? 180 : 180 + ((Math.imul(shiftSeed ^ 0x50415359, 0x45d9f3b) >>> 0) % 90);
@@ -215,9 +215,13 @@
         }
       },
       onMonitorFail: beginFinalBlackout,
-      canStartFakeDawn: (now) => !showLocked && now >= majorShowCooldownUntil,
-      canSendOrdinaryMessage: () => !showLocked && performance.now() >= ordinaryMessagesResumeAt && !finalBlackoutPending && !sim.terminalStage,
-      canSendAnomalyLead: () => !showLocked && !finalBlackoutPending && !sim.terminalStage,
+      canStartFakeDawn: (now) => {
+        if (showLocked || now < majorShowCooldownUntil) return false;
+        if (sim.majorGuard.phase === "idle") sim.requestMajorShow("fake-dawn", now);
+        return sim.majorGuard.kind === "fake-dawn" && sim.startMajorShow(now);
+      },
+      canSendOrdinaryMessage: () => !showLocked && sim.majorGuard.phase === "idle" && !sim.finalQuietAt && performance.now() >= ordinaryMessagesResumeAt && !finalBlackoutPending && !sim.terminalStage,
+      canSendAnomalyLead: () => !showLocked && sim.majorGuard.phase !== "active" && sim.majorGuard.phase !== "post" && !sim.finalQuietAt && !finalBlackoutPending && !sim.terminalStage,
       onFakeDawn: handleFakeDawn,
       onFinalClue: handleFinalClue,
       onSelfCall: showSelfCall,
@@ -361,6 +365,7 @@
   }
 
   function finishMajorShow() {
+    sim.endMajorShow();
     majorShowCooldownUntil = Math.max(majorShowCooldownUntil, performance.now() + majorShowCooldownMs);
     ordinaryMessagesResumeAt = Math.max(ordinaryMessagesResumeAt, performance.now() + (qa || fast ? Math.max(250, Math.round(3000 * minuteMs / (470000 / 360))) : 3000));
   }
@@ -410,6 +415,7 @@
     document.querySelectorAll(".phone-tabs button").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
     els.messagesPanel.classList.toggle("active", tab === "messages");
     els.reportPanel.classList.toggle("active", tab === "report");
+    els.phoneView.classList.toggle("report-open", tab === "report");
     if (tab === "report") {
       els.reportCamera.value = sim.currentCamera;
       sim.setView("phone-report");
@@ -487,7 +493,7 @@
 
   function triggerPhoneCorruption(type, phrase) {
     const major = type === "snow" || type === "snow-hard" || type === "flood";
-    if (sim.terminalStage || sim.finalStage || finalBlackoutPending || finalBlackoutStarted) return;
+    if (sim.terminalStage || sim.finalStage || sim.finalQuietAt || finalBlackoutPending || finalBlackoutStarted) return;
     if (showLocked && showLocked !== "phone") { pendingPhoneCorruption = { type, phrase }; return; }
     if (major && performance.now() < majorShowCooldownUntil) {
       pendingPhoneCorruption = { type, phrase };
@@ -501,7 +507,15 @@
       }, majorShowCooldownUntil - performance.now());
       return;
     }
-    if (major) showLocked = "phone";
+    if (major) {
+      if (sim.majorGuard.phase === "idle") sim.requestMajorShow("phone", performance.now());
+      if (sim.majorGuard.kind !== "phone" || !sim.startMajorShow(performance.now())) {
+        pendingPhoneCorruption = { type, phrase };
+        return;
+      }
+      pendingPhoneCorruption = null;
+      showLocked = "phone";
+    }
     window.clearTimeout(phoneCorruptionTimer);
     els.phoneGhostWarning.textContent = phrase;
     els.phoneRedFlood.querySelectorAll("span").forEach((line, index) => {
@@ -670,6 +684,8 @@
         now < majorShowCooldownUntil ||
         ["pre", "bright", "post"].includes(sim.fakeDawnStage) ||
         phoneCorruptionStartTimer || els.phoneCorruption.classList.contains("active")) return;
+    if (sim.majorGuard.phase === "idle") sim.requestMajorShow("pa", now);
+    if (sim.majorGuard.kind !== "pa" || !sim.startMajorShow(now)) return;
     startPaOverride(now);
   }
 
@@ -1586,6 +1602,8 @@
     if (!globalSignalStartedAt) {
       if (now - shiftStartedAt < globalSignalAt) return;
       if (showLocked || now < majorShowCooldownUntil) return;
+      if (sim.majorGuard.phase === "idle") sim.requestMajorShow("global", now);
+      if (sim.majorGuard.kind !== "global" || !sim.startMajorShow(now)) return;
       showLocked = "global";
       globalSignalStartedAt = now;
       if (!qa) window.GameArchive.recordShow(globalSignalMode);
@@ -1634,13 +1652,18 @@
     if (showLocked === "pa") sim.pauseFor(1000, now);
     syncGlobalSignal(now);
     syncPaOverride(now);
+    if (pendingPhoneCorruption && sim.view.startsWith("phone") && !showLocked && !sim.finalQuietAt &&
+        sim.majorGuard.phase !== "post" && now >= majorShowCooldownUntil) {
+      const pending = pendingPhoneCorruption;
+      triggerPhoneCorruption(pending.type, pending.phrase);
+    }
     sim.step(now);
     if (focusedEvent && !focusedEventHeld && sim.minute >= focusedEvent.actualStart + focusedEvent.duration) {
       focusedEventHeld = true;
       sim.pauseFor(24 * 60 * 60 * 1000, now);
     }
     const currentMinute = Math.floor(sim.minute);
-    if (currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {
+    if (!showLocked && !sim.finalQuietAt && !sim.terminalStage && currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {
       lastAmbientWarning = currentMinute;
       audio.doorHandle();
     }

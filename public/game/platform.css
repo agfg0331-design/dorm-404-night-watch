@@ -33,11 +33,6 @@
 .platform-taptap .rotate-device-notice strong{font-size:clamp(1.2rem,5vw,1.7rem)}
 .platform-taptap .rotate-device-notice span{max-width:18rem;color:#9faea2;font-size:.78rem;line-height:1.6}
 
-/* New scene frames have no baked date/CAM stamp to cover at the top. */
-@media (pointer:coarse) and (orientation:landscape) and (max-height:600px) {
-  .platform-taptap .monitor-view:is([data-scene="music"],[data-scene="dance"],[data-scene="elevator"],[data-scene="lab"]) .feed-matte-top { display:none }
-}
-
 /* TapTap's short landscape viewport uses the same 4:3 CCTV coordinate space. */
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px) and (min-aspect-ratio:2/1) {
   .platform-taptap .monitor-stage {
@@ -56,6 +51,20 @@
 }
 
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px) {
+  .platform-taptap .phone-view.report-open .phone-status { display:none }
+  .platform-taptap .phone-view.report-open .phone-title { display:none }
+  .platform-taptap .phone-view.report-open .phone-panel { height:calc(100% - 34px) }
+  .platform-taptap .report-panel { padding:.26rem .38rem;overscroll-behavior:contain }
+  .platform-taptap .report-urgency { display:none }
+  .platform-taptap .report-panel form>label { margin-top:.12rem }
+  .platform-taptap .report-panel select { margin-top:.1rem;padding:.24rem .35rem;min-height:42px }
+  .platform-taptap .report-panel fieldset { margin:.18rem 0 .08rem }
+  .platform-taptap .report-panel legend { position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap }
+  .platform-taptap .category-hint { margin:0 0 .1rem;line-height:1.15 }
+  .platform-taptap .category-grid { gap:.1rem }
+  .platform-taptap .category-grid span { display:grid;place-items:center;min-height:43px;padding:.12rem .08rem;font-size:.7rem }
+  .platform-taptap .report-feedback { min-height:.48rem;margin:.05rem 0;font-size:.65rem;line-height:1.1 }
+  .platform-taptap .submit-report { min-height:44px;padding:.25rem }
   .platform-taptap.taptap-wide .camera-dock button { min-height:44px }
   .platform-taptap .phone-dock { min-width:48px;min-height:48px }
   .platform-taptap .settings-overlay {

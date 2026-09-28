@@ -2,6 +2,17 @@
   "use strict";
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const interferencePool = Object.freeze({
+    dorm: ["宿舍门口传来脚步声，请核对。", "宿舍灯光状态发生短暂变化。", "宿舍窗边疑似有人停留。"],
+    hall: ["走廊尽头似乎有人经过。", "走廊照明记录出现一次跳变。", "巡楼人员称刚才走廊有动静。"],
+    laundry: ["洗衣房设备似乎自行启动。", "洗衣房传来一声碰撞，请核对。", "洗衣房地面出现不明水迹。"],
+    stairs: ["楼梯间好像有人上楼。", "楼梯间的声控灯刚亮了一次。", "巡楼记录显示楼梯间有脚步声。"],
+    lobby: ["大厅门禁出现一次异常记录。", "一楼大厅似乎有人停留。", "大厅入口的门刚才响了一声。"],
+    music: ["音乐教室似乎有人经过。", "音乐教室传来一声琴键响。", "音乐教室的谱架位置疑似变化。"],
+    dance: ["舞蹈教室的镜面似乎有人影。", "舞蹈教室传出一声脚步。", "舞蹈教室灯光记录有短时波动。"],
+    elevator: ["电梯厅检测到短时停留，请人工确认。", "电梯厅刚才传来开门声。", "电梯厅楼层指示疑似跳动。"],
+    lab: ["机房一台终端发生异常启动。", "机房屏幕似乎闪烁了一次。", "机房设备记录出现短暂离线。"]
+  });
 
   const FINAL_CHOICES = Object.freeze({ TURN: "TURN", STAY: "STAY" });
   const FINAL_ROUTES = Object.freeze({
@@ -123,18 +134,18 @@
       this.pendingOrdinaryMessages = [];
       this.lastPhoneMessageAt = -Infinity;
       this.messageNow = 0;
-      // Four seeded windows, ending before the final third of the shift.
+      this.majorGuard = { phase: "idle", kind: null, quietAt: 0, until: 0 };
+      this.finalQuietAt = 0;
+      this.lastLeadCamera = null;
+      this.lastInterferenceScene = null;
+      this.sentInterferenceScenes = new Set();
+      this.lastMessageKind = null;
+      // Four seeded windows; unresolved slots remain queued through shows.
       this.interferencePlan = [[75, 21], [120, 26], [165, 26], [205, 26]].map(([base, span], index) => ({
         at: base + Math.floor(this.#seededUnit(0x494e4600 + index) * span), index
       }));
       this.eventQueue = this.shift.events.map((event, index) => {
         let actualStart = clamp(event.start + this.jitter(index, event.jitter), 5, 340);
-        // Preserve every anomaly, but bring any late one that would cross the
-        // 05:20 quiet window forward. Nothing is spawned or missed on the false
-        // daylight, and the final phone beat remains uncrowded.
-        if (this.fakeDawnPlanned && actualStart < 325 && actualStart + event.duration + event.grace > 315) {
-          actualStart = 315 - event.duration - event.grace;
-        }
         const early = actualStart < 120;
         const priority = event.hintPriority || "standard";
         const late = actualStart >= 260;
@@ -147,7 +158,7 @@
         const silent = !early && this.#seededUnit(0x53494c00 + index) >= hintChance;
         // Early notices and important multi-stage notices point to the actual
         // feed even if the original scene text was an intentional false lead.
-        const lead = (early || priority === "essential" || priority === "featured") && event.lead.kind === "false"
+        const lead = event.lead.kind === "false"
           ? { sender: "值班系统", text: `${this.cameras[event.camera].code}（${this.cameras[event.camera].name}）的记录与巡楼登记不一致，需人工复核。`, kind: "real" }
           : { ...event.lead };
         const feed = this.cameras[event.camera];
@@ -201,6 +212,43 @@
       this.pausedUntil = Math.max(this.pausedUntil, now + duration);
     }
 
+    requestMajorShow(kind, now = performance.now()) {
+      if (this.majorGuard.phase !== "idle" || this.terminalStage || this.finalQuietAt) return false;
+      this.majorGuard = { phase: "pre", kind, quietAt: 0, until: 0 };
+      return true;
+    }
+
+    majorShowReady(now = performance.now()) {
+      if (this.majorGuard.phase !== "pre") return false;
+      const ongoing = this.activeEvents.some((event) => !event.reported && event.state !== "missed");
+      if (ongoing) { this.majorGuard.quietAt = 0; return false; }
+      if (!this.majorGuard.quietAt) this.majorGuard.quietAt = now;
+      return now - this.majorGuard.quietAt >= 3500;
+    }
+
+    startMajorShow(now = performance.now()) {
+      if (!this.majorShowReady(now)) return false;
+      this.shiftWaitingEvents(0);
+      this.majorGuard.phase = "active";
+      return true;
+    }
+
+    endMajorShow(now = performance.now()) {
+      if (this.majorGuard.phase !== "active") return;
+      this.shiftWaitingEvents(0);
+      this.majorGuard.phase = "post";
+      this.majorGuard.until = now + 5000;
+    }
+
+    shiftWaitingEvents(deltaMinutes) {
+      let earliest = this.minute + 3;
+      for (const event of this.eventQueue.filter((entry) => entry.state === "waiting").sort((a, b) => a.actualStart - b.actualStart)) {
+        event.actualStart = Math.max(event.actualStart + deltaMinutes, earliest);
+        event.leadQueued = false;
+        earliest = event.actualStart + 6;
+      }
+    }
+
     setView(view) {
       this.view = view;
       if (view === "phone-messages") this.readPhone();
@@ -227,8 +275,13 @@
       if (!this.lastFrame) this.lastFrame = now;
       const elapsed = Math.min(250, now - this.lastFrame);
       this.lastFrame = now;
+      if (this.majorGuard.phase === "post" && now >= this.majorGuard.until) this.majorGuard = { phase: "idle", kind: null, quietAt: 0, until: 0 };
       if (["pre", "bright", "post"].includes(this.fakeDawnStage)) {
         this.advanceFakeDawn(now);
+        this.callbacks.onTick?.(this.snapshot());
+        return;
+      }
+      if (this.majorGuard.phase === "active" || this.majorGuard.phase === "post") {
         this.callbacks.onTick?.(this.snapshot());
         return;
       }
@@ -237,7 +290,7 @@
         return;
       }
       this.minute += (elapsed / this.minuteMs) * this.timeScale;
-      if (this.fakeDawnPlanned && this.fakeDawnStage === "idle" && this.minute >= 316 && this.minute < 334 &&
+      if (this.fakeDawnPlanned && this.fakeDawnStage === "idle" && this.minute >= 316 &&
           (!this.callbacks.canStartFakeDawn || this.callbacks.canStartFakeDawn(now))) {
         this.fakeDawnAnchor = this.minute < 316.5 ? 316 : this.minute;
         this.minute = this.fakeDawnAnchor;
@@ -253,17 +306,23 @@
         this.lastMinute = floorMinute;
         this.processNarrative();
         this.processInterference();
-        this.processMilestones();
       }
       this.processFinalClues();
+      if (this.minute >= 342 && !this.terminalStage) {
+        const unfinished = this.eventQueue.some((event) => event.state === "waiting" || (event.state !== "missed" && !event.reported));
+        const pending = this.pendingOrdinaryMessages.some((entry) => entry.index !== undefined);
+        const clues = this.#finalPlan.some((clue) => !this.firedFinalClues.has(clue.id));
+        if (!unfinished && !pending && !clues && !this.finalQuietAt) this.finalQuietAt = now;
+        if (this.finalQuietAt && now - this.finalQuietAt >= 9000) this.processMilestones();
+      }
       if (this.finalStage || this.terminalStage) {
         this.callbacks.onTick?.(this.snapshot());
         return;
       }
       this.processEvents();
-      this.flushOrdinaryMessages();
+      if (!this.finalQuietAt) this.flushOrdinaryMessages();
       this.callbacks.onTick?.(this.snapshot());
-      if (this.minute >= 360 && !this.turning && !this.finalStage) this.finish("dawn");
+      // The clock may run past 06:00 while protected events finish naturally.
     }
 
     advanceFakeDawn(now) {
@@ -295,28 +354,25 @@
       this.interferencePlan.forEach(({ at, index }) => {
         if (this.minute < at || this.firedInterference.has(index)) return;
         this.firedInterference.add(index);
-        this.pendingOrdinaryMessages.push({ index, expiresAt: Math.min(at + 18, [100, 150, 195, 240][index]), priority: 3 });
+        this.pendingOrdinaryMessages.push({ index, expiresAt: Infinity, priority: 3 });
       });
     }
 
     createInterference(index) {
-      const cameras = Object.keys(this.cameras);
-      const active = this.activeEvents.find((event) => !event.reported && !event.resolvingUntil && event.state !== "missed");
-      const empty = cameras.filter((camera) => !this.activeEvents.some((event) => event.camera === camera && !event.reported));
-      const emptyCamera = empty[this.#seededIndex(empty.length, 0x43414d00 + index)];
-      const emptyFeed = this.cameras[emptyCamera];
-      if (index % 2 === 0 && emptyFeed) {
-        return index === 0
-          ? { sender: "值班系统", text: `${emptyFeed.code}（${emptyFeed.name}）检测到短时人员活动，请核对画面。`, suspicious: true, interference: true }
-          : { sender: "405 张同学", text: `我刚才看到 ${emptyFeed.name} 那边有人经过，你看到了吗？`, suspicious: true, interference: true };
-      }
-      if (index % 2 === 1 && active) {
-        const activeFeed = this.cameras[active.camera];
-        return index === 3
-          ? { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）现场复核无异常。`, suspicious: true, interference: true }
-          : { sender: "值班系统", text: `${activeFeed.code}（${activeFeed.name}）画面状态正常。`, suspicious: true, interference: true };
-      }
-      return null;
+      const nextLead = this.eventQueue.filter((event) => !event.leadSent && !event.silent &&
+        event.actualStart + event.lead.offset >= this.minute)
+        .sort((a, b) => a.actualStart + a.lead.offset - b.actualStart - b.lead.offset)[0];
+      const busy = new Set(this.activeEvents.filter((event) => !event.reported && event.state !== "missed").map((event) => event.camera));
+      const candidates = Object.entries(this.cameras).filter(([camera, feed]) => feed.sceneId !== "duty" &&
+        interferencePool[feed.sceneId] && !busy.has(camera) && camera !== this.lastLeadCamera &&
+        camera !== nextLead?.camera && feed.sceneId !== this.lastInterferenceScene);
+      if (!candidates.length) return null;
+      const unused = candidates.filter(([, feed]) => !this.sentInterferenceScenes.has(feed.sceneId));
+      const choices = unused.length ? unused : candidates;
+      const [camera, feed] = choices[this.#seededIndex(choices.length, 0x43414d00 + index + Math.floor(this.minute))];
+      const variants = interferencePool[feed.sceneId];
+      return { sender: index % 2 ? "405 张同学" : "值班系统", text: `${feed.code}（${feed.name}）：${variants[this.#seededIndex(variants.length, 0x54455800 + index)]}`, suspicious: true, interference: true,
+        targetCamera: camera, targetScene: feed.sceneId };
     }
 
     queueOrdinaryMessage(message, lifetimeMinutes = 20, priority = 2) {
@@ -324,7 +380,7 @@
     }
 
     flushOrdinaryMessages() {
-      if (this.callbacks.canSendOrdinaryMessage?.() === false) return;
+      if (this.majorGuard.phase !== "idle" || this.finalQuietAt || this.callbacks.canSendOrdinaryMessage?.() === false) return;
       this.pendingOrdinaryMessages = this.pendingOrdinaryMessages.filter((entry) => this.minute <= entry.expiresAt);
       if (this.messageNow - this.lastPhoneMessageAt < this.ordinaryMessageSpacing() || !this.pendingOrdinaryMessages.length) return;
       // If a lead or final clue is seconds away, let it speak first. Neither
@@ -339,13 +395,19 @@
         const entry = this.pendingOrdinaryMessages[index];
         const message = entry.message || this.createInterference(entry.index);
         if (!message) continue;
+        if (entry.index !== undefined && this.lastMessageKind === "lead" && this.messageNow - this.lastPhoneMessageAt < this.scaleMessageDelay(7000)) continue;
         this.pendingOrdinaryMessages.splice(index, 1);
+        if (message.interference) {
+          this.lastInterferenceScene = message.targetScene;
+          this.sentInterferenceScenes.add(message.targetScene);
+        }
         this.pushMessage(message);
         return;
       }
     }
 
     processFinalClues() {
+      if (this.majorGuard.phase !== "idle" || this.finalQuietAt) return;
       this.#finalPlan.forEach((clue) => {
         if (this.minute < clue.at || this.firedFinalClues.has(clue.id)) return;
         if (clue.channel === "phone" && this.callbacks.canSendAnomalyLead?.() === false) return;
@@ -364,7 +426,7 @@
     }
 
     processMilestones() {
-      if (this.minute >= 342 && !this.monitorFailed) {
+      if (this.minute >= 342 && this.finalQuietAt && !this.monitorFailed) {
         this.monitorFailed = true;
         this.terminalStage = true;
         this.callbacks.onMonitorFail?.(this.snapshot());
@@ -389,16 +451,18 @@
     }
 
     processEvents() {
+      const canSpawn = this.majorGuard.phase === "idle" && !this.finalQuietAt;
       this.eventQueue.forEach((event) => {
-        if (!event.leadSent && this.minute >= event.actualStart + event.lead.offset) event.leadQueued = true;
-        if (event.state === "waiting" && this.minute >= event.actualStart) {
+        if (canSpawn && !event.leadSent && this.minute >= event.actualStart + event.lead.offset) event.leadQueued = true;
+        if (canSpawn && event.state === "waiting" && this.minute >= event.actualStart) {
+          event.actualStart = this.minute;
           event.state = "changing";
           this.activeEvents.push(event);
           this.callbacks.onEventStart?.(event, this.snapshot());
         }
       });
 
-      this.flushAnomalyLeads();
+      if (canSpawn) this.flushAnomalyLeads();
 
       this.activeEvents.slice().forEach((event) => {
         if (event.reported) return;
@@ -447,7 +511,8 @@
         // twice in the same second. Their offsets give them room to queue.
         if (sinceLast < this.scaleMessageDelay(1000)) continue;
         event.leadSent = true;
-        this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: event.lead.kind === "false", linkedEvent: event.id });
+        this.lastLeadCamera = event.camera;
+        this.pushMessage({ sender: event.lead.sender, text: event.lead.text, suspicious: false, linkedEvent: event.id, targetCamera: event.camera });
         break;
       }
     }
@@ -486,6 +551,7 @@
     }
 
     pushMessage(message) {
+      this.lastMessageKind = message.linkedEvent ? "lead" : message.interference ? "interference" : "other";
       this.unread += 1;
       this.lastPhoneMessageAt = this.messageNow || performance.now();
       this.callbacks.onMessage?.(message, this.snapshot());
@@ -538,14 +604,16 @@
     }
 
     getVisibleEvent() {
-      if (["pre", "bright", "post"].includes(this.fakeDawnStage)) return null;
+      if (["pre", "bright", "post"].includes(this.fakeDawnStage) ||
+          ["active", "post"].includes(this.majorGuard.phase) || this.finalQuietAt) return null;
       // Once missed, the earlier CAM 04 figure gives way to the final camera
       // clue. It stays in activeEvents and remains reportable from the phone.
       const candidates = this.activeEvents.filter((event) => event.camera === this.currentCamera && !event.reported &&
         !(this.currentCamera === "cam04" && this.finalCameraCue && event.id === "duty-self" && event.state === "missed"));
       // An older missed anomaly stays reportable, but never hides a newer event
       // on the same feed. Other missed events remain visible in quiet gaps.
-      return candidates.filter((event) => event.state !== "missed").at(-1) || candidates.at(-1) || null;
+      return candidates.filter((event) => event.state !== "missed").at(-1) ||
+        (this.majorGuard.phase === "pre" ? null : candidates.at(-1)) || null;
     }
 
     snapshot() {

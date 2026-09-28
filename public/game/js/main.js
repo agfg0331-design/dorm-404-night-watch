@@ -31,7 +31,7 @@
     mobileFullscreenTip: $("mobileFullscreenTip"), mobileFullscreenTipText: $("mobileFullscreenTipText"), enterFullscreen: $("enterFullscreen"), dismissFullscreenTip: $("dismissFullscreenTip"),
     enterMonitor: $("enterMonitor"), monitorPhone: $("monitorPhone"),
     monitorUnread: $("monitorUnread"), tabUnread: $("tabUnread"),
-    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
+    cameraImage: $("cameraImage"), cameraCode: $("cameraCode"), cameraName: $("cameraName"), sceneWatermark: $("sceneWatermark"), monitorTime: $("monitorTime"), globalSignal: $("globalSignal"), globalSignalGrid: $("globalSignalGrid"),
     eventFrameStack: $("eventFrameStack"), eventFrames: [$("eventFrame1"), $("eventFrame2"), $("eventFrame3")],
     eventLayer: $("eventLayer"), eventStatus: $("eventStatus"), signalError: $("signalError"), cameraCheckStatus: $("cameraCheckStatus"), cameraCheckLine: $("cameraCheckLine"), paStatus: $("paStatus"), paCaption: $("paCaption"),
     phoneTime: $("phoneTime"), phoneSubtitle: $("phoneSubtitle"), handset: $("handset"), closePhone: $("closePhone"), phoneHome: $("phoneHome"),
@@ -79,6 +79,7 @@
   });
   els.cameraImage.src = cameras.cam01.image;
   els.cameraName.textContent = cameras.cam01.name;
+  els.sceneWatermark.textContent = cameras.cam01.name;
   let previousView = "room";
   let currentTab = "messages";
   let toastTimer = null;
@@ -765,6 +766,7 @@
       els.monitorView.dataset.scene = camera.sceneId;
       els.cameraCode.textContent = camera.code;
       els.cameraName.textContent = camera.name;
+      els.sceneWatermark.textContent = camera.name;
       els.cameraImage.alt = `${camera.name}监控画面`;
       document.querySelectorAll(".camera-dock [data-camera]").forEach((button) => button.classList.toggle("active", button.dataset.camera === sim.currentCamera));
     }

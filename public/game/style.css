@@ -720,20 +720,15 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
   .phone-dock>.mini-phone{height:1.4rem;width:.9rem;margin-bottom:.05rem}
 }
 
-/* The older CCTV photographs contain fixed camera stamps in their corners.
-   Random scene mapping can assign them a different CAM slot. Conceal only the
-   photographed stamps, then use the live HUD for every scene and every shift. */
+/* One camera-film edge treatment covers photographed dates, location stamps
+   and fixed CAM numbers across normal frames and anomaly frames alike. The
+   live scene name is the only location watermark inside the mobile feed. */
+.feed-matte,.scene-watermark{display:none}
 @media(max-width:760px), (pointer:coarse) and (orientation:landscape) and (max-height:600px){
-  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::before,
-  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::after{
-    content:"";position:absolute;z-index:6;pointer-events:none
-  }
-  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::before{
-    left:0;top:0;width:48%;height:11%;background:linear-gradient(90deg,#020504f8 65%,#020504dd 82%,transparent)
-  }
-  .monitor-view:is([data-scene="dorm"],[data-scene="hall"],[data-scene="laundry"],[data-scene="stairs"],[data-scene="lobby"]) .monitor-stage::after{
-    right:0;bottom:0;width:20%;height:7%;background:linear-gradient(270deg,#020504f5 42%,#020504a8 75%,transparent)
-  }
+  .feed-matte{display:block;position:absolute;z-index:6;left:0;right:0;pointer-events:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .feed-matte-top{top:0;height:12%;background:linear-gradient(rgba(6,16,18,.68),rgba(6,16,18,.34));-webkit-mask-image:linear-gradient(#000 0 75%,transparent);mask-image:linear-gradient(#000 0 75%,transparent)}
+  .feed-matte-bottom{bottom:0;height:10%;background:linear-gradient(rgba(6,16,18,.18),rgba(6,16,18,.66));-webkit-mask-image:linear-gradient(transparent,#000 30%);mask-image:linear-gradient(transparent,#000 30%)}
+  .scene-watermark{display:block;position:absolute;z-index:6;left:3%;bottom:3%;max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;color:#c7d1cb;font:500 clamp(.65rem,1.5vw,.91rem)/1.2 ui-monospace,monospace;letter-spacing:.14em;text-shadow:0 1px 5px #000,0 0 9px #000}
   .monitor-hud.top div{min-width:0;gap:.45rem}
   .monitor-hud.top span{display:inline-block;max-width:min(34vw,10rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(.59rem,1.55vw,.7rem)}
 }

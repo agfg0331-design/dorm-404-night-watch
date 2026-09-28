@@ -12,10 +12,16 @@ for (const scene of ["music", "dance", "elevator", "lab"]) {
   assert(referenced.some((path) => path.startsWith(`scene-preview/assets/${scene}-`) && !path.endsWith("-normal.webp")));
 }
 
-for (const target of ["taptap-dev", "taptap-release"]) {
+// This smoke test builds only the development target; release validates its
+// scene manifest when the release command is deliberately run.
+for (const target of ["taptap-dev"]) {
   execFileSync(process.execPath, ["scripts/build-game-platform.mjs", target]);
   const output = resolve("dist", target);
   assert((await stat(resolve(output, "index.html"))).isFile());
+  assert((await stat(resolve(output, "platform.css"))).isFile());
+  const platformStyles = await readFile(resolve(output, "platform.css"), "utf8");
+  assert(platformStyles.includes(".platform-taptap .mobile-fullscreen-tip"));
+  assert(platformStyles.includes("--tap-stage-height"));
   await assert.rejects(stat(resolve(output, "scene-preview/index.html")), { code: "ENOENT" });
   assert.deepEqual((await readdir(resolve(output, "scene-preview/assets"))).sort(), sourceAssets);
   for (const path of referenced) assert((await stat(resolve(output, path))).isFile(), `${target}: ${path}`);

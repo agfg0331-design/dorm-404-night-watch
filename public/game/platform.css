@@ -32,3 +32,109 @@
 .platform-taptap .rotate-device-notice svg{width:90px;height:90px;fill:none;stroke:#a7bbac;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .platform-taptap .rotate-device-notice strong{font-size:clamp(1.2rem,5vw,1.7rem)}
 .platform-taptap .rotate-device-notice span{max-width:18rem;color:#9faea2;font-size:.78rem;line-height:1.6}
+
+/* TapTap's short landscape viewport uses the same 4:3 CCTV coordinate space. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:600px) and (min-aspect-ratio:2/1) {
+  .platform-taptap .monitor-stage {
+    transform:translate(-50%,-50%) scale(1.05);
+    transform-origin:center center;
+  }
+  /* The control gutters follow the scaled stage edge, keeping a clear gap. */
+  .platform-taptap .monitor-view {
+    --side-gutter:calc((100vw - var(--tap-stage-height) * 1.4) / 2);
+    --tap-side-button-width:min(9rem,calc(var(--side-gutter) - max(env(safe-area-inset-left),env(safe-area-inset-right)) - .8rem));
+  }
+  .platform-taptap.taptap-wide .camera-dock button { width:var(--tap-side-button-width);min-height:44px }
+  .platform-taptap.taptap-wide .camera-dock button:nth-child(-n+3) { left:max(env(safe-area-inset-left),calc(var(--side-gutter) - var(--tap-side-button-width) - .35rem)) }
+  .platform-taptap.taptap-wide .camera-dock button:nth-child(n+4) { right:max(env(safe-area-inset-right),calc(var(--side-gutter) - var(--tap-side-button-width) - .35rem)) }
+  .platform-taptap .phone-dock { right:max(env(safe-area-inset-right),calc(var(--side-gutter) - 4.5rem - .35rem)) }
+}
+
+@media (pointer:coarse) and (orientation:landscape) and (max-height:600px) {
+  .platform-taptap.taptap-wide .camera-dock button { min-height:44px }
+  .platform-taptap .phone-dock { min-width:48px;min-height:48px }
+  .platform-taptap .settings-overlay {
+    height:100dvh;
+    bottom:auto;
+    padding:max(2.75rem,calc(env(safe-area-inset-top) + .5rem)) max(.5rem,env(safe-area-inset-right)) max(.5rem,env(safe-area-inset-bottom)) max(.5rem,env(safe-area-inset-left));
+    overflow:hidden;
+  }
+  .platform-taptap .settings-card {
+    width:min(620px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem));
+    max-height:calc(100dvh - max(2.75rem,calc(env(safe-area-inset-top) + .5rem)) - max(.5rem,env(safe-area-inset-bottom)) - .5rem);
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.2rem .8rem;
+    padding:.6rem .8rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  .platform-taptap .settings-card header,
+  .platform-taptap .setting-toggles,
+  .platform-taptap .settings-card>p,
+  .platform-taptap .settings-done { grid-column:1/-1 }
+  .platform-taptap .settings-card header { align-items:center;margin:0;padding:0 0 .25rem }
+  .platform-taptap .settings-card header button { width:44px;height:44px;flex:none }
+  .platform-taptap .settings-card>label { margin:.1rem 0 }
+  .platform-taptap .settings-card>label>span { margin-bottom:0 }
+  .platform-taptap .settings-card input[type="range"] { height:36px;margin:0 }
+  .platform-taptap .setting-toggles { margin:.1rem 0 }
+  .platform-taptap .setting-toggles label { display:flex;align-items:center;min-height:44px;padding:.3rem .5rem }
+  .platform-taptap .settings-card>p { margin:.1rem 0;line-height:1.45 }
+  .platform-taptap .settings-done { min-height:44px;margin-top:.1rem;text-align:center }
+
+  .platform-taptap .room-guidance { display:none }
+  .platform-taptap .room-hotspot.monitor-hotspot span,
+  .platform-taptap .room-hotspot.monitor-hotspot small {
+    opacity:1;
+    transform:translateX(-50%);
+    width:max-content;
+    max-width:95%;
+    padding:.15rem .35rem;
+    background:#06100dc9;
+    text-align:center;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  .platform-taptap .room-hotspot.monitor-hotspot span { bottom:3rem }
+  .platform-taptap .room-hotspot.monitor-hotspot small { bottom:1.55rem }
+  .platform-taptap .archive-entry span {
+    opacity:1;
+    transform:none;
+    font-size:clamp(.65rem,1.1vw,.8rem);
+    pointer-events:none;
+  }
+  .platform-taptap .room-hotspot.phone-hotspot { align-items:flex-start;padding:.2rem 0 0 }
+  .platform-taptap .room-hotspot.phone-hotspot strong {
+    opacity:1;
+    transform:none;
+    padding:.25rem .4rem;
+    background:#06100dc9;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+
+  .platform-taptap .archive-overlay {
+    height:100dvh;
+    bottom:auto;
+    display:grid;
+    place-items:center;
+    padding:max(2.75rem,calc(env(safe-area-inset-top) + .5rem)) max(.5rem,env(safe-area-inset-right)) max(.5rem,env(safe-area-inset-bottom)) max(.5rem,env(safe-area-inset-left));
+    overflow:hidden;
+  }
+  .platform-taptap .archive-case {
+    width:min(900px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem),calc((100dvh - max(2.75rem,calc(env(safe-area-inset-top) + .5rem)) - max(.5rem,env(safe-area-inset-bottom)) - .5rem) * 1672 / 941));
+    height:auto;
+    max-height:none;
+    aspect-ratio:1672/941;
+    margin:auto;
+  }
+  .platform-taptap .archive-progress strong { font-size:clamp(14px,2.5cqw,34px) }
+  .platform-taptap .archive-progress span { font-size:clamp(14px,2.2cqw,30px) }
+  .platform-taptap .archive-tabs button { font-size:clamp(12px,2.6cqw,36px) }
+  .platform-taptap .archive-tabs button span { font-size:clamp(12px,2.4cqw,33px) }
+  .platform-taptap .archive-row .archive-index,
+  .platform-taptap .archive-row b { font-size:clamp(12px,2.3cqw,32px) }
+  .platform-taptap .archive-mark,
+  .platform-taptap .archive-row.sealed .archive-mark { font-size:clamp(11px,1.95cqw,27px) }
+}

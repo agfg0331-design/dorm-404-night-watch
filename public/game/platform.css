@@ -33,6 +33,11 @@
 .platform-taptap .rotate-device-notice strong{font-size:clamp(1.2rem,5vw,1.7rem)}
 .platform-taptap .rotate-device-notice span{max-width:18rem;color:#9faea2;font-size:.78rem;line-height:1.6}
 
+/* New scene frames have no baked date/CAM stamp to cover at the top. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:600px) {
+  .platform-taptap .monitor-view:is([data-scene="music"],[data-scene="dance"],[data-scene="elevator"],[data-scene="lab"]) .feed-matte-top { display:none }
+}
+
 /* TapTap's short landscape viewport uses the same 4:3 CCTV coordinate space. */
 @media (pointer:coarse) and (orientation:landscape) and (max-height:600px) and (min-aspect-ratio:2/1) {
   .platform-taptap .monitor-stage {

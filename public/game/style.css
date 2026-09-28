@@ -697,19 +697,25 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
   .mobile-fullscreen-tip div{display:flex;gap:.4rem}
   .mobile-fullscreen-tip button{min-height:32px;padding:.25rem .5rem;border:1px solid #64806d;background:#142b20;color:#e4eee5;font-size:.65rem;cursor:pointer}
   .mobile-fullscreen-tip button:last-child{background:#0b1711;color:#b7c8bc}
+  .camera-dock button{min-height:44px;box-sizing:border-box}
+  .phone-dock{min-width:48px;min-height:48px;box-sizing:border-box}
 }
 @media(pointer:coarse) and (orientation:landscape) and (max-height:600px) and (min-aspect-ratio:2/1){
+  .monitor-view{--side-gutter:calc((100vw - 133.333dvh)/2);--side-control-width:min(10rem,calc(var(--side-gutter) - 1.5rem))}
+  .monitor-view::before,.monitor-view::after{content:"";position:absolute;top:0;bottom:0;width:var(--side-gutter);pointer-events:none;background:linear-gradient(90deg,#030807,#0b1712 50%,#040a08),repeating-linear-gradient(180deg,transparent 0 3px,#77917b0d 4px);box-shadow:inset 0 0 0 1px #30473a66,inset 0 0 24px #000;opacity:.88}
+  .monitor-view::before{left:0;border-right:1px solid #52685880}
+  .monitor-view::after{right:0;border-left:1px solid #52685880}
   .monitor-hud span{display:none}
   .monitor-top-scrim{background:linear-gradient(90deg,#020504e8,transparent 23% 77%,#020504e8)}
   .camera-dock{inset:0;transform:none;display:block;overflow:visible;contain:none;padding:0;border:0;background:none;pointer-events:none}
-  .camera-dock button{position:absolute;min-width:0;width:min(10rem,calc((100vw - 133.333dvh)/2 - 1.5rem));min-height:44px;padding:.4rem .45rem;border:1px solid #566c5d9c;background:#06100de8;pointer-events:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.63rem}
-  .camera-dock button:nth-child(-n+3){left:max(.55rem,env(safe-area-inset-left))}
-  .camera-dock button:nth-child(n+4){right:max(.55rem,env(safe-area-inset-right))}
+  .camera-dock button{position:absolute;min-width:0;width:var(--side-control-width);padding:.4rem .45rem;border:1px solid #566c5d9c;background:#06100de8;pointer-events:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.63rem}
+  .camera-dock button:nth-child(-n+3){left:max(env(safe-area-inset-left),calc(var(--side-gutter) - var(--side-control-width) - .35rem))}
+  .camera-dock button:nth-child(n+4){right:max(env(safe-area-inset-right),calc(var(--side-gutter) - var(--side-control-width) - .35rem))}
   .camera-dock button:nth-child(1),.camera-dock button:nth-child(4){top:24%}
   .camera-dock button:nth-child(2),.camera-dock button:nth-child(5){top:39%}
   .camera-dock button:nth-child(3),.camera-dock button:nth-child(6){top:54%}
   .camera-dock kbd{width:1rem;height:1rem;margin-right:.25rem}
-  .phone-dock{right:max(.55rem,env(safe-area-inset-right));bottom:max(.5rem,env(safe-area-inset-bottom))}
+  .phone-dock{right:max(env(safe-area-inset-right),calc(var(--side-gutter) - 4.5rem - .35rem));bottom:max(.5rem,env(safe-area-inset-bottom))}
 }
 @media(pointer:coarse) and (orientation:landscape) and (max-height:600px) and (max-aspect-ratio:199/100){
   .monitor-stage{top:0;width:calc((100dvh - 58px)*4/3);height:calc(100dvh - 58px);transform:translateX(-50%)}

@@ -461,7 +461,7 @@
     report(camera, category) {
       // When two events share a camera and category, resolve the one currently
       // shown on the feed before an older missed event behind it.
-      const match = this.activeEvents.slice().reverse().find((event) => !event.reported && !event.resolvingUntil && event.camera === camera && event.category === category);
+      const match = this.activeEvents.slice().reverse().find((event) => !event.reported && !event.resolvingUntil && event.camera === camera && (event.category === category || (event.acceptedCategories || []).includes(category)));
       if (match) {
         match.resolvingUntil = performance.now() + 2800 + this.#seededUnit(0x52455000 + this.correct) * 1500;
         this.correct += 1;

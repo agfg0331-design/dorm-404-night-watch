@@ -138,14 +138,14 @@
                   <option value="cam06">CAM 06</option>
                 </select>
               </label>
-              <fieldset><legend>异常类别</legend><div class="category-grid">
-                <label><input required type="radio" name="category" value="物品移动"><span>物品移动</span></label>
-                <label><input type="radio" name="category" value="人物异常"><span>人物异常</span></label>
-                <label><input type="radio" name="category" value="灯光异常"><span>灯光异常</span></label>
-                <label><input type="radio" name="category" value="门窗异常"><span>门窗异常</span></label>
-                <label><input type="radio" name="category" value="空间异常"><span>空间异常</span></label>
-                <label><input type="radio" name="category" value="未知异常"><span>未知异常</span></label>
-                <label class="late-category"><input type="radio" name="category" value="监控异常"><span>监控异常</span></label>
+              <fieldset><legend>异常类别</legend><p class="category-hint">按你看到的现象选择，不必判断异常原因。</p><div class="category-grid">
+                <label><input required type="radio" name="category" value="人物异常"><span>人物异常</span></label>
+                <label><input type="radio" name="category" value="物品变化"><span>物品变化</span></label>
+                <label><input type="radio" name="category" value="门窗 / 通道"><span>门窗 / 通道</span></label>
+                <label><input type="radio" name="category" value="灯光 / 设备"><span>灯光 / 设备</span></label>
+                <label><input type="radio" name="category" value="环境 / 空间"><span>环境 / 空间</span></label>
+                <label><input type="radio" name="category" value="监控 / 信号"><span>监控 / 信号</span></label>
+                <label class="category-other"><input type="radio" name="category" value="其他 / 无法判断"><span>其他 / 无法判断</span></label>
               </div></fieldset>
               <p class="report-feedback" id="reportFeedback"></p>
               <button class="submit-report" type="submit">提交异常报告</button>
@@ -197,7 +197,7 @@
     <div class="start-menu">
       <small>东区 4 号楼 / 00:00—06:00</small>
       <strong>404宿舍：夜间监控</strong>
-      <p>监控异常，及时上报。不要轻信屏幕。</p>
+      <p>画面出现异样，及时上报。不要轻信屏幕。</p>
       <div class="start-actions">
         <button id="startGame" type="button">开始值班 <span>ENTER</span></button>
         <button id="openSettings" type="button">设置 <span>声音 / 画面</span></button>
@@ -261,7 +261,7 @@
         <aside class="archive-rail" aria-label="档案概览">
           <div class="archive-progress" id="archiveProgress"></div>
           <nav class="archive-tabs" aria-label="档案类别">
-            <button type="button" class="active" data-archive-tab="anomaly" aria-selected="true">监控异常 <span id="archiveAnomalyCount">0/0</span></button>
+            <button type="button" class="active" data-archive-tab="anomaly" aria-selected="true">异常记录 <span id="archiveAnomalyCount">0/0</span></button>
             <button type="button" data-archive-tab="show" aria-selected="false">系统演出 <span id="archiveShowCount">0/0</span></button>
             <button type="button" data-archive-tab="ending" aria-selected="false">值班结局 <span id="archiveEndingCount">0/0</span></button>
           </nav>

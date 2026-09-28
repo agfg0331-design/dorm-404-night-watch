@@ -11,7 +11,7 @@ for (const name of ["anomalies", "game"]) {
 const { scenePool, createShift } = sandbox.GameContent;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const names = Object.values(scenePool).map((scene) => scene.name);
-const earlyCategories = new Set(["物品移动", "人物异常", "灯光异常", "门窗异常", "空间异常", "未知异常"]);
+const earlyCategories = new Set(["人物异常", "物品变化", "门窗 / 通道", "灯光 / 设备", "环境 / 空间", "监控 / 信号", "其他 / 无法判断"]);
 const combinations = new Set();
 const seenScenes = new Set();
 
@@ -75,7 +75,7 @@ const event = sim.eventQueue.find((item) => item.id === "dance-figure");
 sim.minute = event.actualStart + 1;
 sim.processEvents();
 assert(sim.activeEvents.includes(event), "新场景异常没有出现");
-const wrongReport = sim.report(event.camera, "灯光异常");
+const wrongReport = sim.report(event.camera, "灯光 / 设备");
 assert(!wrongReport.ok && wrongReport.message === "报告已提交" && sim.activeEvents.includes(event) && !event.resolvingUntil, "误报错误地解除异常或泄露了反馈");
 sim.setCamera(event.camera);
 const correctReport = sim.report(event.camera, event.category);

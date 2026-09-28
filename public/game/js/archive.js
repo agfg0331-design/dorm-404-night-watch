@@ -47,6 +47,28 @@
   const footer = document.getElementById("archiveFooter");
   const tabs = [...overlay.querySelectorAll("[data-archive-tab]")];
   let selected = "anomaly";
+  let dirty = true;
+  let warmupScheduled = false;
+  let ledgerImage;
+
+  // Optional work, scheduled only after the initial monitor resources are ready.
+  // Keep the decoded image alive; never open the overlay or touch persistence.
+  function warmup() {
+    if (warmupScheduled) return;
+    warmupScheduled = true;
+    window.setTimeout(() => {
+      const prepare = () => {
+        ledgerImage = new Image();
+        ledgerImage.decoding = "async";
+        ledgerImage.fetchPriority = "low";
+        ledgerImage.src = "assets/archive-ledger-flat.webp";
+        if (ledgerImage.decode) void ledgerImage.decode().catch(() => {});
+        if (dirty && overlay.classList.contains("hidden")) render();
+      };
+      if (window.requestIdleCallback) window.requestIdleCallback(prepare);
+      else window.setTimeout(prepare, 1000);
+    }, 2000);
+  }
 
   function count(type) { return Object.keys(saved[type]).length; }
 
@@ -95,18 +117,21 @@
     list.replaceChildren(fragment);
     list.scrollTop = 0;
     footer.textContent = `FILE ${String(Object.keys(catalog).indexOf(selected) + 1).padStart(2, "0")}`;
+    dirty = false;
   }
 
   function record(type, id) {
     if (!allowed[type]?.has(id) || saved[type][id]) return;
     saved[type][id] = Date.now();
+    dirty = true;
     try { window.GamePlatform.storage.setItem(KEY, JSON.stringify(saved)); } catch { /* Gameplay continues without storage. */ }
     if (!overlay.classList.contains("hidden")) render();
   }
 
   entry.addEventListener("click", () => {
     if (!document.getElementById("startOverlay").classList.contains("hidden")) return;
-    render();
+    if (dirty) render();
+    list.scrollTop = 0;
     overlay.classList.remove("hidden");
     close.focus({ preventScroll: true });
   });
@@ -122,6 +147,7 @@
   tabs.forEach((tab) => tab.addEventListener("click", () => { selected = tab.dataset.archiveTab; render(); }));
 
   window.GameArchive = {
+    warmup,
     unlockedIds: () => Object.entries(saved).flatMap(([type, entries]) => Object.keys(entries).map((id) => `${type}:${id}`)),
     recordAnomaly: (id) => record("anomaly", id),
     recordShow: (id) => record("show", id),

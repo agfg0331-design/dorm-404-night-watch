@@ -164,6 +164,7 @@
   // The first six feeds must be ready to switch immediately. Later anomaly
   // frames decode in the background instead of blocking the first monitor view.
   const cameraPreload = Promise.all(initialCameraSources.map((source) => preloadImage(source, true)));
+  void cameraPreload.then(() => window.GameArchive.warmup());
   let backgroundPreloadStarted = false;
   function warmLaterFrames() {
     if (backgroundPreloadStarted) return;

@@ -725,7 +725,7 @@ body[data-phase="4"] .room-guidance,body[data-phase="5"] .room-guidance{display:
   .phone-dock>.mini-phone{height:1.4rem;width:.9rem;margin-bottom:.05rem}
 }
 
-.scene-watermark{display:block;position:absolute;z-index:6;left:3%;top:max(3%,calc(env(safe-area-inset-top) + 2.5rem));bottom:auto;max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;color:#d3dbd6;font:500 clamp(.8rem,1.65vw,1.05rem)/1.25 ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 1px 3px #000,0 0 6px #000}
+.scene-watermark{display:block;position:absolute;z-index:6;left:3%;top:max(3%,calc(env(safe-area-inset-top) + 2rem));bottom:auto;max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;color:rgba(205,215,211,.82);font:300 clamp(.6rem,1.12vw,.75rem)/1.15 "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:.035em;text-shadow:0 1px 1px #0008}
 @media(max-width:760px), (pointer:coarse) and (orientation:landscape) and (max-height:600px){
   .monitor-hud.top div{min-width:0;gap:.45rem}
   .monitor-hud.top span{display:inline-block;max-width:min(34vw,10rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(.59rem,1.55vw,.7rem)}

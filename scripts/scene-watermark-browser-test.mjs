@@ -28,12 +28,12 @@ try{
     await page.keyboard.press(String(key));await page.waitForTimeout(70);
     const state=await page.evaluate(()=>{
      const watermark=document.querySelector('#sceneWatermark'),rect=watermark.getBoundingClientRect(),stage=document.querySelector('.monitor-stage').getBoundingClientRect(),scene=document.querySelector('#monitorView').dataset.scene;
-     return {scene,name:watermark.textContent,expected:scene==='duty'?'值班室':GameContent.scenePool[scene].name,instances:document.querySelectorAll('.scene-watermark').length,top:rect.top,left:rect.left,bottom:rect.bottom,stageTop:stage.top,stageLeft:stage.left,stageHeight:stage.height,bottomStyle:getComputedStyle(watermark).bottom};
+     return {scene,name:watermark.textContent,expected:scene==='duty'?'值班室':GameContent.scenePool[scene].name,instances:document.querySelectorAll('.scene-watermark').length,top:rect.top,left:rect.left,bottom:rect.bottom,stageTop:stage.top,stageLeft:stage.left,stageHeight:stage.height,bottomStyle:getComputedStyle(watermark).bottom,fontSize:parseFloat(getComputedStyle(watermark).fontSize),fontWeight:getComputedStyle(watermark).fontWeight};
     });
     assert.equal(state.name,state.expected);assert.equal(state.instances,1);assert(!state.name.includes('CAM'));
-    assert(state.top>=30 && state.top-state.stageTop<65,JSON.stringify(state));
+    assert(state.top>=20 && state.top-state.stageTop<45,JSON.stringify(state));
     assert(state.left-state.stageLeft>=10);assert(state.bottom<state.stageTop+state.stageHeight/3);
-    seen.add(state.scene);
+    assert(state.fontSize<=12 && state.fontSize>=9.6);assert.equal(state.fontWeight,'300');seen.add(state.scene);
     if(key===1) await page.screenshot({path:`/tmp/404-watermark-${width}-${state.scene}.png`});
    }
    console.log(JSON.stringify({width,height,event,camSwitches:6,watermark:'one top-left scene name; correct on every switch'}));await page.close();

@@ -218,6 +218,12 @@
       return true;
     }
 
+    cancelPendingMajorShow(kind) {
+      if (this.majorGuard.phase !== "pre" || this.majorGuard.kind !== kind) return;
+      this.shiftWaitingEvents(0);
+      this.majorGuard = { phase: "idle", kind: null, quietAt: 0, until: 0 };
+    }
+
     majorShowReady(now = performance.now()) {
       if (this.majorGuard.phase !== "pre") return false;
       const ongoing = this.activeEvents.some((event) => !event.reported && event.state !== "missed");
@@ -310,9 +316,12 @@
       this.processFinalClues();
       if (this.minute >= 342 && !this.terminalStage) {
         const unfinished = this.eventQueue.some((event) => event.state === "waiting" || (event.state !== "missed" && !event.reported));
-        const pending = this.pendingOrdinaryMessages.some((entry) => entry.index !== undefined);
+        const pending = this.pendingOrdinaryMessages.some((entry) => this.minute <= entry.expiresAt);
         const clues = this.#finalPlan.some((clue) => !this.firedFinalClues.has(clue.id));
-        if (!unfinished && !pending && !clues && !this.finalQuietAt) this.finalQuietAt = now;
+        if (!unfinished && !pending && !clues && this.majorGuard.phase === "idle" && !this.finalQuietAt) {
+          this.finalQuietAt = now;
+          this.callbacks.onFinalQuiet?.();
+        }
         if (this.finalQuietAt && now - this.finalQuietAt >= 9000) this.processMilestones();
       }
       if (this.finalStage || this.terminalStage) {
@@ -359,13 +368,19 @@
     }
 
     createInterference(index) {
-      const nextLead = this.eventQueue.filter((event) => !event.leadSent && !event.silent &&
-        event.actualStart + event.lead.offset >= this.minute)
-        .sort((a, b) => a.actualStart + a.lead.offset - b.actualStart - b.lead.offset)[0];
+      // Expendable hints may be skipped. Exclude every possible next target
+      // through the next non-expendable hint, including already queued leads.
+      const upcoming = this.eventQueue.filter((event) => !event.leadSent && !event.silent)
+        .sort((a, b) => a.actualStart + a.lead.offset - b.actualStart - b.lead.offset);
+      const nextTargets = new Set();
+      for (const event of upcoming) {
+        nextTargets.add(event.camera);
+        if (["essential", "featured"].includes(event.hintPriority)) break;
+      }
       const busy = new Set(this.activeEvents.filter((event) => !event.reported && event.state !== "missed").map((event) => event.camera));
       const candidates = Object.entries(this.cameras).filter(([camera, feed]) => feed.sceneId !== "duty" &&
         interferencePool[feed.sceneId] && !busy.has(camera) && camera !== this.lastLeadCamera &&
-        camera !== nextLead?.camera && feed.sceneId !== this.lastInterferenceScene);
+        !nextTargets.has(camera) && feed.sceneId !== this.lastInterferenceScene);
       if (!candidates.length) return null;
       const unused = candidates.filter(([, feed]) => !this.sentInterferenceScenes.has(feed.sceneId));
       const choices = unused.length ? unused : candidates;

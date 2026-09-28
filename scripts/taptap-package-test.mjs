@@ -18,7 +18,7 @@ assert(!sourceHtml.includes("其他 / 无法判断") && !sourceHtml.includes("ca
 assert((sourceHtml.match(/name="category"/g) || []).length === 6);
 assert(sourceCss.includes("grid-template-columns:1fr 1fr"));
 assert(sourcePlatformCss.includes(".platform-taptap .report-panel") && sourcePlatformCss.includes(".platform-taptap .submit-report"));
-assert(sourcePlatformCss.includes(".phone-view.report-open .phone-panel { height:calc(100% - 34px) }") &&
+assert(sourcePlatformCss.includes(".phone-view.report-open .phone-title button { min-height:44px;padding:0;white-space:nowrap }") &&
   sourcePlatformCss.includes("min-height:43px") && sourcePlatformCss.includes("min-height:44px"));
 assert(sourcePlatformCss.includes("scale(1.05)"));
 const referenced = [...new Set(anomalies.match(/scene-preview\/assets\/[\w-]+\.webp/g) || [])];

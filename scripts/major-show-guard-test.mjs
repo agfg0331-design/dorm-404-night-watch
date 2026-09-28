@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
+import { completeFinalLifecycle } from "./final-lifecycle-harness.mjs";
 
 const sandbox = { window: {}, performance: { now: () => now }, console };
 sandbox.window = sandbox;
@@ -8,9 +9,10 @@ vm.createContext(sandbox);
 for (const file of ["anomalies", "game"]) vm.runInContext(fs.readFileSync(`public/game/js/${file}.js`, "utf8"), sandbox);
 let now = 0;
 const results = [];
-for (let seed = 1; seed <= 250; seed++) {
+for (let seed = 1; seed <= 1000; seed++) {
   now = 1000;
   const messages = [];
+  const starts = [];
   const shows = [];
   let blackout = 0;
   let activeUntil = 0;
@@ -27,7 +29,11 @@ for (let seed = 1; seed <= 250; seed++) {
         !event.reported && event.state !== "missed"), `seed ${seed}: interference targeted active anomaly`);
       messages.push({ ...message, now, minute: sim.minute });
     },
-    onEventStart: () => assert(sim.majorGuard.phase === "idle" && !sim.finalQuietAt, `seed ${seed}: spawned during guard`),
+    onEventStart: (event) => {
+      assert(sim.majorGuard.phase === "idle" && !sim.finalQuietAt, `seed ${seed}: spawned during guard`);
+      assert(!starts.some(entry => entry.now === now), `seed ${seed}: simultaneous anomaly burst`);
+      starts.push({id:event.id,now});
+    },
     onMonitorFail: () => { blackout = now; },
     onFakeDawn: (stage) => {
       if (stage === "done") {
@@ -43,6 +49,9 @@ for (let seed = 1; seed <= 250; seed++) {
       return ready;
     }
   } });
+  assert.equal(new Set(sim.sceneIds).size,5,`seed ${seed}: duplicate scene`);
+  assert.equal(sim.cameras.cam04.sceneId,"duty");
+  assert(sim.sceneIds.every(id=>sandbox.GameContent.scenePool[id]));
   sim.start(now);
   let previousPhase = sim.majorGuard.phase;
   let preAt = 0;
@@ -67,7 +76,13 @@ for (let seed = 1; seed <= 250; seed++) {
       if (due === "phone-flood") floodDone = true;
       activeUntil = now + ({ global: 8000, pa: 14000, "phone-snow": 2200, "phone-flood": 4400 })[due];
     }
-    const before = { missed: sim.missed, events: sim.activeEvents.map((event) => `${event.id}:${event.progress}:${event.state}`).join("|") };
+    // Exercise player-paced clocks and reports as well as unattended shifts.
+    if (seed % 3 === 0 && sim.majorGuard.phase !== "active" && sim.majorGuard.phase !== "post") {
+      sim.setView(frames % 900 < 25 ? "phone-report" : "monitor");
+      const reportable = sim.activeEvents.find(event => !event.reported && !event.resolvingUntil && event.progress > 0.3);
+      if (reportable) sim.report(reportable.camera, reportable.category);
+    }
+    const before = { danger: sim.danger, trust: sim.trust, missed: sim.missed, events: sim.activeEvents.map((event) => `${event.id}:${event.progress}:${event.state}`).join("|") };
     sim.step(now);
     const phase = sim.majorGuard.phase;
     if (phase === "pre" && previousPhase !== "pre") preAt = now;
@@ -82,6 +97,7 @@ for (let seed = 1; seed <= 250; seed++) {
     }
     if (["active", "post"].includes(phase) && sim.fakeDawnStage === "idle") {
       assert.equal(sim.missed, before.missed, `seed ${seed}: missed during show`);
+      assert.equal(sim.danger,before.danger); assert.equal(sim.trust,before.trust);
       assert.equal(sim.activeEvents.map((event) => `${event.id}:${event.progress}:${event.state}`).join("|"), before.events,
         `seed ${seed}: anomaly advanced during show`);
       assert.equal(sim.getVisibleEvent(), null, `seed ${seed}: anomaly visible during show`);
@@ -108,7 +124,10 @@ for (let seed = 1; seed <= 250; seed++) {
   const replay = new sandbox.NightShiftSimulation({ seed });
   assert.deepEqual(JSON.parse(JSON.stringify(replay.interferencePlan)), JSON.parse(JSON.stringify(sim.interferencePlan)),
     `seed ${seed}: interference windows are not deterministic`);
-  results.push({ seed, seconds: +(blackout / 1000).toFixed(1), fakeDawn: sim.fakeDawnPlanned,
+  assert(sim.eventQueue.every(event=>event.state!=="waiting"),`seed ${seed}: permanently waiting event`);
+  assert.equal(starts.length,sim.eventQueue.length,`seed ${seed}: lost anomaly`);
+  const final = completeFinalLifecycle(sim,now,seed%2===0,value=>{now=value;});
+  results.push({ seed, fullSeconds: +(final.endedAt / 1000 - 1).toFixed(1), seconds: +(blackout / 1000).toFixed(1), fakeDawn: sim.fakeDawnPlanned,
     selection: interference.map((item) => item.targetScene).join(",") });
 }
 assert(new Set(results.map((item) => item.selection)).size > 30, "interference does not vary between seeds");
@@ -128,4 +147,4 @@ function replayInterference(seed) {
 }
 for (let seed = 1; seed <= 25; seed++) assert.deepEqual(replayInterference(seed), replayInterference(seed),
   `seed ${seed}: interference target or send time was not reproducible`);
-console.log(`Major Show / interference: ${results.length} seeds; blackout ${(Math.min(...results.map((item) => item.seconds))).toFixed(1)}–${(Math.max(...results.map((item) => item.seconds))).toFixed(1)}s; four valid interference each.`);
+console.log(`Major Show / interference: ${results.length} seeds; blackout ${(Math.min(...results.map((item) => item.seconds))).toFixed(1)}–${(Math.max(...results.map((item) => item.seconds))).toFixed(1)}s; four valid interference each; full automatic ending ${Math.min(...results.map(item=>item.fullSeconds))}–${Math.max(...results.map(item=>item.fullSeconds))}s; no lost anomalies/deadlocks; TURN and STAY timers verified.`);

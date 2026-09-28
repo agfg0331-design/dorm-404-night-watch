@@ -214,6 +214,7 @@
           ensureEventCue(event);
         }
       },
+      onFinalQuiet: () => audio.enterSilence(),
       onMonitorFail: beginFinalBlackout,
       canStartFakeDawn: (now) => {
         if (showLocked || now < majorShowCooldownUntil) return false;
@@ -350,6 +351,7 @@
     } else {
       if (transitionLocked) return;
       audio.stopReportTension();
+      sim.cancelPendingMajorShow("phone");
       els.phoneView.classList.remove("active", "lowering");
       setViewElement(view);
       if (view === "monitor") audio.setScene(cameras[sim.currentCamera].ambient);
@@ -403,6 +405,7 @@
       pendingPhoneCorruption = null;
       phoneCorruptionStartTimer = window.setTimeout(() => {
         phoneCorruptionStartTimer = null;
+        if (!sim.view.startsWith("phone")) { pendingPhoneCorruption ||= pending; return; }
         triggerPhoneCorruption(pending.type, pending.phrase);
       }, 480);
     }
@@ -433,6 +436,8 @@
     window.clearTimeout(phoneTransitionTimer);
     audio.stopReportTension();
     audio.putdownPhone();
+    // A deferred phone show must not hold the monitor in pre-quiet forever.
+    sim.cancelPendingMajorShow("phone");
     const destination = previousView === "room" ? "room" : "monitor";
     sim.setView(destination);
     setViewElement(destination);
@@ -709,6 +714,7 @@
     els.signalError.querySelector("span").textContent = "CAM 01—06 / CONNECTION FAILED";
     els.signalError.querySelector("small").textContent = "所有监控连接中断";
     audio.stopReportTension();
+    audio.exitSilence();
     audio.glitch(true);
     window.setTimeout(() => {
       if (sim.ended) return;
@@ -1079,7 +1085,7 @@
   }
 
   function fireEventBeat(event, beat, impact = null, audible = true) {
-    if (!audible) return;
+    if (!audible || sim.majorGuard.phase !== "idle" || sim.finalQuietAt || sim.terminalStage) return;
     const fired = eventBeatState.get(event.id) || new Set();
     if (fired.has(beat)) return;
     fired.add(beat);
@@ -1094,7 +1100,7 @@
   }
 
   function ensureEventCue(event) {
-    if (!event || eventCueState.has(event.id)) return;
+    if (!event || eventCueState.has(event.id) || sim.majorGuard.phase !== "idle" || sim.finalQuietAt || sim.terminalStage) return;
     eventCueState.add(event.id);
     audio.playEventCue(event);
   }
@@ -1663,7 +1669,7 @@
       sim.pauseFor(24 * 60 * 60 * 1000, now);
     }
     const currentMinute = Math.floor(sim.minute);
-    if (!showLocked && !sim.finalQuietAt && !sim.terminalStage && currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {
+    if (!showLocked && sim.majorGuard.phase === "idle" && !sim.finalQuietAt && !sim.terminalStage && currentMinute > 210 && currentMinute % 37 === 0 && currentMinute !== lastAmbientWarning) {
       lastAmbientWarning = currentMinute;
       audio.doorHandle();
     }
